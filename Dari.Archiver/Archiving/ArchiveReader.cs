@@ -1,0 +1,195 @@
+using System.Buffers;
+using Dari.Archiver.Compression;
+using Dari.Archiver.Format;
+using Dari.Archiver.IO;
+
+namespace Dari.Archiver.Archiving;
+
+/// <summary>
+/// High-level archive reader: opens a <c>.dar</c> file, decompresses entries on extraction,
+/// and optionally verifies BLAKE3 checksums.
+/// </summary>
+/// <remarks>
+/// Built on top of the low-level <see cref="DariReader"/>. Encryption is not yet supported
+/// in this release; passing a non-null passphrase will throw <see cref="NotSupportedException"/>.
+/// </remarks>
+public sealed class ArchiveReader : IDisposable, IAsyncDisposable
+{
+    private readonly DariReader _inner;
+    private readonly CompressorRegistry _registry;
+
+    /// <summary>UTC timestamp written into the archive header.</summary>
+    public DateTimeOffset CreatedAt => _inner.Header.CreatedAt;
+
+    /// <summary>All index entries, in the order stored in the archive.</summary>
+    public IReadOnlyList<IndexEntry> Entries => _inner.Entries;
+
+    private ArchiveReader(DariReader inner, CompressorRegistry registry)
+    {
+        _inner = inner;
+        _registry = registry;
+    }
+
+    // -----------------------------------------------------------------------
+    // Factory methods
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Opens and parses a <c>.dar</c> archive at <paramref name="path"/>.
+    /// </summary>
+    /// <param name="path">Path to the <c>.dar</c> file.</param>
+    /// <param name="compressors">
+    ///   Compressor registry to use for decompression.
+    ///   Defaults to <see cref="CompressorRegistry.Default"/>.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
+    public static async ValueTask<ArchiveReader> OpenAsync(
+        string path,
+        CompressorRegistry? compressors = null,
+        CancellationToken ct = default)
+    {
+        var inner = await DariReader.OpenAsync(path, ct).ConfigureAwait(false);
+        return new ArchiveReader(inner, compressors ?? CompressorRegistry.Default);
+    }
+
+    /// <summary>
+    /// Opens and parses a <c>.dar</c> archive from <paramref name="stream"/>.
+    /// </summary>
+    /// <param name="stream">A seekable, readable stream.</param>
+    /// <param name="leaveOpen">When <see langword="true"/> the stream is not disposed with the reader.</param>
+    /// <param name="compressors">Compressor registry; defaults to <see cref="CompressorRegistry.Default"/>.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public static async ValueTask<ArchiveReader> OpenAsync(
+        Stream stream,
+        bool leaveOpen = false,
+        CompressorRegistry? compressors = null,
+        CancellationToken ct = default)
+    {
+        var inner = await DariReader.OpenAsync(stream, leaveOpen, ct).ConfigureAwait(false);
+        return new ArchiveReader(inner, compressors ?? CompressorRegistry.Default);
+    }
+
+    // -----------------------------------------------------------------------
+    // Extraction
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Decompresses <paramref name="entry"/> and writes the raw content to <paramref name="destination"/>.
+    /// </summary>
+    /// <param name="entry">The entry to extract.</param>
+    /// <param name="destination">Writable stream that receives the decompressed bytes.</param>
+    /// <param name="verifyChecksum">
+    ///   When <see langword="true"/> (the default), the BLAKE3 checksum of the decompressed
+    ///   content is compared with the value stored in the index entry.
+    ///   Throws <see cref="InvalidDataException"/> on mismatch.
+    /// </param>
+    /// <param name="ct">Cancellation token.</param>
+    public async ValueTask ExtractAsync(
+        IndexEntry entry,
+        Stream destination,
+        bool verifyChecksum = true,
+        CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+        ArgumentNullException.ThrowIfNull(destination);
+
+        var rawBlock = await _inner.ReadRawBlockAsync(entry, ct).ConfigureAwait(false);
+        var decompressed = await DecompressAsync(entry, rawBlock, ct).ConfigureAwait(false);
+
+        if (verifyChecksum)
+            VerifyChecksum(entry, decompressed.Span);
+
+        await destination.WriteAsync(decompressed, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// Decompresses <paramref name="entry"/> and writes the content to a file at <paramref name="outputPath"/>.
+    /// Parent directories are created as needed.
+    /// </summary>
+    public async ValueTask ExtractToFileAsync(
+        IndexEntry entry,
+        string outputPath,
+        bool verifyChecksum = true,
+        CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputPath);
+
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? ".");
+
+        await using var fs = new FileStream(outputPath, FileMode.Create, FileAccess.Write,
+                                            FileShare.None, bufferSize: 65536, useAsync: true);
+        await ExtractAsync(entry, fs, verifyChecksum, ct).ConfigureAwait(false);
+
+        // Restore mtime when possible.
+        File.SetLastWriteTimeUtc(outputPath, entry.ModifiedAt.UtcDateTime);
+    }
+
+    /// <summary>
+    /// Extracts all entries to <paramref name="outputDirectory"/>, recreating the directory tree.
+    /// </summary>
+    /// <param name="outputDirectory">Root directory to extract into.</param>
+    /// <param name="verifyChecksums">Verify BLAKE3 checksum for every extracted file.</param>
+    /// <param name="ct">Cancellation token.</param>
+    public async ValueTask ExtractAllAsync(
+        string outputDirectory,
+        bool verifyChecksums = true,
+        CancellationToken ct = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(outputDirectory);
+
+        foreach (var entry in Entries)
+        {
+            ct.ThrowIfCancellationRequested();
+
+            // Forward-slash paths are always relative — join safely regardless of OS.
+            string relPath = entry.Path.Replace('/', Path.DirectorySeparatorChar);
+            string fullPath = Path.Combine(outputDirectory, relPath);
+
+            await ExtractToFileAsync(entry, fullPath, verifyChecksums, ct).ConfigureAwait(false);
+        }
+    }
+
+    /// <summary>
+    /// Returns a <see cref="ReadOnlyMemory{T}"/> of the raw (still compressed) data block
+    /// for <paramref name="entry"/>. Useful for repackaging without decompression.
+    /// </summary>
+    public ValueTask<ReadOnlyMemory<byte>> OpenRawBlockAsync(
+        IndexEntry entry, CancellationToken ct = default) =>
+        _inner.ReadRawBlockAsync(entry, ct);
+
+    // -----------------------------------------------------------------------
+    // Internal helpers
+    // -----------------------------------------------------------------------
+
+    private async ValueTask<ReadOnlyMemory<byte>> DecompressAsync(
+        IndexEntry entry, ReadOnlyMemory<byte> rawBlock, CancellationToken ct)
+    {
+        if (entry.Compression == CompressionMethod.None)
+            return rawBlock;
+
+        var writer = new ArrayBufferWriter<byte>((int)entry.OriginalSize);
+        var compressor = _registry.Get(entry.Compression);
+        await compressor.DecompressAsync(rawBlock, entry.OriginalSize, writer, ct)
+                        .ConfigureAwait(false);
+        return writer.WrittenMemory;
+    }
+
+    private static void VerifyChecksum(IndexEntry entry, ReadOnlySpan<byte> data)
+    {
+        var computed = Blake3Hash.Of(data);
+        if (computed != entry.Checksum)
+            throw new InvalidDataException(
+                $"Checksum mismatch for '{entry.Path}': " +
+                $"expected {entry.Checksum}, got {computed}.");
+    }
+
+    // -----------------------------------------------------------------------
+    // Dispose
+    // -----------------------------------------------------------------------
+
+    /// <inheritdoc/>
+    public void Dispose() => _inner.Dispose();
+
+    /// <inheritdoc/>
+    public ValueTask DisposeAsync() => _inner.DisposeAsync();
+}
