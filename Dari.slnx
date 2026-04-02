@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Dari.Archiver.Tests/Dari.Archiver.Tests.csproj" />
+  <Project Path="Dari.Archiver/Dari.Archiver.csproj" />
+</Solution>
