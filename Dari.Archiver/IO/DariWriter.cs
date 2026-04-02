@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Dari.Archiver.Compression;
 using Dari.Archiver.Crypto;
+using Dari.Archiver.Deduplication;
 using Dari.Archiver.Extra;
 using Dari.Archiver.Format;
 
@@ -36,15 +37,17 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     private readonly bool _leaveOpen;
     private readonly List<IndexEntry> _entries;
     private readonly DariPassphrase? _passphrase;
+    private readonly DeduplicationTracker _dedup;
     private bool _finalized;
     private bool _disposed;
 
-    private DariWriter(Stream stream, bool leaveOpen, DariPassphrase? passphrase)
+    private DariWriter(Stream stream, bool leaveOpen, DariPassphrase? passphrase, DeduplicationTracker? dedup)
     {
         _stream = stream;
         _leaveOpen = leaveOpen;
         _entries = new List<IndexEntry>(64);
         _passphrase = passphrase;
+        _dedup = dedup ?? new DeduplicationTracker();
     }
 
     // -----------------------------------------------------------------------
@@ -73,7 +76,7 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
         if (!stream.CanWrite) throw new ArgumentException("Stream must be writable.", nameof(stream));
         if (!stream.CanSeek) throw new ArgumentException("Stream must be seekable.", nameof(stream));
 
-        var writer = new DariWriter(stream, leaveOpen, passphrase);
+        var writer = new DariWriter(stream, leaveOpen, passphrase, dedup: null);
         await writer.WriteHeaderAsync(header ?? DariHeader.CreateNew(), ct).ConfigureAwait(false);
         return writer;
     }
@@ -96,6 +99,31 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
         var fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
                                 bufferSize: 65536, useAsync: true);
         return CreateAsync(fs, header, leaveOpen: false, passphrase, ct);
+    }
+
+    /// <summary>
+    /// Internal factory used by <see cref="Archiving.ArchiveAppender"/> to resume writing
+    /// into an existing archive stream (no header is written; the stream must already be
+    /// positioned at the end of the data section).
+    /// </summary>
+    internal static DariWriter Resume(
+        Stream stream,
+        bool leaveOpen,
+        DariPassphrase? passphrase,
+        DeduplicationTracker dedup)
+    {
+        ArgumentNullException.ThrowIfNull(stream);
+        return new DariWriter(stream, leaveOpen, passphrase, dedup);
+    }
+
+    /// <summary>
+    /// Injects pre-existing <see cref="IndexEntry"/> records at the <em>front</em> of the
+    /// internal entry list so that they appear first in the written index.
+    /// Used by <see cref="Archiving.ArchiveAppender"/> to preserve existing entries.
+    /// </summary>
+    internal void InjectEntries(IReadOnlyList<IndexEntry> entries)
+    {
+        _entries.InsertRange(0, entries);
     }
 
     // -----------------------------------------------------------------------
@@ -166,7 +194,21 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
         // 1. Compute BLAKE3 checksum of the original content.
         Blake3Hash checksum = ComputeBlake3(rawBytes);
 
-        // 2. Compress (with fallback to raw if output >= input).
+        // 2. Deduplication check: if we have seen this content before, emit a linked entry.
+        if (_dedup.TryGetExisting(checksum, out ulong existingOffset, out CompressionMethod primaryMethod))
+        {
+            var linkedEntry = BuildEntry(
+                archivePath, extra, checksum, metadata,
+                dataOffset: existingOffset,
+                method: primaryMethod,
+                originalSize: (ulong)rawBytes.Length,
+                compressedSize: 0,
+                flags: IndexFlags.LinkedData);
+            _entries.Add(linkedEntry);
+            return;
+        }
+
+        // 3. Compress (with fallback to raw if output >= input).
         var reg = registry ?? CompressorRegistry.Default;
         string extension = System.IO.Path.GetExtension(archivePath);
         CompressionMethod method = reg.SelectForExtension(extension.AsSpan());
@@ -189,7 +231,7 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
             storedMethod = method;
         }
 
-        // 3. Encrypt (if passphrase provided): compress → encrypt.
+        // 4. Encrypt (if passphrase provided): compress → encrypt.
         IndexFlags flags = IndexFlags.None;
         if (_passphrase is not null)
         {
@@ -217,16 +259,15 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
             flags = IndexFlags.EncryptedData;
         }
 
-        // 4. Record the current stream position as the data block offset.
+        // 5. Record the current stream position and register as primary in the dedup map.
         ulong dataOffset = (ulong)_stream.Position;
+        _dedup.TryRegisterPrimary(checksum, dataOffset, storedMethod);
 
-        // 5. Write the data block.
+        // 6. Write the data block.
         if (storedBytes.Length > 0)
-        {
             await _stream.WriteAsync(storedBytes, ct).ConfigureAwait(false);
-        }
 
-        // 6. Build and record the IndexEntry.
+        // 7. Build and record the IndexEntry.
         var entry = BuildEntry(
             archivePath, extra, checksum, metadata,
             dataOffset, storedMethod,
@@ -387,6 +428,11 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     public async ValueTask DisposeAsync()
     {
         if (_disposed) return;
+        if (!_finalized)
+        {
+            try { await FinalizeAsync().ConfigureAwait(false); }
+            catch { /* best-effort */ }
+        }
         _disposed = true;
         if (!_leaveOpen) await _stream.DisposeAsync().ConfigureAwait(false);
     }

@@ -32,12 +32,20 @@ public sealed class DariReader : IDisposable, IAsyncDisposable
     /// <summary>All index entries, in the order they appear in the archive index.</summary>
     public IReadOnlyList<IndexEntry> Entries { get; }
 
-    private DariReader(Stream stream, bool leaveOpen, DariHeader header, IReadOnlyList<IndexEntry> entries)
+    /// <summary>
+    /// Absolute byte offset of the index section in the stream.
+    /// Everything before this offset is the header + data blocks.
+    /// </summary>
+    internal long IndexOffset { get; }
+
+    private DariReader(Stream stream, bool leaveOpen, DariHeader header,
+                       IReadOnlyList<IndexEntry> entries, long indexOffset)
     {
         _stream = stream;
         _leaveOpen = leaveOpen;
         Header = header;
         Entries = entries;
+        IndexOffset = indexOffset;
     }
 
     // -----------------------------------------------------------------------
@@ -119,7 +127,10 @@ public sealed class DariReader : IDisposable, IAsyncDisposable
 
         // ── 3. Read and parse index ────────────────────────────────────────
         int indexSize = (int)(fileLength - DariConstants.FooterSize - footer.IndexOffset);
-        var entries = new List<IndexEntry>((int)footer.FileCount);
+        // Cap initial capacity to avoid ArgumentOutOfRangeException on corrupt fileCount values.
+        int safeCapacity = (int)Math.Min(footer.FileCount,
+            (uint)(indexSize / DariConstants.IndexEntryFixedSize + 1));
+        var entries = new List<IndexEntry>(safeCapacity);
 
         if (indexSize > 0 && footer.FileCount > 0)
         {
@@ -136,7 +147,7 @@ public sealed class DariReader : IDisposable, IAsyncDisposable
             }
         }
 
-        return new DariReader(stream, leaveOpen, header, entries.AsReadOnly());
+        return new DariReader(stream, leaveOpen, header, entries.AsReadOnly(), footer.IndexOffset);
     }
 
     private static void ParseIndex(ReadOnlySpan<byte> span, uint fileCount, List<IndexEntry> entries)
@@ -169,12 +180,34 @@ public sealed class DariReader : IDisposable, IAsyncDisposable
         ObjectDisposedException.ThrowIf(_disposed, this);
         ArgumentNullException.ThrowIfNull(entry);
 
-        int blockSize = (int)entry.CompressedSize;
-        if (blockSize == 0)
-            return ReadOnlyMemory<byte>.Empty;
+        // For linked entries, Offset points to the primary's data block but CompressedSize is 0.
+        // Look up the primary entry to get the correct CompressedSize.
+        int blockSize;
+        if (entry.IsLinked)
+        {
+            var primary = FindPrimaryAt(entry.Offset);
+            if (primary is null || primary.CompressedSize == 0)
+                return ReadOnlyMemory<byte>.Empty;
+            blockSize = (int)primary.CompressedSize;
+        }
+        else
+        {
+            blockSize = (int)entry.CompressedSize;
+            if (blockSize == 0)
+                return ReadOnlyMemory<byte>.Empty;
+        }
 
         _stream.Seek((long)entry.Offset, SeekOrigin.Begin);
         return await BinaryHelpers.ReadExactAsync(_stream, blockSize, ct).ConfigureAwait(false);
+    }
+
+    /// <summary>Finds the first non-linked entry whose data block starts at <paramref name="offset"/>.</summary>
+    private IndexEntry? FindPrimaryAt(ulong offset)
+    {
+        foreach (var e in Entries)
+            if (!e.IsLinked && e.Offset == offset)
+                return e;
+        return null;
     }
 
     // -----------------------------------------------------------------------
