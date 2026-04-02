@@ -88,4 +88,57 @@ public sealed class Blake3HashTests
         dict[key] = "value";
         Assert.Equal("value", dict[new Blake3Hash(MakeBytes(0x11))]);
     }
+
+    // -----------------------------------------------------------------------
+    // Computation via Blake3.NET
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public void Of_EmptyInput_ProducesKnownHash()
+    {
+        // BLAKE3 of empty bytes is a well-known constant.
+        const string expected = "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262";
+        var hash = Blake3Hash.Of(ReadOnlySpan<byte>.Empty);
+        Assert.Equal(expected, hash.ToString());
+    }
+
+    [Fact]
+    public void Of_SameInput_ProducesSameHash()
+    {
+        var data = "hello"u8.ToArray();
+        Assert.Equal(Blake3Hash.Of(data), Blake3Hash.Of(data));
+    }
+
+    [Fact]
+    public void Of_DifferentInput_ProducesDifferentHash()
+    {
+        Assert.NotEqual(Blake3Hash.Of("a"u8), Blake3Hash.Of("b"u8));
+    }
+
+    [Fact]
+    public void DeriveKey_SameContextAndMaterial_ProducesSameKey()
+    {
+        var material = "passphrase"u8.ToArray();
+        var k1 = Blake3Hash.DeriveKey("dari.v1.chacha20poly1305.key", material);
+        var k2 = Blake3Hash.DeriveKey("dari.v1.chacha20poly1305.key", material);
+        Assert.Equal(k1, k2);
+    }
+
+    [Fact]
+    public void DeriveKey_DifferentContext_ProducesDifferentKey()
+    {
+        var material = "passphrase"u8.ToArray();
+        var k1 = Blake3Hash.DeriveKey("context.a", material);
+        var k2 = Blake3Hash.DeriveKey("context.b", material);
+        Assert.NotEqual(k1, k2);
+    }
+
+    [Fact]
+    public void DeriveKey_DifferentMaterial_ProducesDifferentKey()
+    {
+        const string ctx = "dari.v1.chacha20poly1305.key";
+        var k1 = Blake3Hash.DeriveKey(ctx, "pass1"u8);
+        var k2 = Blake3Hash.DeriveKey(ctx, "pass2"u8);
+        Assert.NotEqual(k1, k2);
+    }
 }

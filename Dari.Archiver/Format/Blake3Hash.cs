@@ -1,14 +1,19 @@
 using System.Buffers.Binary;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Blake3;
 
 namespace Dari.Archiver.Format;
 
 /// <summary>
 /// A 32-byte BLAKE3 hash stored as a value type.
 /// Equality is byte-wise; <see cref="GetHashCode"/> uses the first 8 bytes
-/// reinterpreted as a <see langword="long"/> for O(1) dictionary lookups.
+/// for O(1) dictionary lookups.
 /// </summary>
+/// <remarks>
+/// Use <see cref="Of(ReadOnlySpan{byte})"/> to compute a hash and
+/// <see cref="DeriveKey"/> to derive a key via the BLAKE3 KDF.
+/// The constructor accepts pre-computed raw bytes (e.g. read from an index entry).
+/// </remarks>
 [StructLayout(LayoutKind.Sequential, Size = 32)]
 public readonly struct Blake3Hash : IEquatable<Blake3Hash>
 {
@@ -17,7 +22,7 @@ public readonly struct Blake3Hash : IEquatable<Blake3Hash>
     private readonly ulong _c;
     private readonly ulong _d;
 
-    /// <summary>Creates a <see cref="Blake3Hash"/> by copying exactly 32 bytes from <paramref name="bytes"/>.</summary>
+    /// <summary>Creates a <see cref="Blake3Hash"/> by copying exactly 32 raw bytes.</summary>
     public Blake3Hash(ReadOnlySpan<byte> bytes)
     {
         if (bytes.Length < 32)
@@ -28,6 +33,40 @@ public readonly struct Blake3Hash : IEquatable<Blake3Hash>
         _c = BinaryPrimitives.ReadUInt64LittleEndian(bytes[16..]);
         _d = BinaryPrimitives.ReadUInt64LittleEndian(bytes[24..]);
     }
+
+    // -----------------------------------------------------------------------
+    // Computation
+    // -----------------------------------------------------------------------
+
+    /// <summary>Computes the BLAKE3 hash of <paramref name="data"/>.</summary>
+    public static Blake3Hash Of(ReadOnlySpan<byte> data)
+    {
+        Span<byte> buf = stackalloc byte[32];
+        Hasher.Hash(data, buf);
+        return new Blake3Hash(buf);
+    }
+
+    /// <summary>
+    /// Derives a 32-byte key using the BLAKE3 KDF:
+    /// <c>blake3_derive_key(context, inputKeyMaterial)</c>.
+    /// </summary>
+    /// <param name="context">
+    ///   Application-specific context string (e.g. <see cref="DariConstants.KdfContext"/>).
+    ///   Must be a compile-time constant per the BLAKE3 spec.
+    /// </param>
+    /// <param name="inputKeyMaterial">Key material (e.g. passphrase bytes).</param>
+    public static Blake3Hash DeriveKey(string context, ReadOnlySpan<byte> inputKeyMaterial)
+    {
+        Span<byte> buf = stackalloc byte[32];
+        using var hasher = Hasher.NewDeriveKey(context);
+        hasher.Update(inputKeyMaterial);
+        hasher.Finalize(buf);
+        return new Blake3Hash(buf);
+    }
+
+    // -----------------------------------------------------------------------
+    // Output helpers
+    // -----------------------------------------------------------------------
 
     /// <summary>Writes the 32 hash bytes into <paramref name="destination"/>.</summary>
     public void CopyTo(Span<byte> destination)
@@ -50,6 +89,10 @@ public readonly struct Blake3Hash : IEquatable<Blake3Hash>
         BinaryPrimitives.WriteUInt64LittleEndian(nonce12, _a);
         BinaryPrimitives.WriteUInt32LittleEndian(nonce12[8..], (uint)(_b & 0xFFFF_FFFF));
     }
+
+    // -----------------------------------------------------------------------
+    // Equality / formatting
+    // -----------------------------------------------------------------------
 
     public bool Equals(Blake3Hash other) =>
         _a == other._a && _b == other._b && _c == other._c && _d == other._d;

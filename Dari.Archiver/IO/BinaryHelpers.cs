@@ -43,4 +43,12 @@ internal static class BinaryHelpers
         await stream.ReadExactlyAsync(buf, ct).ConfigureAwait(false);
         return buf;
     }
+
+    /// <summary>
+    /// Reads exactly <c><paramref name="destination"/>.Length</c> bytes from
+    /// <paramref name="stream"/> into the supplied buffer.
+    /// </summary>
+    public static async ValueTask ReadExactFromAsync(
+        Stream stream, byte[] destination, CancellationToken ct) =>
+        await stream.ReadExactlyAsync(destination, ct).ConfigureAwait(false);
 }
