@@ -1,6 +1,7 @@
 using Dari.Archiver.Compression;
 using Dari.Archiver.Crypto;
 using Dari.Archiver.Format;
+using Dari.Archiver.Ignoring;
 using Dari.Archiver.IO;
 
 namespace Dari.Archiver.Archiving;
@@ -147,19 +148,23 @@ public sealed class ArchiveWriter : IAsyncDisposable
     }
 
     /// <summary>
-    /// Recursively adds all files under <paramref name="sourceDirectory"/> to the archive.
+    /// Recursively adds all files under <paramref name="sourceDirectory"/> to the archive,
+    /// respecting <c>.darignore</c> and <c>.gitignore</c> files found in the tree.
     /// </summary>
     /// <param name="sourceDirectory">Root directory to walk.</param>
     /// <param name="archivePrefix">
     ///   Prefix prepended to all archive paths (e.g. <c>src/</c>).
     ///   Use an empty string to store files without a prefix.
     /// </param>
-    /// <param name="searchPattern">File search pattern; defaults to <c>*</c> (all files).</param>
+    /// <param name="ignoreFilter">
+    ///   Custom ignore filter. When <see langword="null"/>, a <see cref="GitIgnoreFilter"/>
+    ///   is built automatically by scanning for <c>.darignore</c> / <c>.gitignore</c> files.
+    /// </param>
     /// <param name="ct">Cancellation token.</param>
     public async ValueTask AddDirectoryAsync(
         string sourceDirectory,
         string archivePrefix = "",
-        string searchPattern = "*",
+        IIgnoreFilter? ignoreFilter = null,
         CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceDirectory);
@@ -168,24 +173,46 @@ public sealed class ArchiveWriter : IAsyncDisposable
         if (!root.Exists)
             throw new DirectoryNotFoundException($"Source directory not found: {sourceDirectory}");
 
-        // Normalize prefix: ensure it ends with '/' if non-empty.
         string prefix = archivePrefix.Length > 0 && !archivePrefix.EndsWith('/')
             ? archivePrefix + '/'
             : archivePrefix;
 
-        foreach (var fi in root.EnumerateFiles(searchPattern, SearchOption.AllDirectories))
+        IIgnoreFilter filter = ignoreFilter ?? GitIgnoreFilter.Load(sourceDirectory);
+
+        await WalkDirectoryAsync(root, root, prefix, filter, ct).ConfigureAwait(false);
+    }
+
+    private async ValueTask WalkDirectoryAsync(
+        DirectoryInfo root,
+        DirectoryInfo current,
+        string prefix,
+        IIgnoreFilter filter,
+        CancellationToken ct)
+    {
+        foreach (var fi in current.EnumerateFiles())
         {
             ct.ThrowIfCancellationRequested();
 
-            // Build archive path: prefix + relative path with forward slashes.
-            string relative = Path.GetRelativePath(root.FullName, fi.FullName)
-                                  .Replace(Path.DirectorySeparatorChar, '/');
-            string archivePath = prefix + relative;
+            string relPath = Path.GetRelativePath(root.FullName, fi.FullName)
+                                 .Replace(Path.DirectorySeparatorChar, '/');
+            if (filter.ShouldIgnore(relPath, isDirectory: false)) continue;
 
+            string archivePath = prefix + relPath;
             var metadata = FileMetadata.FromFileInfo(fi);
             await using var fs = fi.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
             await _inner.AddFileAsync(archivePath, fs, metadata, _registry, ct: ct)
                         .ConfigureAwait(false);
+        }
+
+        foreach (var sub in current.EnumerateDirectories())
+        {
+            ct.ThrowIfCancellationRequested();
+
+            string relPath = Path.GetRelativePath(root.FullName, sub.FullName)
+                                 .Replace(Path.DirectorySeparatorChar, '/');
+            if (filter.ShouldIgnore(relPath, isDirectory: true)) continue;
+
+            await WalkDirectoryAsync(root, sub, prefix, filter, ct).ConfigureAwait(false);
         }
     }
 
