@@ -1,4 +1,5 @@
 using Dari.Archiver.Compression;
+using Dari.Archiver.Crypto;
 using Dari.Archiver.Format;
 using Dari.Archiver.IO;
 
@@ -44,15 +45,17 @@ public sealed class ArchiveWriter : IAsyncDisposable
     /// </summary>
     /// <param name="path">Output file path. The file is created or truncated.</param>
     /// <param name="compressors">Compressor registry; defaults to <see cref="CompressorRegistry.Default"/>.</param>
+    /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
     /// <param name="header">Archive header; defaults to a new header stamped with the current time.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<ArchiveWriter> CreateAsync(
         string path,
         CompressorRegistry? compressors = null,
+        DariPassphrase? passphrase = null,
         DariHeader? header = null,
         CancellationToken ct = default)
     {
-        var inner = await DariWriter.CreateAsync(path, header, ct).ConfigureAwait(false);
+        var inner = await DariWriter.CreateAsync(path, header, passphrase, ct).ConfigureAwait(false);
         return new ArchiveWriter(inner, compressors ?? CompressorRegistry.Default);
     }
 
@@ -62,16 +65,18 @@ public sealed class ArchiveWriter : IAsyncDisposable
     /// <param name="stream">A writable, seekable stream.</param>
     /// <param name="leaveOpen">When <see langword="true"/> the stream is not disposed with the writer.</param>
     /// <param name="compressors">Compressor registry; defaults to <see cref="CompressorRegistry.Default"/>.</param>
+    /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
     /// <param name="header">Archive header; defaults to a new header stamped with the current time.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<ArchiveWriter> CreateAsync(
         Stream stream,
         bool leaveOpen = false,
         CompressorRegistry? compressors = null,
+        DariPassphrase? passphrase = null,
         DariHeader? header = null,
         CancellationToken ct = default)
     {
-        var inner = await DariWriter.CreateAsync(stream, header, leaveOpen, ct).ConfigureAwait(false);
+        var inner = await DariWriter.CreateAsync(stream, header, leaveOpen, passphrase, ct).ConfigureAwait(false);
         return new ArchiveWriter(inner, compressors ?? CompressorRegistry.Default);
     }
 
@@ -120,6 +125,23 @@ public sealed class ArchiveWriter : IAsyncDisposable
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(content);
+        ArgumentException.ThrowIfNullOrWhiteSpace(archivePath);
+        return _inner.AddFileAsync(archivePath, content, metadata, _registry, ct: ct);
+    }
+
+    /// <summary>
+    /// Adds a single file from an in-memory buffer, using <paramref name="metadata"/> for index entry fields.
+    /// </summary>
+    /// <param name="archivePath">Forward-slash path to store in the archive index.</param>
+    /// <param name="content">File content bytes.</param>
+    /// <param name="metadata">File metadata (mtime, uid, gid, perm).</param>
+    /// <param name="ct">Cancellation token.</param>
+    public ValueTask AddAsync(
+        string archivePath,
+        ReadOnlyMemory<byte> content,
+        FileMetadata metadata,
+        CancellationToken ct = default)
+    {
         ArgumentException.ThrowIfNullOrWhiteSpace(archivePath);
         return _inner.AddFileAsync(archivePath, content, metadata, _registry, ct: ct);
     }

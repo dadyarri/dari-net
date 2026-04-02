@@ -1,5 +1,7 @@
 using System.Buffers;
 using Dari.Archiver.Compression;
+using Dari.Archiver.Crypto;
+using Dari.Archiver.Extra;
 using Dari.Archiver.Format;
 using Dari.Archiver.IO;
 
@@ -17,6 +19,7 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
 {
     private readonly DariReader _inner;
     private readonly CompressorRegistry _registry;
+    private readonly DariPassphrase? _passphrase;
 
     /// <summary>UTC timestamp written into the archive header.</summary>
     public DateTimeOffset CreatedAt => _inner.Header.CreatedAt;
@@ -24,10 +27,11 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
     /// <summary>All index entries, in the order stored in the archive.</summary>
     public IReadOnlyList<IndexEntry> Entries => _inner.Entries;
 
-    private ArchiveReader(DariReader inner, CompressorRegistry registry)
+    private ArchiveReader(DariReader inner, CompressorRegistry registry, DariPassphrase? passphrase)
     {
         _inner = inner;
         _registry = registry;
+        _passphrase = passphrase;
     }
 
     // -----------------------------------------------------------------------
@@ -42,14 +46,16 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
     ///   Compressor registry to use for decompression.
     ///   Defaults to <see cref="CompressorRegistry.Default"/>.
     /// </param>
+    /// <param name="passphrase">Passphrase for decrypting encrypted entries; <see langword="null"/> for plain archives.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<ArchiveReader> OpenAsync(
         string path,
         CompressorRegistry? compressors = null,
+        DariPassphrase? passphrase = null,
         CancellationToken ct = default)
     {
         var inner = await DariReader.OpenAsync(path, ct).ConfigureAwait(false);
-        return new ArchiveReader(inner, compressors ?? CompressorRegistry.Default);
+        return new ArchiveReader(inner, compressors ?? CompressorRegistry.Default, passphrase);
     }
 
     /// <summary>
@@ -58,15 +64,17 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
     /// <param name="stream">A seekable, readable stream.</param>
     /// <param name="leaveOpen">When <see langword="true"/> the stream is not disposed with the reader.</param>
     /// <param name="compressors">Compressor registry; defaults to <see cref="CompressorRegistry.Default"/>.</param>
+    /// <param name="passphrase">Passphrase for decrypting encrypted entries; <see langword="null"/> for plain archives.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<ArchiveReader> OpenAsync(
         Stream stream,
         bool leaveOpen = false,
         CompressorRegistry? compressors = null,
+        DariPassphrase? passphrase = null,
         CancellationToken ct = default)
     {
         var inner = await DariReader.OpenAsync(stream, leaveOpen, ct).ConfigureAwait(false);
-        return new ArchiveReader(inner, compressors ?? CompressorRegistry.Default);
+        return new ArchiveReader(inner, compressors ?? CompressorRegistry.Default, passphrase);
     }
 
     // -----------------------------------------------------------------------
@@ -164,14 +172,49 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
     private async ValueTask<ReadOnlyMemory<byte>> DecompressAsync(
         IndexEntry entry, ReadOnlyMemory<byte> rawBlock, CancellationToken ct)
     {
+        // Order: decrypt → decompress (inverse of write order: compress → encrypt).
+        var block = rawBlock;
+
+        if (entry.IsEncrypted)
+        {
+            if (_passphrase is null)
+                throw new InvalidOperationException(
+                    $"Entry '{entry.Path}' is encrypted but no passphrase was provided.");
+
+            block = DecryptBlock(entry, block);
+        }
+
         if (entry.Compression == CompressionMethod.None)
-            return rawBlock;
+            return block;
 
         var writer = new ArrayBufferWriter<byte>((int)entry.OriginalSize);
         var compressor = _registry.Get(entry.Compression);
-        await compressor.DecompressAsync(rawBlock, entry.OriginalSize, writer, ct)
+        await compressor.DecompressAsync(block, entry.OriginalSize, writer, ct)
                         .ConfigureAwait(false);
         return writer.WrittenMemory;
+    }
+
+    private ReadOnlyMemory<byte> DecryptBlock(IndexEntry entry, ReadOnlyMemory<byte> ciphertextAndTag)
+    {
+        // Nonce is stored in extra field "en" as lowercase hex (24 chars = 12 bytes).
+        string? nonceHex = entry.Extra.GetValueOrDefault(WellKnownExtraKeys.EncryptionNonce);
+        if (nonceHex is null)
+            throw new InvalidDataException(
+                $"Entry '{entry.Path}' is marked encrypted but has no nonce in extra fields.");
+
+        byte[] nonce = Convert.FromHexString(nonceHex);
+
+        int plaintextLen = ciphertextAndTag.Length - DariConstants.TagSize;
+        if (plaintextLen < 0)
+            throw new InvalidDataException(
+                $"Encrypted block for '{entry.Path}' is too short to contain an auth tag.");
+
+        Span<byte> key = stackalloc byte[DariConstants.KeySize];
+        _passphrase!.DeriveKey(key);
+
+        byte[] plaintext = new byte[plaintextLen];
+        DariEncryption.Decrypt(key, nonce, ciphertextAndTag.Span, plaintext);
+        return plaintext;
     }
 
     private static void VerifyChecksum(IndexEntry entry, ReadOnlySpan<byte> data)

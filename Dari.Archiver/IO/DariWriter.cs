@@ -2,6 +2,7 @@ using System.Buffers;
 using System.Runtime.InteropServices;
 using System.Text;
 using Dari.Archiver.Compression;
+using Dari.Archiver.Crypto;
 using Dari.Archiver.Extra;
 using Dari.Archiver.Format;
 
@@ -25,7 +26,7 @@ namespace Dari.Archiver.IO;
 /// <para>
 /// The output stream must be writable and seekable (seekability is required to back-fill
 /// the index offset in the footer).  When constructed via
-/// <see cref="CreateAsync(string,DariHeader?,CancellationToken)"/> the file stream is owned
+/// <see cref="CreateAsync(string,DariHeader?,DariPassphrase?,CancellationToken)"/> the file stream is owned
 /// and disposed together with the writer.
 /// </para>
 /// </remarks>
@@ -34,14 +35,16 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     private readonly Stream _stream;
     private readonly bool _leaveOpen;
     private readonly List<IndexEntry> _entries;
+    private readonly DariPassphrase? _passphrase;
     private bool _finalized;
     private bool _disposed;
 
-    private DariWriter(Stream stream, bool leaveOpen)
+    private DariWriter(Stream stream, bool leaveOpen, DariPassphrase? passphrase)
     {
         _stream = stream;
         _leaveOpen = leaveOpen;
         _entries = new List<IndexEntry>(64);
+        _passphrase = passphrase;
     }
 
     // -----------------------------------------------------------------------
@@ -57,18 +60,20 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     ///   Header to write, or <see langword="null"/> to use <see cref="DariHeader.CreateNew()"/>.
     /// </param>
     /// <param name="leaveOpen">When <see langword="true"/>, the stream is not disposed with the writer.</param>
+    /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<DariWriter> CreateAsync(
         Stream stream,
         DariHeader? header = null,
         bool leaveOpen = false,
+        DariPassphrase? passphrase = null,
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
         if (!stream.CanWrite) throw new ArgumentException("Stream must be writable.", nameof(stream));
         if (!stream.CanSeek) throw new ArgumentException("Stream must be seekable.", nameof(stream));
 
-        var writer = new DariWriter(stream, leaveOpen);
+        var writer = new DariWriter(stream, leaveOpen, passphrase);
         await writer.WriteHeaderAsync(header ?? DariHeader.CreateNew(), ct).ConfigureAwait(false);
         return writer;
     }
@@ -77,15 +82,20 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     /// Creates a new <see cref="DariWriter"/> that writes to a file at <paramref name="path"/>.
     /// The file is created (or truncated if it exists).  The writer owns the file stream.
     /// </summary>
+    /// <param name="path">Output file path.</param>
+    /// <param name="header">Header to write; defaults to a new header with the current timestamp.</param>
+    /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
+    /// <param name="ct">Cancellation token.</param>
     public static ValueTask<DariWriter> CreateAsync(
         string path,
         DariHeader? header = null,
+        DariPassphrase? passphrase = null,
         CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         var fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
                                 bufferSize: 65536, useAsync: true);
-        return CreateAsync(fs, header, leaveOpen: false, ct);
+        return CreateAsync(fs, header, leaveOpen: false, passphrase, ct);
     }
 
     // -----------------------------------------------------------------------
@@ -170,7 +180,6 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
 
         if (compressed is null)
         {
-            // Compressor signalled fallback: store raw.
             storedBytes = rawBytes;
             storedMethod = CompressionMethod.None;
         }
@@ -180,22 +189,50 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
             storedMethod = method;
         }
 
-        // 3. Record the current stream position as the data block offset.
+        // 3. Encrypt (if passphrase provided): compress → encrypt.
+        IndexFlags flags = IndexFlags.None;
+        if (_passphrase is not null)
+        {
+            Span<byte> key = stackalloc byte[DariConstants.KeySize];
+            _passphrase.DeriveKey(key);
+
+            // Nonce = first 12 bytes of the BLAKE3 content checksum (§9.2).
+            Span<byte> nonce = stackalloc byte[DariConstants.NonceSize];
+            Span<byte> checksumBytes = stackalloc byte[32];
+            checksum.CopyTo(checksumBytes);
+            DariEncryption.DeriveNonce(checksumBytes, nonce);
+
+            byte[] ciphertextAndTag = new byte[storedBytes.Length + DariConstants.TagSize];
+            DariEncryption.Encrypt(key, nonce, storedBytes.Span, ciphertextAndTag);
+
+            // Store the nonce and tag hex in extra fields.
+            string nonceHex = Convert.ToHexStringLower(nonce);
+            string tagHex = Convert.ToHexStringLower(ciphertextAndTag[^DariConstants.TagSize..]);
+            extra = extra
+                .With(WellKnownExtraKeys.EncryptionAlgorithm, "chacha20poly1305")
+                .With(WellKnownExtraKeys.EncryptionNonce, nonceHex)
+                .With(WellKnownExtraKeys.EncryptionTag, tagHex);
+
+            storedBytes = ciphertextAndTag;
+            flags = IndexFlags.EncryptedData;
+        }
+
+        // 4. Record the current stream position as the data block offset.
         ulong dataOffset = (ulong)_stream.Position;
 
-        // 4. Write the data block.
+        // 5. Write the data block.
         if (storedBytes.Length > 0)
         {
             await _stream.WriteAsync(storedBytes, ct).ConfigureAwait(false);
         }
 
-        // 5. Build and record the IndexEntry.
+        // 6. Build and record the IndexEntry.
         var entry = BuildEntry(
             archivePath, extra, checksum, metadata,
             dataOffset, storedMethod,
             originalSize: (ulong)rawBytes.Length,
             compressedSize: (ulong)storedBytes.Length,
-            flags: IndexFlags.None);
+            flags: flags);
 
         _entries.Add(entry);
     }
