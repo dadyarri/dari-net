@@ -2,131 +2,136 @@
 
 ---
 
-## Часть 1 — `Dari.Archiver` (библиотека) ✅ Реализована
+## Part 1 — `Dari.Archiver` (library) ✅ Complete
 
-> **Цель:** Высокопроизводительная, полностью управляемая библиотека .NET 10 / C# 13  
-> для чтения и записи архивов `.dar` формата Dari v5.
+> **Target:** .NET 10 / C# 13 class library  
+> **Format:** Dari v5 (see `docs/src/archive_structure.md`)  
+> **Goal:** A correct, high-performance, fully-managed reader/writer for `.dar` archives.
 
-### Структура проекта
+### Project structure
 
 ```
 Dari.Archiver/
-├── Format/            # Примитивы формата Dari v5
-│   ├── DariConstants.cs         # Магические байты, версия, фиксированные размеры
-│   ├── DariHeader.cs            # 13-байтовый заголовок
-│   ├── DariFooter.cs            # 15-байтовый футер
-│   ├── IndexEntry.cs            # 85-байтовая фиксированная часть + path + extra
+├── Format/            # Dari v5 format primitives
+│   ├── DariConstants.cs         # Magic bytes, version, fixed sizes
+│   ├── DariHeader.cs            # 13-byte header
+│   ├── DariFooter.cs            # 15-byte footer
+│   ├── IndexEntry.cs            # 85-byte fixed part + path + extra
 │   ├── IndexFlags.cs            # [Flags] LinkedData=0x0001, EncryptedData=0x0002
 │   ├── CompressionMethod.cs     # None=0, Brotli=1, Zstandard=2, Lzma=3, LeptonJpeg=4
-│   ├── Blake3Hash.cs            # 32-байтовый value type с IEquatable<T>
+│   ├── Blake3Hash.cs            # 32-byte value type with IEquatable<T>
 │   └── FileMetadata.cs          # mtime, uid, gid, perm
 │
-├── IO/                # Низкоуровневый двоичный I/O
-│   ├── DariReader.cs            # Stream → заголовок / футер / индекс / блоки данных
-│   ├── DariWriter.cs            # Запись заголовка, блоков, индекса, футера
-│   └── BinaryHelpers.cs         # Span-обёртки над BinaryPrimitives
+├── IO/                # Low-level binary I/O
+│   ├── DariReader.cs            # Stream → header / footer / index / data blocks
+│   ├── DariWriter.cs            # Writes header, data blocks, index, footer
+│   └── BinaryHelpers.cs         # Span wrappers over BinaryPrimitives
 │
-├── Compression/       # Пайплайн сжатия
+├── Compression/       # Compression pipeline
 │   ├── ICompressor.cs           # CompressAsync / DecompressAsync
-│   ├── CompressorRegistry.cs    # CompressionMethod → ICompressor; ext → метод
+│   ├── CompressorRegistry.cs    # CompressionMethod → ICompressor; ext → method
 │   ├── NoneCompressor.cs
 │   ├── BrotliCompressor.cs      # quality=6, lgwin=22
 │   ├── ZstandardCompressor.cs   # ZstdSharp, level=3
 │   └── LzmaCompressor.cs        # SharpCompress XZ, preset=9
 │
-├── Crypto/            # Шифрование ChaCha20-Poly1305
-│   ├── DariEncryption.cs        # Derivation KDF, Encrypt, Decrypt
-│   └── DariPassphrase.cs        # Value-object; ZeroMemory при Dispose
+├── Crypto/            # ChaCha20-Poly1305 encryption
+│   ├── DariEncryption.cs        # KDF, Encrypt, Decrypt
+│   └── DariPassphrase.cs        # Value-object; ZeroMemory on Dispose
 │
 ├── Deduplication/
 │   └── DeduplicationTracker.cs  # checksum → (offset, method); LinkedData entries
 │
 ├── Extra/
-│   ├── ExtraField.cs            # Парсинг / сериализация "k=v;k=v"
+│   ├── ExtraField.cs            # Parse / serialize "k=v;k=v"
 │   └── WellKnownExtraKeys.cs    # "e", "en", "et", "imk", "imd", "idt" …
 │
-├── Ignoring/          # Фильтрация по .darignore / .gitignore
+├── Ignoring/          # .darignore / .gitignore filtering
 │   ├── IIgnoreFilter.cs
-│   └── GitIgnoreFilter.cs       # Иерархическая загрузка через пакет Ignore
+│   └── GitIgnoreFilter.cs       # Hierarchical loading via the Ignore package
 │
-├── Archiving/         # Высокоуровневый API
-│   ├── ArchiveReader.cs         # Открыть, перебрать, извлечь
-│   ├── ArchiveWriter.cs         # Создать архив, добавить файлы / директории
-│   └── ArchiveAppender.cs       # Атомарное дополнение существующего архива
+├── Archiving/         # High-level API
+│   ├── ArchiveReader.cs         # Open, enumerate, extract
+│   ├── ArchiveWriter.cs         # Create archive, add files / directories
+│   └── ArchiveAppender.cs       # Atomic append to an existing archive
 │
 └── Diagnostics/
-    └── DariFormatException.cs   # Нарушение формата Dari v5
+    └── DariFormatException.cs   # Thrown on Dari v5 format violations
 ```
 
-### Зависимости
+### Dependencies
 
-| Пакет | Версия | Назначение |
-|-------|--------|------------|
-| `Blake3` | 2.2.1 | Контрольные суммы BLAKE3 и KDF |
-| `ZstdSharp.Port` | 0.8.7 | Сжатие Zstandard (чистый managed) |
-| `SharpCompress` | 0.47.3 | Сжатие LZMA/XZ |
-| `Ignore` | 0.2.1 | Парсинг правил `.gitignore` (spec 2.29.2) |
+| Package | Version | Purpose |
+|---------|---------|---------|
+| `Blake3` | 2.2.1 | BLAKE3 checksums and KDF |
+| `ZstdSharp.Port` | 0.8.7 | Zstandard compression (pure managed) |
+| `SharpCompress` | 0.47.3 | LZMA/XZ compression |
+| `Ignore` | 0.2.1 | `.gitignore` rule parsing (spec 2.29.2) |
 
-### Реализованные фазы
+### Completed phases
 
-| Фаза | Описание | Статус |
-|------|----------|--------|
-| 1 | Примитивы формата — `DariConstants`, `DariHeader`, `DariFooter`, `IndexEntry` | ✅ |
-| 2 | Низкоуровневый читатель `DariReader` | ✅ |
-| 3 | Низкоуровневый писатель `DariWriter` | ✅ |
-| 4 | Сжатие — `ICompressor`, `CompressorRegistry`, Brotli/Zstd/LZMA/None | ✅ |
-| 5 | Шифрование — `DariEncryption`, `DariPassphrase` | ✅ |
-| 6 | Дополнительные поля — `ExtraField`, `WellKnownExtraKeys` | ✅ |
-| 7 | Высокоуровневый API — `ArchiveReader`, `ArchiveWriter` | ✅ |
-| 8 | Дедупликация — `DeduplicationTracker`, `LinkedData` entries | ✅ |
-| 9 | Дополнение архивов — `ArchiveAppender` (атомарный rename-swap) | ✅ |
-| 10 | Тесты — 159 xUnit-тестов (все проходят) | ✅ |
+| Phase | Description | Status |
+|-------|-------------|--------|
+| 1 | Format primitives — `DariConstants`, `DariHeader`, `DariFooter`, `IndexEntry` | ✅ |
+| 2 | Low-level reader `DariReader` | ✅ |
+| 3 | Low-level writer `DariWriter` | ✅ |
+| 4 | Compression — `ICompressor`, `CompressorRegistry`, Brotli / Zstd / LZMA / None | ✅ |
+| 5 | Encryption — `DariEncryption`, `DariPassphrase` | ✅ |
+| 6 | Extra fields — `ExtraField`, `WellKnownExtraKeys` | ✅ |
+| 7 | High-level API — `ArchiveReader`, `ArchiveWriter` | ✅ |
+| 8 | Deduplication — `DeduplicationTracker`, `LinkedData` entries | ✅ |
+| 9 | Archive appending — `ArchiveAppender` (atomic rename-swap) | ✅ |
+| 10 | Tests — 159 xUnit tests (all passing) | ✅ |
 
-### Поддержка `.darignore` / `.gitignore`
+### Notes
 
-`GitIgnoreFilter` иерархически загружает файлы `.darignore` и `.gitignore` из каждой
-директории дерева. `ArchiveWriter.AddDirectoryAsync` автоматически применяет фильтр.
-Проверено на реальном архиве — количество файлов совпадает с эталонной реализацией (561 запись).
+- `ArchiveWriter.AddDirectoryAsync` walks the tree recursively and applies a `GitIgnoreFilter`
+  that loads `.darignore` / `.gitignore` hierarchically from each directory.
+  Verified against the reference archive — entry count matches exactly (561 entries).
+- `DariWriter.DisposeAsync` auto-finalizes on best-effort so `await using` works without
+  an explicit `FinalizeAsync()` call.
+- Linked (deduplicated) entries inherit the primary entry's `CompressionMethod` so they
+  decompress correctly through `ArchiveReader.ExtractAsync`.
 
 ---
 
-## Часть 2 — `Dari.App` (GUI-приложение)
+## Part 2 — `Dari.App` (GUI application)
 
-> **Цель:** Кроссплатформенное GUI-приложение (.NET 10, Avalonia 11) для работы  
-> с архивами `.dar` на Windows, macOS и Linux.
+> **Goal:** Cross-platform desktop GUI (.NET 10, Avalonia 11) for working with `.dar` archives  
+> on Windows, macOS, and Linux from a single codebase.
 
-### Цели
+### Goals
 
-| Цель | Описание |
-|------|----------|
-| **Кроссплатформенность** | Windows 10+, macOS 12+, Linux (X11/Wayland) — единая кодовая база |
-| **Современный UI** | Avalonia 11 + Fluent-тема; нативный заголовок на каждой платформе |
-| **MVVM** | CommunityToolkit.Mvvm; нет code-behind логики |
-| **Отзывчивость** | Все I/O операции асинхронны; прогресс и отмена через `CancellationToken` |
-| **Безопасность** | Пароль хранится только в `DariPassphrase` (ZeroMemory при закрытии) |
+| Goal | Description |
+|------|-------------|
+| **Cross-platform** | Windows 10+, macOS 12+, Linux (X11/Wayland) — one codebase |
+| **Modern UI** | Avalonia 11 + Fluent theme; native title bar per platform |
+| **MVVM** | CommunityToolkit.Mvvm; no logic in code-behind |
+| **Responsiveness** | All I/O is async; progress and cancellation via `CancellationToken` |
+| **Security** | Passphrase lives only in `DariPassphrase` (ZeroMemory on close) |
 
-### Структура проекта
+### Project structure
 
 ```
 Dari.App/
-├── Assets/                  # Иконки, шрифты, ресурсы
-├── Controls/                # Переиспользуемые Avalonia-контролы
-│   ├── FileIconControl.axaml       # Иконка по расширению файла
-│   └── SizeLabel.axaml             # Форматированный вывод размера (KB/MB/GB)
-├── Converters/              # IValueConverter для привязок
-├── Models/                  # Доменные модели UI-слоя
+├── Assets/                  # Icons, fonts, resources
+├── Controls/                # Reusable Avalonia controls
+│   ├── FileIconControl.axaml       # Icon resolved by file extension
+│   └── SizeLabel.axaml             # Formatted size display (KB / MB / GB)
+├── Converters/              # IValueConverter for bindings
+├── Models/                  # UI-layer domain models
 │   └── ArchiveEntryViewModel.cs
-├── Services/                # Абстракции сервисов (для тестов)
-│   ├── IDialogService.cs          # Открытие диалогов файлов, уведомлений
+├── Services/                # Service abstractions (for testability)
+│   ├── IDialogService.cs           # File dialogs, notifications
 │   ├── IClipboardService.cs
 │   └── IProgressService.cs
 ├── ViewModels/
-│   ├── MainWindowViewModel.cs     # Главный shell: меню, вкладки, статус
-│   ├── ArchiveBrowserViewModel.cs # Просмотр архива, фильтр, сортировка
-│   ├── CreateArchiveViewModel.cs  # Мастер создания нового архива
-│   ├── ExtractViewModel.cs        # Прогресс извлечения
-│   ├── PasswordPromptViewModel.cs # Ввод пароля для зашифрованного архива
-│   └── PreviewViewModel.cs        # Предпросмотр содержимого файла
+│   ├── MainWindowViewModel.cs      # Shell: menu, tabs, status bar
+│   ├── ArchiveBrowserViewModel.cs  # Browse entries, filter, sort
+│   ├── CreateArchiveViewModel.cs   # New-archive wizard
+│   ├── ExtractViewModel.cs         # Extraction progress
+│   ├── PasswordPromptViewModel.cs  # Passphrase entry for encrypted archives
+│   └── PreviewViewModel.cs         # In-pane file content preview
 └── Views/
     ├── MainWindow.axaml
     ├── ArchiveBrowserView.axaml
@@ -136,166 +141,166 @@ Dari.App/
     └── PreviewView.axaml
 ```
 
-### Зависимости
+### Dependencies
 
-| Пакет | Назначение |
-|-------|------------|
-| `Avalonia` 11.x | UI-фреймворк |
-| `Avalonia.Themes.Fluent` | Тема оформления |
-| `Avalonia.Desktop` | Поддержка native file dialogs |
+| Package | Purpose |
+|---------|---------|
+| `Avalonia` 11.x | UI framework |
+| `Avalonia.Themes.Fluent` | Fluent design theme |
+| `Avalonia.Desktop` | Native file dialogs |
 | `CommunityToolkit.Mvvm` | `[ObservableProperty]`, `[RelayCommand]`, `WeakReferenceMessenger` |
-| `Dari.Archiver` | Ссылка на проект библиотеки архиватора |
+| `Dari.Archiver` | Project reference to the archiver library |
 
 ---
 
-### Фаза A — Инициализация проекта
+### Phase A — Project setup
 
-**Цель:** Создать скелет решения, убедиться что приложение запускается на всех платформах.
+**Goal:** Create the solution skeleton; app launches and runs on all three platforms.
 
-- Добавить `Dari.App` как Avalonia Application project в `Dari.slnx`
-- Настроить `net10.0` TFM, `Nullable enable`, `LangVersion preview`
-- Подключить `Avalonia.Themes.Fluent`, `CommunityToolkit.Mvvm`, `Dari.Archiver`
-- Реализовать `MainWindow` с базовой Fluent-темой и пустым контентом
-- Настроить `app.manifest` (Windows), `Info.plist` (macOS), `.desktop` (Linux)
-- Добавить иконку приложения в форматах `.ico` / `.icns` / `.png`
-- Проверить сборку и запуск на Windows, macOS, Linux
-
----
-
-### Фаза B — Просмотр архива
-
-**Цель:** Открыть `.dar`-файл и отобразить список записей.
-
-**Основные компоненты:**
-
-- `MainWindowViewModel` — команды `OpenArchiveCommand`, `CloseArchiveCommand`; открывает системный диалог выбора файла через `IDialogService`
-- `ArchiveBrowserViewModel` — хранит `IReadOnlyList<ArchiveEntryViewModel>`; поддерживает режим плоского списка и дерева директорий; сортировка по имени / размеру / дате / степени сжатия
-- `ArchiveBrowserView` — `DataGrid` со столбцами: имя, путь, размер, сжатый размер, % сжатия, алгоритм, дата, права доступа
-- `ArchiveEntryViewModel` — оборачивает `IndexEntry`; вычисляемые свойства `CompressionRatio`, `IsEncrypted`, `IsLinked`, иконка по расширению
-- Метаданные архива в заголовке: дата создания, количество файлов, общий / сжатый размер
-- Строка поиска с real-time фильтрацией (привязка к `SearchText`, `CollectionView` или `ObservableCollection<ArchiveEntryViewModel>`)
-- Открытие через Drag & Drop `.dar`-файла на окно
-- При зашифрованном архиве — показать `PasswordPromptView` перед открытием
+- Add `Dari.App` as an Avalonia Application project to `Dari.slnx`
+- Target `net10.0`, `Nullable enable`, `LangVersion preview`
+- Reference `Avalonia.Themes.Fluent`, `CommunityToolkit.Mvvm`, `Dari.Archiver`
+- Implement `MainWindow` with a basic Fluent theme and empty content area
+- Configure `app.manifest` (Windows), `Info.plist` (macOS), `.desktop` file (Linux)
+- Add application icon in `.ico` / `.icns` / `.png` formats
+- Verify build and launch on Windows, macOS, Linux
 
 ---
 
-### Фаза C — Извлечение
+### Phase B — Archive browser
 
-**Цель:** Извлечь выбранные записи или весь архив на диск.
+**Goal:** Open a `.dar` file and display its entries.
 
-**Основные компоненты:**
+**Key components:**
 
-- `ExtractViewModel` — список выбранных записей или «все»; путь назначения; `Progress<double>`; `CancellationTokenSource`
-- Команды в `ArchiveBrowserViewModel`:
-  - `ExtractSelectedCommand` — извлечь отмеченные записи
-  - `ExtractAllCommand` — извлечь весь архив
-  - `OpenInExplorerCommand` — открыть директорию назначения после извлечения
-- `ExtractView` — модальный диалог с прогресс-баром, счётчиком файлов, кнопкой «Отмена»
-- Конфликты имён: диалог с выбором «Перезаписать / Пропустить / Переименовать»
-- Ошибки контрольной суммы — отдельное уведомление; опция «продолжить несмотря на ошибки»
-- По завершении — итоговое уведомление с количеством извлечённых файлов
-
----
-
-### Фаза D — Создание архива
-
-**Цель:** Создать новый `.dar`-архив из выбранных файлов или директории.
-
-**Основные компоненты:**
-
-- `CreateArchiveViewModel` — мастер из 3 шагов:
-  1. **Источник** — выбор директории или отдельных файлов; предпросмотр дерева файлов с учётом `.darignore` / `.gitignore`
-  2. **Параметры** — алгоритм сжатия (Brotli / Zstd / LZMA / Авто / Без сжатия); включить дедупликацию (чекбокс); шифрование (пароль + подтверждение)
-  3. **Назначение** — путь к результирующему `.dar`; кнопка «Создать»
-- Прогресс создания через `ArchiveWriter.AddDirectoryAsync` + `IProgress<(int done, int total, string currentFile)>`
-- После создания — открыть созданный архив в браузере
-- Создание через Drag & Drop папки на пустое окно приложения
+- `MainWindowViewModel` — `OpenArchiveCommand`, `CloseArchiveCommand`; opens a system file dialog via `IDialogService`
+- `ArchiveBrowserViewModel` — holds `IReadOnlyList<ArchiveEntryViewModel>`; supports flat list and directory tree modes; sorts by name / size / date / compression ratio
+- `ArchiveBrowserView` — `DataGrid` with columns: name, path, size, compressed size, ratio, algorithm, date, permissions
+- `ArchiveEntryViewModel` — wraps `IndexEntry`; computed properties `CompressionRatio`, `IsEncrypted`, `IsLinked`, icon by extension
+- Archive header metadata: creation date, file count, total / compressed size
+- Search bar with real-time filtering bound to `SearchText`
+- Drag & drop a `.dar` file onto the window to open it
+- If the archive is encrypted, show `PasswordPromptView` before reading entries
 
 ---
 
-### Фаза E — Дополнение архива
+### Phase C — Extraction
 
-**Цель:** Добавить файлы в существующий открытый архив.
+**Goal:** Extract selected entries or the entire archive to disk.
 
-**Основные компоненты:**
+**Key components:**
 
-- Команда `AppendFilesCommand` в `MainWindowViewModel`
-- Drag & Drop файлов / папок на открытый `ArchiveBrowserView`
-- Диалог выбора файлов для добавления
-- Использует `ArchiveAppender.OpenAsync` под капотом
-- Показ прогресса и обновление `ArchiveBrowserViewModel` после успешного завершения
-- Если архив зашифрован — запросить пароль перед дополнением
-- Уведомление об успехе с количеством добавленных файлов / дедуплицированных блоков
-
----
-
-### Фаза F — Предпросмотр
-
-**Цель:** Показать содержимое выбранного файла без полного извлечения.
-
-**Основные компоненты:**
-
-- `PreviewViewModel` — читает raw-блок через `ArchiveReader.OpenRawBlockAsync`, декодирует на лету; ограничение на размер — не более 1 МБ
-- Типы предпросмотра:
-  - **Текст** — UTF-8 / Latin-1 / hex-дамп для бинарных файлов; использует `AvaloniaEdit` или встроенный `TextBlock`
-  - **Изображения** — `Bitmap` через Avalonia (`png`, `jpg`, `bmp`, `gif`, `webp`)
-  - **Прочее** — hex-дамп первых 512 байт
-- Панель предпросмотра справа от списка; переключается выбором записи (debounce 150 мс)
-- Кнопка «Извлечь и открыть» — извлечение во временную папку, открытие системным приложением
+- `ExtractViewModel` — list of selected entries or "all"; destination path; `Progress<double>`; `CancellationTokenSource`
+- Commands on `ArchiveBrowserViewModel`:
+  - `ExtractSelectedCommand` — extract checked entries
+  - `ExtractAllCommand` — extract whole archive
+  - `OpenInExplorerCommand` — reveal destination directory after extraction
+- `ExtractView` — modal dialog with progress bar, file counter, and Cancel button
+- Name conflicts: dialog offering Overwrite / Skip / Rename
+- Checksum errors: separate notification with option to continue despite errors
+- Completion summary notification with count of extracted files
 
 ---
 
-### Фаза G — Платформенная интеграция и полировка
+### Phase D — Archive creation
 
-**Цель:** Нативное ощущение на каждой платформе; финальная доработка UX.
+**Goal:** Create a new `.dar` archive from selected files or a directory.
+
+**Key components:**
+
+- `CreateArchiveViewModel` — three-step wizard:
+  1. **Source** — pick a directory or individual files; preview the file tree respecting `.darignore` / `.gitignore`
+  2. **Options** — compression algorithm (Brotli / Zstd / LZMA / Auto / None); enable deduplication checkbox; encryption (password + confirmation)
+  3. **Destination** — output `.dar` path; Create button
+- Creation progress via `ArchiveWriter.AddDirectoryAsync` + `IProgress<(int done, int total, string currentFile)>`
+- After creation, open the new archive in the browser
+- Drag & drop a folder onto an empty window to start the creation wizard
+
+---
+
+### Phase E — Archive appending
+
+**Goal:** Add files to an already-open archive.
+
+**Key components:**
+
+- `AppendFilesCommand` on `MainWindowViewModel`
+- Drag & drop files / folders onto an open `ArchiveBrowserView`
+- File picker dialog for selecting files to add
+- Uses `ArchiveAppender.OpenAsync` under the hood
+- Shows progress and refreshes `ArchiveBrowserViewModel` on success
+- If the archive is encrypted, prompts for the passphrase before appending
+- Success notification with count of added files and deduplicated blocks
+
+---
+
+### Phase F — File preview
+
+**Goal:** Show entry content in-pane without full extraction.
+
+**Key components:**
+
+- `PreviewViewModel` — reads the raw block via `ArchiveReader.OpenRawBlockAsync`, decodes on the fly; capped at 1 MB
+- Preview types:
+  - **Text** — UTF-8 / Latin-1 / hex dump for binary; `AvaloniaEdit` or plain `TextBlock`
+  - **Images** — `Bitmap` via Avalonia (`png`, `jpg`, `bmp`, `gif`, `webp`)
+  - **Other** — hex dump of the first 512 bytes
+- Preview pane to the right of the entry list; updates on selection change (150 ms debounce)
+- "Extract & Open" button — extracts to a temp folder and opens with the system default app
+
+---
+
+### Phase G — Platform integration and polish
+
+**Goal:** Native feel on every platform; final UX refinement.
 
 **Windows:**
-- Регистрация ассоциации `.dar` через инсталлятор (NSIS или WiX Toolset)
-- Контекстное меню проводника: «Открыть в Dari», «Извлечь здесь»
-- Нативный заголовок через `Avalonia.Win32.TitleBarCustomization`
+- Register `.dar` file association via installer (NSIS or WiX Toolset)
+- Explorer context menu: "Open with Dari", "Extract here"
+- Native title bar via `Avalonia.Win32.TitleBarCustomization`
 
 **macOS:**
-- `NSDocument`-архитектура через Avalonia; поддержка `Open with…`
-- Иконки в форматах `icns` для Finder
-- Нативная строка меню (File / Edit / Window / Help)
-- Подписание и нотаризация (через `codesign` + `notarytool`)
+- NSDocument-style architecture via Avalonia; support for "Open with…"
+- Icons in `icns` format for Finder
+- Native menu bar (File / Edit / Window / Help)
+- Code signing and notarization (`codesign` + `notarytool`)
 
 **Linux:**
-- `.desktop`-файл с MIME-type `application/x-dari-archive`
-- XDG `MimeInfo.cache` обновляется при установке через `update-mime-database`
-- Поддержка Wayland и X11 через Avalonia
+- `.desktop` file with MIME type `application/x-dari-archive`
+- XDG `MimeInfo.cache` updated by installer via `update-mime-database`
+- Wayland and X11 support via Avalonia
 
-**Общее:**
-- Тема: светлая / тёмная (следует за системной настройкой `ActualThemeVariant`)
-- Горячие клавиши: `Ctrl+O` (открыть), `Ctrl+E` (извлечь), `Ctrl+N` (создать), `Ctrl+W` (закрыть)
-- Список недавних файлов в меню (хранится в `%APPDATA%` / `~/.config/dari/recent.json`)
-- Настройки: директория извлечения по умолчанию, тема, язык
+**General:**
+- Light / dark theme following the system `ActualThemeVariant`
+- Keyboard shortcuts: `Ctrl+O` (open), `Ctrl+E` (extract), `Ctrl+N` (new), `Ctrl+W` (close)
+- Recent files list in menu (stored in `%APPDATA%` / `~/.config/dari/recent.json`)
+- Settings: default extraction directory, theme, language
 
 ---
 
-### Тесты приложения
+### Application tests
 
-| Тест-класс | Покрытие |
+| Test class | Coverage |
 |------------|----------|
-| `ArchiveBrowserViewModelTests` | Открытие архива, фильтрация, сортировка |
-| `ExtractViewModelTests` | Прогресс, отмена, конфликты имён |
-| `CreateArchiveViewModelTests` | Параметры создания, валидация пути |
-| `PasswordPromptViewModelTests` | Корректный / неверный пароль |
-| `AppendViewModelTests` | Дополнение файлами, дедупликация |
-| `IntegrationTests` | Создать → открыть → извлечь (headless Avalonia) |
+| `ArchiveBrowserViewModelTests` | Open archive, filter, sort |
+| `ExtractViewModelTests` | Progress, cancellation, name conflicts |
+| `CreateArchiveViewModelTests` | Creation options, path validation |
+| `PasswordPromptViewModelTests` | Correct / wrong passphrase |
+| `AppendViewModelTests` | Append files, deduplication |
+| `IntegrationTests` | Create → open → extract (headless Avalonia) |
 
 ---
 
-### Порядок реализации
+### Implementation order
 
 ```
-Фаза A  →  Инициализация проекта (скелет, тема, запуск на всех платформах)
-Фаза B  →  Просмотр архива (открытие файла, DataGrid, поиск)
-Фаза C  →  Извлечение (выбранных записей и всего архива)
-Фаза D  →  Создание архива (мастер, прогресс, ignore-фильтр)
-Фаза E  →  Дополнение архива (Append, Drag & Drop)
-Фаза F  →  Предпросмотр (текст, изображения, hex-дамп)
-Фаза G  →  Платформенная интеграция (ассоциации, меню, нотаризация)
+Phase A  →  Project setup (skeleton, theme, launch on all platforms)
+Phase B  →  Archive browser (open file, DataGrid, search)
+Phase C  →  Extraction (selected entries and full archive)
+Phase D  →  Archive creation (wizard, progress, ignore-filter preview)
+Phase E  →  Archive appending (ArchiveAppender, drag & drop)
+Phase F  →  File preview (text, images, hex dump)
+Phase G  →  Platform integration (file associations, native menus, notarization)
 ```
 
-Каждая фаза независимо компилируется и тестируется перед переходом к следующей.
+Each phase is independently compilable and testable before moving on to the next.
