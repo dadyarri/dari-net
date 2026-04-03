@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using Dari.Archiver.Format;
 using Dari.App.Helpers;
 
@@ -6,9 +7,13 @@ namespace Dari.App.Models;
 /// <summary>
 /// UI-layer wrapper around an <see cref="IndexEntry"/> with display-ready computed properties.
 /// </summary>
-public sealed class ArchiveEntryViewModel
+public sealed partial class ArchiveEntryViewModel : ObservableObject
 {
     private readonly IndexEntry _entry;
+
+    /// <summary>Whether the entry is checked for extraction.</summary>
+    [ObservableProperty]
+    private bool _isSelected;
 
     public ArchiveEntryViewModel(IndexEntry entry) => _entry = entry;
 

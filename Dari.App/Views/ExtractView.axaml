@@ -1,0 +1,80 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        x:Class="Dari.App.Views.ExtractView"
+        x:DataType="vm:ExtractViewModel"
+        Title="Extracting…"
+        Width="460"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Grid Margin="20" RowDefinitions="*,Auto">
+
+        <!-- Extraction progress panel -->
+        <StackPanel Grid.Row="0"
+                    Spacing="10"
+                    IsVisible="{Binding !IsCompleted}">
+            <TextBlock Text="Extracting files…" FontWeight="SemiBold" />
+
+            <ProgressBar Minimum="0"
+                         Maximum="1"
+                         Value="{Binding Progress}"
+                         Height="12" />
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding CurrentFile}"
+                           TextTrimming="LeadingEllipsis"
+                           Opacity="0.7"
+                           FontSize="11" />
+                <TextBlock Grid.Column="1"
+                           Margin="8,0,0,0"
+                           FontSize="11"
+                           Opacity="0.7">
+                    <Run Text="{Binding ExtractedCount}" />
+                    <Run Text="/" />
+                    <Run Text="{Binding TotalCount}" />
+                </TextBlock>
+            </Grid>
+        </StackPanel>
+
+        <!-- Completion summary panel -->
+        <StackPanel Grid.Row="0"
+                    Spacing="10"
+                    IsVisible="{Binding IsCompleted}">
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="{Binding DestinationPath}"
+                       FontFamily="Monospace"
+                       TextWrapping="Wrap"
+                       FontSize="11"
+                       Opacity="0.8" />
+        </StackPanel>
+
+        <!-- Action buttons -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+            <!-- Cancel button (visible while running) -->
+            <Button Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsRunning}" />
+
+            <!-- Post-completion buttons -->
+            <Button Content="Open in Explorer"
+                    Command="{Binding OpenInExplorerCommand}"
+                    IsVisible="{Binding IsCompleted}" />
+            <Button Content="Close"
+                    Classes="accent"
+                    IsVisible="{Binding IsCompleted}"
+                    Click="OnCloseClicked" />
+        </StackPanel>
+
+    </Grid>
+
+</Window>

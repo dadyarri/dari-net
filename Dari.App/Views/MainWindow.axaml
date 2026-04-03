@@ -30,6 +30,14 @@
                 <MenuItem Header="E_xit"
                           Command="{Binding ExitCommand}" />
             </MenuItem>
+            <MenuItem Header="_Archive"
+                      IsEnabled="{Binding Browser, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <MenuItem Header="Extract _All…"
+                          InputGesture="Ctrl+E"
+                          Command="{Binding Browser.ExtractAllCommand}" />
+                <MenuItem Header="Extract _Selected…"
+                          Command="{Binding Browser.ExtractSelectedCommand}" />
+            </MenuItem>
             <MenuItem Header="_Help">
                 <MenuItem Header="_About Dari" Command="{Binding AboutCommand}" />
             </MenuItem>

@@ -1,6 +1,10 @@
 using Dari.Archiver.Crypto;
+using Dari.App.ViewModels;
 
 namespace Dari.App.Services;
+
+/// <summary>Resolution chosen when a target file already exists during extraction.</summary>
+public enum ConflictResolution { Overwrite, Skip, Rename }
 
 /// <summary>
 /// Abstracts platform file/UI dialogs for testability.
@@ -19,4 +23,24 @@ public interface IDialogService
     /// </param>
     ValueTask<DariPassphrase?> ShowPasswordPromptAsync(
         Func<DariPassphrase, ValueTask<bool>>? validator = null);
+
+    /// <summary>Opens a folder picker and returns the chosen directory path, or <see langword="null"/> if cancelled.</summary>
+    ValueTask<string?> PickFolderAsync();
+
+    /// <summary>
+    /// Shows a name-conflict dialog for <paramref name="existingPath"/> and returns the user's choice.
+    /// </summary>
+    ValueTask<ConflictResolution> ShowNameConflictAsync(string existingPath);
+
+    /// <summary>
+    /// Shows a checksum-error notification for <paramref name="entryPath"/> and asks whether to continue.
+    /// Returns <see langword="true"/> to continue extraction, <see langword="false"/> to abort.
+    /// </summary>
+    ValueTask<bool> ShowChecksumErrorAsync(string entryPath, string detail);
+
+    /// <summary>Shows a non-blocking informational message dialog.</summary>
+    ValueTask ShowMessageAsync(string title, string message);
+
+    /// <summary>Shows the <see cref="ExtractViewModel"/> in a modal extraction-progress dialog.</summary>
+    ValueTask ShowExtractDialogAsync(ExtractViewModel vm);
 }

@@ -32,9 +32,9 @@
             </WrapPanel>
         </Border>
 
-        <!-- Toolbar: search + view-mode toggle + sort buttons -->
+        <!-- Toolbar: search + view-mode toggle + sort buttons + extract buttons -->
         <Grid Grid.Row="1"
-              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
               Margin="8,4"
               VerticalAlignment="Center">
 
@@ -67,7 +67,21 @@
             <Button Grid.Column="5"
                     Content="Date"
                     Command="{Binding SortByCommand}"
-                    CommandParameter="Date" />
+                    CommandParameter="Date"
+                    Margin="0,0,16,0" />
+
+            <!-- Extraction buttons -->
+            <Button Grid.Column="6"
+                    Content="Extract Selected"
+                    Command="{Binding ExtractSelectedCommand}"
+                    ToolTip.Tip="Extract checked entries to a folder"
+                    Margin="0,0,4,0" />
+            <Button Grid.Column="7"
+                    Content="Extract All"
+                    Classes="accent"
+                    Command="{Binding ExtractAllCommand}"
+                    ToolTip.Tip="Extract all entries to a folder"
+                    Margin="0,0,0,0" />
 
         </Grid>
 
@@ -79,13 +93,17 @@
                       ItemsSource="{Binding FilteredEntries}"
                       IsVisible="{Binding ViewMode, Converter={x:Static ObjectConverters.Equal}, ConverterParameter={x:Static vm:ViewMode.Flat}}"
                       AutoGenerateColumns="False"
-                      IsReadOnly="True"
+                      IsReadOnly="False"
                       CanUserReorderColumns="True"
                       CanUserResizeColumns="True"
                       CanUserSortColumns="False"
                       GridLinesVisibility="Horizontal"
                       SelectionMode="Extended">
                 <dgrid:DataGrid.Columns>
+                    <dgrid:DataGridCheckBoxColumn Header="✓"
+                                            Binding="{Binding IsSelected}"
+                                            Width="36"
+                                            IsReadOnly="False" />
                     <dgrid:DataGridTextColumn Header="Name"
                                         Binding="{Binding Name}"
                                         Width="*" />
