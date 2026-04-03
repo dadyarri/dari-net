@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=Dari
+Comment=Cross-platform archive manager for .dar archives
+Exec=dari-app %f
+Icon=dari
+Terminal=false
+Categories=Utility;Archiving;
+MimeType=application/x-dari-archive;
+StartupWMClass=Dari
+Keywords=archive;dar;compress;extract;

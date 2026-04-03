@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Background rounded square -->
+  <rect width="256" height="256" rx="48" ry="48" fill="#1a6fce"/>
+  <!-- Letter D shape representing an archive box -->
+  <path d="M60 56 h60 a72 72 0 0 1 0 144 H60 Z"
+        fill="none" stroke="white" stroke-width="20" stroke-linejoin="round"/>
+  <!-- Horizontal lines suggesting archive entries -->
+  <line x1="84" y1="104" x2="148" y2="104" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <line x1="84" y1="128" x2="152" y2="128" stroke="white" stroke-width="14" stroke-linecap="round"/>
+  <line x1="84" y1="152" x2="142" y2="152" stroke="white" stroke-width="14" stroke-linecap="round"/>
+</svg>
