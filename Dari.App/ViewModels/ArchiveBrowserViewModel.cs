@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dari.App.Helpers;
 using Dari.App.Models;
 using Dari.Archiver.Archiving;
 using Dari.Archiver.Crypto;
@@ -66,10 +67,10 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     public ulong TotalCompressedSize { get; }
 
     /// <summary>Human-readable total uncompressed size.</summary>
-    public string TotalSizeDisplay => FormatSize(TotalSize);
+    public string TotalSizeDisplay => DisplayFormatter.FormatSize(TotalSize);
 
     /// <summary>Human-readable total compressed size.</summary>
-    public string TotalCompressedSizeDisplay => FormatSize(TotalCompressedSize);
+    public string TotalCompressedSizeDisplay => DisplayFormatter.FormatSize(TotalCompressedSize);
 
     /// <summary>Optional passphrase retained for extraction (Phase C).</summary>
     public DariPassphrase? Passphrase => _passphrase;
@@ -199,18 +200,6 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
             roots.Add(child);
         TreeRootNodes = roots;
     }
-
-    // -----------------------------------------------------------------------
-    // Helpers
-    // -----------------------------------------------------------------------
-
-    private static string FormatSize(ulong bytes) => bytes switch
-    {
-        < 1024 => $"{bytes} B",
-        < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
-        < 1024UL * 1024 * 1024 => $"{bytes / (1024.0 * 1024):F1} MB",
-        _ => $"{bytes / (1024.0 * 1024 * 1024):F2} GB",
-    };
 
     // -----------------------------------------------------------------------
     // Dispose

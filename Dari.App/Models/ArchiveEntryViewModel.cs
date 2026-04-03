@@ -1,4 +1,5 @@
 using Dari.Archiver.Format;
+using Dari.App.Helpers;
 
 namespace Dari.App.Models;
 
@@ -28,7 +29,7 @@ public sealed class ArchiveEntryViewModel
         : null;
 
     /// <summary>Human-readable ratio string, e.g. "42.3%".</summary>
-    public string CompressionRatioDisplay => CompressionRatio is { } r ? $"{r:P1}" : "—";
+    public string CompressionRatioDisplay => CompressionRatio is { } r ? $"{r:P1}" : "N/A";
 
     public bool IsEncrypted => _entry.IsEncrypted;
     public bool IsLinked => _entry.IsLinked;
@@ -39,10 +40,10 @@ public sealed class ArchiveEntryViewModel
     public DateTimeOffset ModifiedAt => _entry.ModifiedAt;
 
     /// <summary>Formatted original size (e.g. "1.2 MB").</summary>
-    public string OriginalSizeDisplay => FormatSize(_entry.OriginalSize);
+    public string OriginalSizeDisplay => DisplayFormatter.FormatSize(_entry.OriginalSize);
 
     /// <summary>Formatted compressed size (e.g. "500 KB").</summary>
-    public string CompressedSizeDisplay => FormatSize(_entry.CompressedSize);
+    public string CompressedSizeDisplay => DisplayFormatter.FormatSize(_entry.CompressedSize);
 
     /// <summary>Modification time formatted for the UI.</summary>
     public string ModifiedAtDisplay => _entry.ModifiedAt.LocalDateTime.ToString("yyyy-MM-dd HH:mm");
@@ -56,14 +57,6 @@ public sealed class ArchiveEntryViewModel
     // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
-
-    private static string FormatSize(ulong bytes) => bytes switch
-    {
-        < 1024 => $"{bytes} B",
-        < 1024 * 1024 => $"{bytes / 1024.0:F1} KB",
-        < 1024UL * 1024 * 1024 => $"{bytes / (1024.0 * 1024):F1} MB",
-        _ => $"{bytes / (1024.0 * 1024 * 1024):F2} GB",
-    };
 
     private static string FormatPermissions(ushort perm)
     {
