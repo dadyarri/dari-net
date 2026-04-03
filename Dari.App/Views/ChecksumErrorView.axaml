@@ -1,0 +1,46 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        x:Class="Dari.App.Views.ChecksumErrorView"
+        x:DataType="vm:ChecksumErrorViewModel"
+        Title="Checksum Error"
+        Width="460"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="20">
+
+        <StackPanel Grid.Row="0" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="A checksum error occurred for the following entry:"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="{Binding EntryPath}"
+                       FontFamily="Monospace"
+                       TextWrapping="Wrap"
+                       Opacity="0.8" />
+            <TextBlock Text="{Binding Detail}"
+                       TextWrapping="Wrap"
+                       Foreground="Red"
+                       FontSize="11"
+                       Margin="0,4,0,0" />
+            <TextBlock Text="Would you like to continue extracting the remaining files?"
+                       TextWrapping="Wrap"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+            <Button Content="Abort"
+                    Command="{Binding AbortCommand}" />
+            <Button Content="Continue"
+                    Classes="accent"
+                    Command="{Binding ContinueCommand}" />
+        </StackPanel>
+
+    </Grid>
+
+</Window>

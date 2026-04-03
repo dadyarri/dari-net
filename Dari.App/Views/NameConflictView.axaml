@@ -1,0 +1,42 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        x:Class="Dari.App.Views.NameConflictView"
+        x:DataType="vm:NameConflictViewModel"
+        Title="File Already Exists"
+        Width="480"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Grid RowDefinitions="*,Auto" Margin="20">
+
+        <StackPanel Grid.Row="0" Spacing="8" VerticalAlignment="Center">
+            <TextBlock Text="A file already exists at the destination:"
+                       TextWrapping="Wrap" />
+            <TextBlock Text="{Binding ExistingPath}"
+                       FontFamily="Monospace"
+                       TextWrapping="Wrap"
+                       Opacity="0.8" />
+            <TextBlock Text="How would you like to proceed?"
+                       Margin="0,4,0,0" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+            <Button Content="Skip"
+                    Command="{Binding SkipCommand}" />
+            <Button Content="Rename"
+                    Command="{Binding RenameCommand}" />
+            <Button Content="Overwrite"
+                    Classes="accent"
+                    Command="{Binding OverwriteCommand}" />
+        </StackPanel>
+
+    </Grid>
+
+</Window>

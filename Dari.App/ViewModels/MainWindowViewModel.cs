@@ -57,9 +57,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await reader.DisposeAsync().ConfigureAwait(true);
                 return;
             }
+
+            // Re-open with the passphrase so that ExtractAsync can decrypt entries.
+            await reader.DisposeAsync().ConfigureAwait(true);
+            reader = await ArchiveReader.OpenAsync(path, passphrase: passphrase).ConfigureAwait(true);
         }
 
-        Browser = new ArchiveBrowserViewModel(reader, passphrase);
+        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = $"Opened {reader.Entries.Count} entries.";
     }
@@ -121,9 +125,13 @@ public sealed partial class MainWindowViewModel : ObservableObject
                 await reader.DisposeAsync().ConfigureAwait(true);
                 return;
             }
+
+            // Re-open with the passphrase so that ExtractAsync can decrypt entries.
+            await reader.DisposeAsync().ConfigureAwait(true);
+            reader = await ArchiveReader.OpenAsync(path, passphrase: passphrase).ConfigureAwait(true);
         }
 
-        Browser = new ArchiveBrowserViewModel(reader, passphrase);
+        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = $"Opened {reader.Entries.Count} entries.";
     }

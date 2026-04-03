@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dari.App.Helpers;
 using Dari.App.Models;
+using Dari.App.Services;
 using Dari.Archiver.Archiving;
 using Dari.Archiver.Crypto;
 
@@ -27,6 +28,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     private readonly ArchiveReader _reader;
     private readonly DariPassphrase? _passphrase;
     private readonly IReadOnlyList<ArchiveEntryViewModel> _allEntries;
+    private readonly IDialogService _dialogService;
 
     // -----------------------------------------------------------------------
     // Observable properties
@@ -79,10 +81,12 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     // Constructor
     // -----------------------------------------------------------------------
 
-    public ArchiveBrowserViewModel(ArchiveReader reader, DariPassphrase? passphrase = null)
+    public ArchiveBrowserViewModel(ArchiveReader reader, DariPassphrase? passphrase = null,
+                                   IDialogService? dialogService = null)
     {
         _reader = reader;
         _passphrase = passphrase;
+        _dialogService = dialogService ?? NullDialogService.Instance;
         _allEntries = reader.Entries.Select(e => new ArchiveEntryViewModel(e)).ToList();
 
         ulong totalSize = 0UL, totalCompressed = 0UL;
@@ -131,6 +135,39 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     [RelayCommand]
     private void ToggleViewMode() =>
         ViewMode = ViewMode == ViewMode.Flat ? ViewMode.Tree : ViewMode.Flat;
+
+    /// <summary>Extracts all archive entries to a user-chosen directory.</summary>
+    [RelayCommand]
+    private async Task ExtractAllAsync()
+    {
+        var destination = await _dialogService.PickFolderAsync().ConfigureAwait(true);
+        if (destination is null) return;
+
+        var vm = new ExtractViewModel(_allEntries.Select(e => e.Entry).ToList(),
+                                     _reader, destination, _dialogService);
+        await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
+        foreach (var entry in _allEntries) entry.IsSelected = false;
+    }
+
+    /// <summary>Extracts only the checked (selected) entries to a user-chosen directory.</summary>
+    [RelayCommand]
+    private async Task ExtractSelectedAsync()
+    {
+        var selected = _allEntries.Where(e => e.IsSelected).Select(e => e.Entry).ToList();
+        if (selected.Count == 0)
+        {
+            await _dialogService.ShowMessageAsync("No Selection",
+                "Please check at least one entry before extracting.").ConfigureAwait(true);
+            return;
+        }
+
+        var destination = await _dialogService.PickFolderAsync().ConfigureAwait(true);
+        if (destination is null) return;
+
+        var vm = new ExtractViewModel(selected, _reader, destination, _dialogService);
+        await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
+        foreach (var entry in _allEntries) entry.IsSelected = false;
+    }
 
     // -----------------------------------------------------------------------
     // Refresh logic
