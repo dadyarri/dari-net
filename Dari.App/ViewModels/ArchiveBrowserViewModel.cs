@@ -146,6 +146,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         var vm = new ExtractViewModel(_allEntries.Select(e => e.Entry).ToList(),
                                      _reader, destination, _dialogService);
         await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
+        foreach (var entry in _allEntries) entry.IsSelected = false;
     }
 
     /// <summary>Extracts only the checked (selected) entries to a user-chosen directory.</summary>
@@ -165,6 +166,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
 
         var vm = new ExtractViewModel(selected, _reader, destination, _dialogService);
         await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
+        foreach (var entry in _allEntries) entry.IsSelected = false;
     }
 
     // -----------------------------------------------------------------------
