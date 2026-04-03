@@ -90,9 +90,15 @@ public sealed class DialogService : IDialogService
         var dialog = new ExtractView { DataContext = vm };
         vm.Completed += dialog.Close;
         var extractTask = vm.StartExtractionAsync();
-        await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        try
+        {
+            await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        }
+        finally
+        {
+            vm.Completed -= dialog.Close;
+        }
         if (!extractTask.IsCompleted)
             await extractTask.ConfigureAwait(true);
-        vm.Completed -= dialog.Close;
     }
 }

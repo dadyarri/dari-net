@@ -12,7 +12,7 @@ namespace Dari.App.ViewModels;
 /// Drives extraction of a list of entries to a destination directory,
 /// reporting progress and handling name conflicts and checksum errors.
 /// </summary>
-public sealed partial class ExtractViewModel : ObservableObject
+public sealed partial class ExtractViewModel : ObservableObject, IDisposable
 {
     private readonly IReadOnlyList<IndexEntry> _entries;
     private readonly ArchiveReader _reader;
@@ -180,7 +180,7 @@ public sealed partial class ExtractViewModel : ObservableObject
             // Extract the entry.
             try
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(fullPath) ?? ".");
+                Directory.CreateDirectory(Path.GetDirectoryName(fullPath) ?? _destinationPath);
 
                 await using var fs = new FileStream(
                     fullPath, FileMode.Create, FileAccess.Write,
@@ -204,6 +204,12 @@ public sealed partial class ExtractViewModel : ObservableObject
             Progress = (double)(i + 1) / _entries.Count;
         }
     }
+
+    // -----------------------------------------------------------------------
+    // Dispose
+    // -----------------------------------------------------------------------
+
+    public void Dispose() => _cts.Dispose();
 
     // -----------------------------------------------------------------------
     // Helpers
