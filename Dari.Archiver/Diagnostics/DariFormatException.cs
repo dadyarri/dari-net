@@ -22,4 +22,7 @@ public sealed class DariFormatException : Exception
 
     internal static DariFormatException BadIndexOffset(uint offset, long fileLength) =>
         new($"Footer index_offset {offset} is out of range for a file of length {fileLength}.");
+
+    internal static DariFormatException WrongPassphrase(string entryPath, Exception inner) =>
+        new($"Wrong passphrase: authentication tag mismatch for entry '{entryPath}'.", inner);
 }

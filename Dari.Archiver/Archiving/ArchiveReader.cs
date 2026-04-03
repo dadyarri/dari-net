@@ -1,6 +1,8 @@
 using System.Buffers;
+using System.Security.Cryptography;
 using Dari.Archiver.Compression;
 using Dari.Archiver.Crypto;
+using Dari.Archiver.Diagnostics;
 using Dari.Archiver.Extra;
 using Dari.Archiver.Format;
 using Dari.Archiver.IO;
@@ -213,7 +215,14 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
         _passphrase!.DeriveKey(key);
 
         byte[] plaintext = new byte[plaintextLen];
-        DariEncryption.Decrypt(key, nonce, ciphertextAndTag.Span, plaintext);
+        try
+        {
+            DariEncryption.Decrypt(key, nonce, ciphertextAndTag.Span, plaintext);
+        }
+        catch (AuthenticationTagMismatchException ex)
+        {
+            throw DariFormatException.WrongPassphrase(entry.Path, ex);
+        }
         return plaintext;
     }
 

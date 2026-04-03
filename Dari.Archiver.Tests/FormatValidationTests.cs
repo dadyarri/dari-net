@@ -116,6 +116,6 @@ public sealed class FormatValidationTests
         var ms = await MakeMinimalArchiveAsync();
         using var reader = await DariReader.OpenAsync(ms);
         Assert.NotNull(reader);
-    Assert.Single(reader.Entries);
+        Assert.Single(reader.Entries);
     }
 }
