@@ -26,7 +26,7 @@
             <Grid ColumnDefinitions="*,Auto">
                 <TextBlock Grid.Column="0"
                            Text="{Binding CurrentFile}"
-                           TextTrimming="LeadingEllipsis"
+                           TextTrimming="CharacterEllipsis"
                            Opacity="0.7"
                            FontSize="11" />
                 <TextBlock Grid.Column="1"
