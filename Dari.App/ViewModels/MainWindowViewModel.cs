@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dari.App.Services;
 using Dari.Archiver.Archiving;
+using Dari.Archiver.Crypto;
 
 namespace Dari.App.ViewModels;
 
@@ -45,7 +46,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         await CloseCurrentBrowserAsync().ConfigureAwait(true);
 
         // If any entry is encrypted, prompt for the passphrase.
-        Dari.Archiver.Crypto.DariPassphrase? passphrase = null;
+        DariPassphrase? passphrase = null;
         if (reader.Entries.Any(e => e.IsEncrypted))
         {
             passphrase = await _dialogService.ShowPasswordPromptAsync(
@@ -110,7 +111,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         await CloseCurrentBrowserAsync().ConfigureAwait(true);
 
-        Dari.Archiver.Crypto.DariPassphrase? passphrase = null;
+        DariPassphrase? passphrase = null;
         if (reader.Entries.Any(e => e.IsEncrypted))
         {
             passphrase = await _dialogService.ShowPasswordPromptAsync(

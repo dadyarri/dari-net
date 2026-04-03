@@ -191,15 +191,20 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
         Span<byte> key = stackalloc byte[DariConstants.KeySize];
         passphrase.DeriveKey(key);
 
-        byte[] plaintext = new byte[plaintextLen];
+        byte[] plaintext = ArrayPool<byte>.Shared.Rent(plaintextLen);
         try
         {
-            DariEncryption.Decrypt(key, Convert.FromHexString(nonceHex), rawBlock.Span, plaintext);
+            DariEncryption.Decrypt(key, Convert.FromHexString(nonceHex), rawBlock.Span,
+                                   plaintext.AsSpan(0, plaintextLen));
             return true;
         }
         catch (AuthenticationTagMismatchException)
         {
             return false;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(plaintext);
         }
     }
 

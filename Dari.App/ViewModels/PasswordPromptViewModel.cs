@@ -46,7 +46,17 @@ public sealed partial class PasswordPromptViewModel : ObservableObject
 
         if (_validator is not null)
         {
-            bool ok = await _validator(pass).ConfigureAwait(true);
+            bool ok;
+            try
+            {
+                ok = await _validator(pass).ConfigureAwait(true);
+            }
+            catch
+            {
+                pass.Dispose();
+                throw;
+            }
+
             if (!ok)
             {
                 pass.Dispose();
