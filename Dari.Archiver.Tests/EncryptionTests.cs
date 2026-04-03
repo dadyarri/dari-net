@@ -304,4 +304,58 @@ public sealed class EncryptionTests
             pass.DeriveKey(key2);
         });
     }
+
+    // -----------------------------------------------------------------------
+    // VerifyPassphraseAsync
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task VerifyPassphrase_CorrectPassphrase_ReturnsTrue()
+    {
+        using var writePass = new DariPassphrase("correct");
+        byte[] content = "verify me"u8.ToArray();
+        var meta = new FileMetadata(DateTimeOffset.UtcNow, 0, 0, 33188);
+
+        var ms = new MemoryStream();
+        await using (var writer = await ArchiveWriter.CreateAsync(ms, leaveOpen: true, passphrase: writePass))
+            await writer.AddAsync("f.txt", new ReadOnlyMemory<byte>(content), meta);
+
+        ms.Position = 0;
+        using var reader = await ArchiveReader.OpenAsync(ms, leaveOpen: true);
+        using var pass = new DariPassphrase("correct");
+        Assert.True(await reader.VerifyPassphraseAsync(pass));
+    }
+
+    [Fact]
+    public async Task VerifyPassphrase_WrongPassphrase_ReturnsFalse()
+    {
+        using var writePass = new DariPassphrase("correct");
+        byte[] content = "verify me"u8.ToArray();
+        var meta = new FileMetadata(DateTimeOffset.UtcNow, 0, 0, 33188);
+
+        var ms = new MemoryStream();
+        await using (var writer = await ArchiveWriter.CreateAsync(ms, leaveOpen: true, passphrase: writePass))
+            await writer.AddAsync("f.txt", new ReadOnlyMemory<byte>(content), meta);
+
+        ms.Position = 0;
+        using var reader = await ArchiveReader.OpenAsync(ms, leaveOpen: true);
+        using var wrong = new DariPassphrase("wrong");
+        Assert.False(await reader.VerifyPassphraseAsync(wrong));
+    }
+
+    [Fact]
+    public async Task VerifyPassphrase_NoEncryptedEntries_ReturnsTrue()
+    {
+        byte[] content = "plain"u8.ToArray();
+        var meta = new FileMetadata(DateTimeOffset.UtcNow, 0, 0, 33188);
+
+        var ms = new MemoryStream();
+        await using (var writer = await ArchiveWriter.CreateAsync(ms, leaveOpen: true))
+            await writer.AddAsync("f.txt", new ReadOnlyMemory<byte>(content), meta);
+
+        ms.Position = 0;
+        using var reader = await ArchiveReader.OpenAsync(ms, leaveOpen: true);
+        using var anyPass = new DariPassphrase("irrelevant");
+        Assert.True(await reader.VerifyPassphraseAsync(anyPass));
+    }
 }

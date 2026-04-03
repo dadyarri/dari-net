@@ -48,7 +48,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dari.Archiver.Crypto.DariPassphrase? passphrase = null;
         if (reader.Entries.Any(e => e.IsEncrypted))
         {
-            passphrase = await _dialogService.ShowPasswordPromptAsync().ConfigureAwait(true);
+            passphrase = await _dialogService.ShowPasswordPromptAsync(
+                p => reader.VerifyPassphraseAsync(p)).ConfigureAwait(true);
             if (passphrase is null)
             {
                 // User cancelled — close the reader and abort.
@@ -112,7 +113,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Dari.Archiver.Crypto.DariPassphrase? passphrase = null;
         if (reader.Entries.Any(e => e.IsEncrypted))
         {
-            passphrase = await _dialogService.ShowPasswordPromptAsync().ConfigureAwait(true);
+            passphrase = await _dialogService.ShowPasswordPromptAsync(
+                p => reader.VerifyPassphraseAsync(p)).ConfigureAwait(true);
             if (passphrase is null)
             {
                 await reader.DisposeAsync().ConfigureAwait(true);

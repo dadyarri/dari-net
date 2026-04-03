@@ -34,16 +34,15 @@ public sealed class DialogService : IDialogService
     }
 
     /// <inheritdoc/>
-    public async ValueTask<DariPassphrase?> ShowPasswordPromptAsync()
+    public async ValueTask<DariPassphrase?> ShowPasswordPromptAsync(
+        Func<DariPassphrase, ValueTask<bool>>? validator = null)
     {
         var vm = new PasswordPromptViewModel();
+        if (validator is not null) vm.SetValidator(validator);
         var dialog = new PasswordPromptView { DataContext = vm };
 
         await dialog.ShowDialog(_owner).ConfigureAwait(true);
 
-        if (vm.IsConfirmed && !string.IsNullOrEmpty(vm.Passphrase))
-            return new DariPassphrase(vm.Passphrase);
-
-        return null;
+        return vm.IsConfirmed ? vm.VerifiedPassphrase : null;
     }
 }
