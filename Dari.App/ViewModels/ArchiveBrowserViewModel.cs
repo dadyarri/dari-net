@@ -36,7 +36,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     private string _searchText = "";
 
     [ObservableProperty]
-    private ViewMode _viewMode = ViewMode.Flat;
+    private ViewMode _viewMode = ViewMode.Tree;
 
     [ObservableProperty]
     private SortColumn _activeSortColumn = SortColumn.Name;

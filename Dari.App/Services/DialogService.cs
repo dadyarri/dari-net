@@ -39,17 +39,9 @@ public sealed class DialogService : IDialogService
         var vm = new PasswordPromptViewModel();
         var dialog = new PasswordPromptView { DataContext = vm };
 
-        var tcs = new TaskCompletionSource<bool>();
-        vm.Confirmed += () => tcs.TrySetResult(true);
-        vm.Cancelled += () => tcs.TrySetResult(false);
+        await dialog.ShowDialog(_owner).ConfigureAwait(true);
 
-        _ = dialog.ShowDialog(_owner).ContinueWith(
-            _ => tcs.TrySetResult(false),
-            TaskContinuationOptions.OnlyOnRanToCompletion);
-
-        bool confirmed = await tcs.Task.ConfigureAwait(true);
-
-        if (confirmed && !string.IsNullOrEmpty(vm.Passphrase))
+        if (vm.IsConfirmed && !string.IsNullOrEmpty(vm.Passphrase))
             return new DariPassphrase(vm.Passphrase);
 
         return null;
