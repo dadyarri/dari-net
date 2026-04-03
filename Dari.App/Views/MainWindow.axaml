@@ -1,6 +1,7 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Dari.App.ViewModels"
+        xmlns:views="using:Dari.App.Views"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -11,7 +12,8 @@
         Width="1024"
         Height="680"
         MinWidth="640"
-        MinHeight="480">
+        MinHeight="480"
+        DragDrop.AllowDrop="True">
 
     <Grid RowDefinitions="Auto,*,Auto">
 
@@ -33,13 +35,26 @@
             </MenuItem>
         </Menu>
 
-        <!-- Main content area (phases B–F will fill this) -->
+        <!-- Main content area -->
         <Panel Grid.Row="1">
+
+            <!-- Placeholder shown when no archive is open -->
             <TextBlock Text="Open a .dar archive to get started."
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Opacity="0.5"
-                       FontSize="16" />
+                       FontSize="16"
+                       IsVisible="{Binding Browser, Converter={x:Static ObjectConverters.IsNull}}" />
+
+            <!-- Archive browser (visible when an archive is open) -->
+            <ContentControl Content="{Binding Browser}">
+                <ContentControl.DataTemplates>
+                    <DataTemplate DataType="{x:Type vm:ArchiveBrowserViewModel}">
+                        <views:ArchiveBrowserView />
+                    </DataTemplate>
+                </ContentControl.DataTemplates>
+            </ContentControl>
+
         </Panel>
 
         <!-- Status bar -->
@@ -54,3 +69,4 @@
     </Grid>
 
 </Window>
+

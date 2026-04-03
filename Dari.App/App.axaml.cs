@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Dari.App.Services;
 using Dari.App.ViewModels;
 using Dari.App.Views;
 
@@ -17,10 +18,10 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = new MainWindowViewModel(),
-            };
+            var mainWindow = new MainWindow();
+            var dialogService = new DialogService(mainWindow);
+            mainWindow.DataContext = new MainWindowViewModel(dialogService);
+            desktop.MainWindow = mainWindow;
         }
 
         base.OnFrameworkInitializationCompleted();

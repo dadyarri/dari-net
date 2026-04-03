@@ -1,6 +1,8 @@
 using System.Buffers;
+using System.Security.Cryptography;
 using Dari.Archiver.Compression;
 using Dari.Archiver.Crypto;
+using Dari.Archiver.Diagnostics;
 using Dari.Archiver.Extra;
 using Dari.Archiver.Format;
 using Dari.Archiver.IO;
@@ -165,6 +167,47 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
         IndexEntry entry, CancellationToken ct = default) =>
         _inner.ReadRawBlockAsync(entry, ct);
 
+    /// <summary>
+    /// Verifies <paramref name="passphrase"/> by attempting to decrypt the first encrypted entry.
+    /// Returns <see langword="true"/> if correct (or if the archive has no encrypted entries),
+    /// <see langword="false"/> if the passphrase is wrong.
+    /// </summary>
+    public async ValueTask<bool> VerifyPassphraseAsync(
+        DariPassphrase passphrase, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(passphrase);
+
+        var probe = Entries.FirstOrDefault(e => e.IsEncrypted && !e.IsLinked);
+        if (probe is null) return true;
+
+        var rawBlock = await _inner.ReadRawBlockAsync(probe, ct).ConfigureAwait(false);
+
+        string? nonceHex = probe.Extra.GetValueOrDefault(WellKnownExtraKeys.EncryptionNonce);
+        if (nonceHex is null) return false;
+
+        int plaintextLen = rawBlock.Length - DariConstants.TagSize;
+        if (plaintextLen < 0) return false;
+
+        Span<byte> key = stackalloc byte[DariConstants.KeySize];
+        passphrase.DeriveKey(key);
+
+        byte[] plaintext = ArrayPool<byte>.Shared.Rent(plaintextLen);
+        try
+        {
+            DariEncryption.Decrypt(key, Convert.FromHexString(nonceHex), rawBlock.Span,
+                                   plaintext.AsSpan(0, plaintextLen));
+            return true;
+        }
+        catch (AuthenticationTagMismatchException)
+        {
+            return false;
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(plaintext);
+        }
+    }
+
     // -----------------------------------------------------------------------
     // Internal helpers
     // -----------------------------------------------------------------------
@@ -213,7 +256,14 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
         _passphrase!.DeriveKey(key);
 
         byte[] plaintext = new byte[plaintextLen];
-        DariEncryption.Decrypt(key, nonce, ciphertextAndTag.Span, plaintext);
+        try
+        {
+            DariEncryption.Decrypt(key, nonce, ciphertextAndTag.Span, plaintext);
+        }
+        catch (AuthenticationTagMismatchException ex)
+        {
+            throw DariFormatException.WrongPassphrase(entry.Path, ex);
+        }
         return plaintext;
     }
 

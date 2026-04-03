@@ -5,6 +5,11 @@
 
     <Application.Styles>
         <FluentTheme />
+        <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+        <!-- Remove DataGridRow background transitions to prevent flicker on row click -->
+        <Style Selector="DataGridRow">
+            <Setter Property="Transitions" Value="{x:Null}" />
+        </Style>
     </Application.Styles>
 
 </Application>
