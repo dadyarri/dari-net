@@ -1,0 +1,79 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        xmlns:dgrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
+        x:Class="Dari.App.Views.ExtractOptionsView"
+        x:DataType="vm:ExtractOptionsViewModel"
+        Title="{DynamicResource Extract.Options.Title}"
+        Width="620"
+        Height="480"
+        MinWidth="420"
+        MinHeight="320"
+        WindowStartupLocation="CenterOwner"
+        ShowInTaskbar="False">
+
+    <Grid Margin="16" RowDefinitions="Auto,Auto,*,Auto">
+
+        <!-- Destination folder row -->
+        <StackPanel Grid.Row="0" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="{DynamicResource Extract.Options.Destination}"
+                       FontWeight="SemiBold" />
+            <Grid ColumnDefinitions="*,8,Auto">
+                <TextBox Grid.Column="0"
+                         Text="{Binding DestinationPath}"
+                         Watermark="{DynamicResource Watermark.DestinationPath}" />
+                <Button Grid.Column="2"
+                        Content="{DynamicResource Button.Browse}"
+                        Command="{Binding BrowseDestinationCommand}" />
+            </Grid>
+        </StackPanel>
+
+        <!-- Options row -->
+        <StackPanel Grid.Row="1" Spacing="4" Margin="0,0,0,12">
+            <TextBlock Text="{DynamicResource Extract.Options.OptionsLabel}"
+                       FontWeight="SemiBold" />
+            <CheckBox IsChecked="{Binding FlatPaths}"
+                      Content="{DynamicResource Extract.Options.FlatPaths}"
+                      ToolTip.Tip="{DynamicResource Extract.Options.FlatPathsTooltip}" />
+        </StackPanel>
+
+        <!-- Preview -->
+        <Grid Grid.Row="2" RowDefinitions="Auto,*" Margin="0,0,0,12">
+            <TextBlock Grid.Row="0"
+                       Text="{DynamicResource Extract.Options.Preview}"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,4" />
+            <dgrid:DataGrid Grid.Row="1"
+                            ItemsSource="{Binding PreviewItems}"
+                            AutoGenerateColumns="False"
+                            IsReadOnly="True"
+                            CanUserReorderColumns="True"
+                            CanUserResizeColumns="True"
+                            CanUserSortColumns="False"
+                            GridLinesVisibility="Horizontal">
+                <dgrid:DataGrid.Columns>
+                    <dgrid:DataGridTextColumn Header="{DynamicResource Extract.Options.ColumnArchive}"
+                                              Binding="{Binding ArchivePath}"
+                                              Width="*" />
+                    <dgrid:DataGridTextColumn Header="{DynamicResource Extract.Options.ColumnDest}"
+                                              Binding="{Binding DestinationPath}"
+                                              Width="*" />
+                </dgrid:DataGrid.Columns>
+            </dgrid:DataGrid>
+        </Grid>
+
+        <!-- Action buttons -->
+        <StackPanel Grid.Row="3"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8">
+            <Button Content="{DynamicResource Button.Cancel}"
+                    Command="{Binding CancelCommand}" />
+            <Button Content="{DynamicResource Button.Extract}"
+                    Classes="accent"
+                    Command="{Binding ConfirmCommand}" />
+        </StackPanel>
+
+    </Grid>
+
+</Window>

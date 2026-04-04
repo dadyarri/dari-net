@@ -32,9 +32,9 @@
             </WrapPanel>
         </Border>
 
-        <!-- Toolbar: search + view-mode toggle + sort buttons + flat-paths + extract buttons -->
+        <!-- Toolbar: search + view-mode toggle + sort buttons + extract buttons -->
         <Grid Grid.Row="1"
-              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
               Margin="8,4"
               VerticalAlignment="Center">
 
@@ -68,23 +68,15 @@
                     Content="{DynamicResource Toolbar.SortDate}"
                     Command="{Binding SortByCommand}"
                     CommandParameter="Date"
-                    Margin="0,0,12,0" />
-
-            <!-- Flat-paths toggle (applies to Extract Selected) -->
-            <CheckBox Grid.Column="6"
-                      IsChecked="{Binding FlatPaths}"
-                      Content="{DynamicResource Toolbar.FlatPaths}"
-                      ToolTip.Tip="{DynamicResource Tooltip.FlatPaths}"
-                      VerticalAlignment="Center"
-                      Margin="0,0,12,0" />
+                    Margin="0,0,16,0" />
 
             <!-- Extraction buttons -->
-            <Button Grid.Column="7"
+            <Button Grid.Column="6"
                     Content="{DynamicResource Button.ExtractSelected}"
                     Command="{Binding ExtractSelectedCommand}"
                     ToolTip.Tip="{DynamicResource Tooltip.ExtractSelected}"
                     Margin="0,0,4,0" />
-            <Button Grid.Column="8"
+            <Button Grid.Column="7"
                     Content="{DynamicResource Button.ExtractAll}"
                     Classes="accent"
                     Command="{Binding ExtractAllCommand}"

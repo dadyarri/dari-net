@@ -254,7 +254,7 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
     ///   <item>Otherwise (individually selected file) only the file name is used.</item>
     /// </list>
     /// </summary>
-    private static string ComputeFlatPath(string entryPath, IReadOnlyList<string> selectedDirPrefixes)
+    internal static string ComputeFlatPath(string entryPath, IReadOnlyList<string> selectedDirPrefixes)
     {
         foreach (var prefix in selectedDirPrefixes)
         {

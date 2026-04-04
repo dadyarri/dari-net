@@ -52,9 +52,6 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     [ObservableProperty]
     private ObservableCollection<TreeNodeViewModel> _treeRootNodes = [];
 
-    [ObservableProperty]
-    private bool _flatPaths;
-
     // -----------------------------------------------------------------------
     // Archive metadata
     // -----------------------------------------------------------------------
@@ -102,6 +99,11 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         TotalCompressedSize = totalCompressed;
 
         Refresh();
+
+        // Subscribe to individual entry selection changes so that directory
+        // tri-state checkboxes reflect the state of their children.
+        foreach (var entry in _allEntries)
+            entry.PropertyChanged += OnEntrySelectionChanged;
     }
 
     // -----------------------------------------------------------------------
@@ -165,15 +167,49 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
             return;
         }
 
-        var destination = await _dialogService.PickFolderAsync().ConfigureAwait(true);
-        if (destination is null) return;
+        var selectedEntries = _allEntries.Where(e => e.IsSelected).ToList();
+        var selectedDirPrefixes = GetSelectedDirectoryPrefixes();
 
-        var selectedDirPrefixes = FlatPaths ? GetSelectedDirectoryPrefixes() : null;
-        var vm = new ExtractViewModel(selected, _reader, destination, _dialogService,
-            flatPaths: FlatPaths, selectedDirectoryPrefixes: selectedDirPrefixes);
+        using var optionsVm = new ExtractOptionsViewModel(selectedEntries, selectedDirPrefixes, _dialogService);
+        await _dialogService.ShowExtractOptionsDialogAsync(optionsVm).ConfigureAwait(true);
+
+        if (!optionsVm.IsConfirmed || string.IsNullOrEmpty(optionsVm.DestinationPath)) return;
+
+        var extractDirPrefixes = optionsVm.FlatPaths ? selectedDirPrefixes : null;
+        var vm = new ExtractViewModel(selected, _reader, optionsVm.DestinationPath, _dialogService,
+            flatPaths: optionsVm.FlatPaths, selectedDirectoryPrefixes: extractDirPrefixes);
         await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
 
         ClearAllSelections();
+    }
+
+    // -----------------------------------------------------------------------
+    // Entry selection → directory tri-state
+    // -----------------------------------------------------------------------
+
+    private void OnEntrySelectionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ArchiveEntryViewModel.IsSelected))
+            UpdateDirSelectionStates();
+    }
+
+    private void UpdateDirSelectionStates()
+    {
+        foreach (var node in TreeRootNodes)
+            if (node is DirectoryNodeViewModel dir)
+                UpdateDirStateRecursive(dir);
+    }
+
+    /// <summary>
+    /// Depth-first traversal: updates sub-directories first, then the parent,
+    /// so each directory's state reflects its already-updated children.
+    /// </summary>
+    private static void UpdateDirStateRecursive(DirectoryNodeViewModel dir)
+    {
+        foreach (var child in dir.Children.OfType<DirectoryNodeViewModel>())
+            UpdateDirStateRecursive(child);
+
+        dir.UpdateSelectionStateFromChildren();
     }
 
     // -----------------------------------------------------------------------
@@ -255,16 +291,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     private void ClearAllSelections()
     {
         foreach (var entry in _allEntries) entry.IsSelected = false;
-        ResetDirSelections(TreeRootNodes);
-    }
-
-    private static void ResetDirSelections(IEnumerable<TreeNodeViewModel> nodes)
-    {
-        foreach (var node in nodes.OfType<DirectoryNodeViewModel>())
-        {
-            if (node.IsSelected) node.IsSelected = false;
-            ResetDirSelections(node.Children);
-        }
+        // Dir states are recomputed by OnEntrySelectionChanged automatically.
     }
 
     /// <summary>
@@ -284,7 +311,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     {
         foreach (var node in nodes.OfType<DirectoryNodeViewModel>())
         {
-            if (node.IsSelected)
+            if (node.IsSelected == true)
                 result.Add(node.FullPath); // children are covered by this prefix
             else
                 CollectSelectedDirPrefixes(node.Children, result);
@@ -297,12 +324,16 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
 
     public void Dispose()
     {
+        foreach (var entry in _allEntries)
+            entry.PropertyChanged -= OnEntrySelectionChanged;
         _reader.Dispose();
         _passphrase?.Dispose();
     }
 
     public async ValueTask DisposeAsync()
     {
+        foreach (var entry in _allEntries)
+            entry.PropertyChanged -= OnEntrySelectionChanged;
         await _reader.DisposeAsync().ConfigureAwait(false);
         _passphrase?.Dispose();
     }

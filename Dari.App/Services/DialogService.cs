@@ -107,16 +107,17 @@ public sealed class DialogService : IDialogService
         if (!extractTask.IsCompleted)
         {
             // Dialog was closed before extraction finished (e.g. owner window force-closed).
-            // Cancel the extraction and wait for it to wind down cleanly.
+            // Cancel the extraction.  Do NOT await with ConfigureAwait(true) here because
+            // the Avalonia UI dispatcher may already be shutting down, which causes
+            // Dispatcher.Send to throw TaskCanceledException.  Instead, schedule an
+            // observation continuation on the thread-pool to suppress
+            // UnobservedTaskException without touching the UI dispatcher.
             vm.CancelCommand.Execute(null);
-            try
-            {
-                await extractTask.ConfigureAwait(true);
-            }
-            catch (Exception)
-            {
-                // Swallow: extraction was force-cancelled by owner close.
-            }
+            _ = extractTask.ContinueWith(
+                static _ => { },
+                CancellationToken.None,
+                TaskContinuationOptions.None,
+                TaskScheduler.Default);
         }
     }
 
@@ -177,5 +178,20 @@ public sealed class DialogService : IDialogService
     {
         var dialog = new SettingsView { DataContext = vm };
         await dialog.ShowDialog(_owner).ConfigureAwait(true);
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask ShowExtractOptionsDialogAsync(ExtractOptionsViewModel vm)
+    {
+        var dialog = new ExtractOptionsView { DataContext = vm };
+        vm.Closed += dialog.Close;
+        try
+        {
+            await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        }
+        finally
+        {
+            vm.Closed -= dialog.Close;
+        }
     }
 }

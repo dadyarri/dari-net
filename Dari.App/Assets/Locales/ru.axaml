@@ -24,7 +24,8 @@
     <x:String x:Key="Button.Cancel">Отмена</x:String>
     <x:String x:Key="Button.Close">Закрыть</x:String>
     <x:String x:Key="Button.OpenInExplorer">Открыть в проводнике</x:String>
-    <x:String x:Key="Button.ExtractSelected">Извлечь выбранное</x:String>
+    <x:String x:Key="Button.ExtractSelected">Извлечь выбранное…</x:String>
+    <x:String x:Key="Button.Extract">Извлечь</x:String>
     <x:String x:Key="Button.ExtractAll">Извлечь всё</x:String>
     <x:String x:Key="Button.Skip">Пропустить</x:String>
     <x:String x:Key="Button.Rename">Переименовать</x:String>
@@ -40,7 +41,7 @@
     <x:String x:Key="Toolbar.SortSize">Размер</x:String>
     <x:String x:Key="Toolbar.SortDate">Дата</x:String>
     <x:String x:Key="Tooltip.ToggleView">Переключить плоский/древовидный вид</x:String>
-    <x:String x:Key="Tooltip.ExtractSelected">Извлечь отмеченные файлы в папку</x:String>
+    <x:String x:Key="Tooltip.ExtractSelected">Открыть параметры извлечения для отмеченных файлов</x:String>
     <x:String x:Key="Tooltip.ExtractAll">Извлечь все файлы в папку</x:String>
 
     <!-- Заголовки столбцов DataGrid -->
@@ -78,8 +79,19 @@
     <x:String x:Key="Watermark.Search">Поиск…</x:String>
     <x:String x:Key="Watermark.SourceDirectory">Исходная папка…</x:String>
     <x:String x:Key="Watermark.OutputPath">Путь к архиву .dar…</x:String>
+    <x:String x:Key="Watermark.DestinationPath">Папка назначения…</x:String>
     <x:String x:Key="Watermark.Passphrase">Пароль</x:String>
     <x:String x:Key="Watermark.ConfirmPassphrase">Подтвердите пароль</x:String>
+
+    <!-- Диалог параметров извлечения -->
+    <x:String x:Key="Extract.Options.Title">Извлечь выбранное</x:String>
+    <x:String x:Key="Extract.Options.Destination">Папка назначения:</x:String>
+    <x:String x:Key="Extract.Options.OptionsLabel">Параметры:</x:String>
+    <x:String x:Key="Extract.Options.FlatPaths">Без путей — не воспроизводить структуру каталогов архива</x:String>
+    <x:String x:Key="Extract.Options.FlatPathsTooltip">При включении файлы помещаются непосредственно в папку назначения или в выбранный каталог без создания родительских папок.</x:String>
+    <x:String x:Key="Extract.Options.Preview">Предпросмотр:</x:String>
+    <x:String x:Key="Extract.Options.ColumnArchive">Путь в архиве</x:String>
+    <x:String x:Key="Extract.Options.ColumnDest">Путь назначения</x:String>
 
     <!-- Диалог извлечения -->
     <x:String x:Key="Extract.Title">Извлечение…</x:String>

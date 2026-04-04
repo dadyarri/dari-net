@@ -39,4 +39,6 @@ internal sealed class NullDialogService : IDialogService
     public ValueTask ShowCreateArchiveDialogAsync(CreateArchiveViewModel vm) => ValueTask.CompletedTask;
 
     public ValueTask ShowSettingsAsync(SettingsViewModel vm) => ValueTask.CompletedTask;
+
+    public ValueTask ShowExtractOptionsDialogAsync(ExtractOptionsViewModel vm) => ValueTask.CompletedTask;
 }

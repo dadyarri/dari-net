@@ -24,7 +24,8 @@
     <x:String x:Key="Button.Cancel">Cancel</x:String>
     <x:String x:Key="Button.Close">Close</x:String>
     <x:String x:Key="Button.OpenInExplorer">Open in Explorer</x:String>
-    <x:String x:Key="Button.ExtractSelected">Extract Selected</x:String>
+    <x:String x:Key="Button.ExtractSelected">Extract Selected…</x:String>
+    <x:String x:Key="Button.Extract">Extract</x:String>
     <x:String x:Key="Button.ExtractAll">Extract All</x:String>
     <x:String x:Key="Button.Skip">Skip</x:String>
     <x:String x:Key="Button.Rename">Rename</x:String>
@@ -40,7 +41,7 @@
     <x:String x:Key="Toolbar.SortSize">Size</x:String>
     <x:String x:Key="Toolbar.SortDate">Date</x:String>
     <x:String x:Key="Tooltip.ToggleView">Toggle flat/tree view</x:String>
-    <x:String x:Key="Tooltip.ExtractSelected">Extract checked entries to a folder</x:String>
+    <x:String x:Key="Tooltip.ExtractSelected">Open extraction options for checked entries</x:String>
     <x:String x:Key="Tooltip.ExtractAll">Extract all entries to a folder</x:String>
 
     <!-- DataGrid column headers -->
@@ -78,8 +79,19 @@
     <x:String x:Key="Watermark.Search">Search…</x:String>
     <x:String x:Key="Watermark.SourceDirectory">Source directory…</x:String>
     <x:String x:Key="Watermark.OutputPath">Output .dar path…</x:String>
+    <x:String x:Key="Watermark.DestinationPath">Destination folder…</x:String>
     <x:String x:Key="Watermark.Passphrase">Passphrase</x:String>
     <x:String x:Key="Watermark.ConfirmPassphrase">Confirm passphrase</x:String>
+
+    <!-- Extract options dialog -->
+    <x:String x:Key="Extract.Options.Title">Extract Selected</x:String>
+    <x:String x:Key="Extract.Options.Destination">Destination folder:</x:String>
+    <x:String x:Key="Extract.Options.OptionsLabel">Options:</x:String>
+    <x:String x:Key="Extract.Options.FlatPaths">Flat paths — do not replicate archive directory structure</x:String>
+    <x:String x:Key="Extract.Options.FlatPathsTooltip">When enabled, files are placed directly in the destination folder or inside their selected directory without recreating parent folders.</x:String>
+    <x:String x:Key="Extract.Options.Preview">Preview:</x:String>
+    <x:String x:Key="Extract.Options.ColumnArchive">Archive path</x:String>
+    <x:String x:Key="Extract.Options.ColumnDest">Destination path</x:String>
 
     <!-- Extract dialog -->
     <x:String x:Key="Extract.Title">Extracting…</x:String>

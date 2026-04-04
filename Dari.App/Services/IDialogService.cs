@@ -61,4 +61,10 @@ public interface IDialogService
 
     /// <summary>Shows the application settings dialog.</summary>
     ValueTask ShowSettingsAsync(SettingsViewModel vm);
+
+    /// <summary>
+    /// Shows the "Extract Selected" options dialog (destination, flat-path toggle, preview).
+    /// On return check <see cref="ExtractOptionsViewModel.IsConfirmed"/> for the user's choice.
+    /// </summary>
+    ValueTask ShowExtractOptionsDialogAsync(ExtractOptionsViewModel vm);
 }
