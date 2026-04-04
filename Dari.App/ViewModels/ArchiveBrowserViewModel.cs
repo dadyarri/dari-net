@@ -52,6 +52,9 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     [ObservableProperty]
     private ObservableCollection<TreeNodeViewModel> _treeRootNodes = [];
 
+    [ObservableProperty]
+    private bool _flatPaths;
+
     // -----------------------------------------------------------------------
     // Archive metadata
     // -----------------------------------------------------------------------
@@ -146,7 +149,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         var vm = new ExtractViewModel(_allEntries.Select(e => e.Entry).ToList(),
                                      _reader, destination, _dialogService);
         await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
-        foreach (var entry in _allEntries) entry.IsSelected = false;
+        ClearAllSelections();
     }
 
     /// <summary>Extracts only the checked (selected) entries to a user-chosen directory.</summary>
@@ -156,17 +159,21 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         var selected = _allEntries.Where(e => e.IsSelected).Select(e => e.Entry).ToList();
         if (selected.Count == 0)
         {
-            await _dialogService.ShowMessageAsync("No Selection",
-                "Please check at least one entry before extracting.").ConfigureAwait(true);
+            await _dialogService.ShowMessageAsync(
+                LocalizationManager.Current["Dialog.NoSelection.Title"],
+                LocalizationManager.Current["Dialog.NoSelection.Message"]).ConfigureAwait(true);
             return;
         }
 
         var destination = await _dialogService.PickFolderAsync().ConfigureAwait(true);
         if (destination is null) return;
 
-        var vm = new ExtractViewModel(selected, _reader, destination, _dialogService);
+        var selectedDirPrefixes = FlatPaths ? GetSelectedDirectoryPrefixes() : null;
+        var vm = new ExtractViewModel(selected, _reader, destination, _dialogService,
+            flatPaths: FlatPaths, selectedDirectoryPrefixes: selectedDirPrefixes);
         await _dialogService.ShowExtractDialogAsync(vm).ConfigureAwait(true);
-        foreach (var entry in _allEntries) entry.IsSelected = false;
+
+        ClearAllSelections();
     }
 
     // -----------------------------------------------------------------------
@@ -210,20 +217,23 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
 
     private void BuildTree()
     {
-        var root = new DirectoryNodeViewModel("");
+        var root = new DirectoryNodeViewModel("", "");
         foreach (var entry in FilteredEntries)
         {
             var parts = entry.Path.Split('/');
             var current = root;
+            string currentPath = "";
             for (int i = 0; i < parts.Length - 1; i++)
             {
                 var segName = parts[i];
+                currentPath += segName + "/";
+                var segPath = currentPath; // capture for closure
                 var existing = current.Children
                     .OfType<DirectoryNodeViewModel>()
                     .FirstOrDefault(n => n.Name == segName);
                 if (existing is null)
                 {
-                    existing = new DirectoryNodeViewModel(segName);
+                    existing = new DirectoryNodeViewModel(segName, segPath);
                     current.Children.Add(existing);
                 }
                 current = existing;
@@ -236,6 +246,49 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         foreach (var child in root.Children)
             roots.Add(child);
         TreeRootNodes = roots;
+    }
+
+    // -----------------------------------------------------------------------
+    // Selection helpers
+    // -----------------------------------------------------------------------
+
+    private void ClearAllSelections()
+    {
+        foreach (var entry in _allEntries) entry.IsSelected = false;
+        ResetDirSelections(TreeRootNodes);
+    }
+
+    private static void ResetDirSelections(IEnumerable<TreeNodeViewModel> nodes)
+    {
+        foreach (var node in nodes.OfType<DirectoryNodeViewModel>())
+        {
+            if (node.IsSelected) node.IsSelected = false;
+            ResetDirSelections(node.Children);
+        }
+    }
+
+    /// <summary>
+    /// Returns the <see cref="DirectoryNodeViewModel.FullPath"/> of every directory node
+    /// that is currently selected (checked). Sub-directories of already-selected directories
+    /// are not included separately because the parent prefix covers them.
+    /// </summary>
+    private IReadOnlyList<string> GetSelectedDirectoryPrefixes()
+    {
+        var result = new List<string>();
+        CollectSelectedDirPrefixes(TreeRootNodes, result);
+        return result;
+    }
+
+    private static void CollectSelectedDirPrefixes(
+        IEnumerable<TreeNodeViewModel> nodes, List<string> result)
+    {
+        foreach (var node in nodes.OfType<DirectoryNodeViewModel>())
+        {
+            if (node.IsSelected)
+                result.Add(node.FullPath); // children are covered by this prefix
+            else
+                CollectSelectedDirPrefixes(node.Children, result);
+        }
     }
 
     // -----------------------------------------------------------------------

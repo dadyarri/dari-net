@@ -95,12 +95,29 @@ public sealed class DialogService : IDialogService
         {
             await dialog.ShowDialog(_owner).ConfigureAwait(true);
         }
+        catch (Exception)
+        {
+            // Owner window closed while dialog was open — fall through to cancellation below.
+        }
         finally
         {
             vm.Completed -= dialog.Close;
         }
+
         if (!extractTask.IsCompleted)
-            await extractTask.ConfigureAwait(true);
+        {
+            // Dialog was closed before extraction finished (e.g. owner window force-closed).
+            // Cancel the extraction and wait for it to wind down cleanly.
+            vm.CancelCommand.Execute(null);
+            try
+            {
+                await extractTask.ConfigureAwait(true);
+            }
+            catch (Exception)
+            {
+                // Swallow: extraction was force-cancelled by owner close.
+            }
+        }
     }
 
     /// <inheritdoc/>

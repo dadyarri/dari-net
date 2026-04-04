@@ -105,6 +105,12 @@
     <!-- Settings dialog -->
     <x:String x:Key="Settings.Title">Settings</x:String>
     <x:String x:Key="Settings.Language">Language:</x:String>
+    <x:String x:Key="Settings.Theme">Theme:</x:String>
+
+    <!-- Theme options -->
+    <x:String x:Key="Theme.System">System (follow OS)</x:String>
+    <x:String x:Key="Theme.Light">Light</x:String>
+    <x:String x:Key="Theme.Dark">Dark</x:String>
     <!-- Status messages (used from ViewModels) -->
     <x:String x:Key="Status.Ready">Ready</x:String>
     <x:String x:Key="Status.FailedToOpen">Failed to open archive: {0}</x:String>
@@ -126,7 +132,11 @@
     <x:String x:Key="Dialog.NoSource.Message">Please select a source directory or files.</x:String>
     <x:String x:Key="Dialog.NoOutputPath.Title">No Output Path</x:String>
     <x:String x:Key="Dialog.NoOutputPath.Message">Please specify an output file path.</x:String>
-    <!-- File / folder picker titles (used from DialogService) -->
+    <x:String x:Key="Dialog.NoSelection.Title">No Selection</x:String>
+    <x:String x:Key="Dialog.NoSelection.Message">Please check at least one entry before extracting.</x:String>
+    <!-- Toolbar: flat-paths option -->
+    <x:String x:Key="Toolbar.FlatPaths">Flat paths</x:String>
+    <x:String x:Key="Tooltip.FlatPaths">Extract without replicating archive directory structure</x:String>
     <x:String x:Key="Dialog.OpenArchive.Title">Open Dari Archive</x:String>
     <x:String x:Key="Dialog.PickFolder.Title">Select Destination Folder</x:String>
     <x:String x:Key="Dialog.PickFiles.Title">Select Files to Archive</x:String>

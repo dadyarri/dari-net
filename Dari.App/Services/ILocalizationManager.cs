@@ -3,6 +3,9 @@ namespace Dari.App.Services;
 /// <summary>Represents a selectable UI language.</summary>
 public sealed record LanguageItem(string Code, string DisplayName);
 
+/// <summary>Represents a selectable UI theme.</summary>
+public sealed record ThemeItem(string Code, string DisplayName);
+
 /// <summary>
 /// Manages the active UI locale by swapping Avalonia resource dictionaries at runtime
 /// and exposing a string-lookup API for use in ViewModels.

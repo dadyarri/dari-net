@@ -8,4 +8,10 @@ public sealed class AppConfig
     /// Defaults to <c>"en"</c>.
     /// </summary>
     public string Language { get; set; } = "en";
+
+    /// <summary>
+    /// UI theme: <c>"System"</c> (follow OS), <c>"Light"</c>, or <c>"Dark"</c>.
+    /// Defaults to <c>"System"</c>.
+    /// </summary>
+    public string Theme { get; set; } = "System";
 }

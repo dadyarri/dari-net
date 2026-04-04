@@ -22,6 +22,7 @@ public partial class App : Application
         var config = LoadOrInitConfig(configService);
 
         LocalizationManager.Initialize(config.Language);
+        SettingsViewModel.ApplyTheme(config.Theme);
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {

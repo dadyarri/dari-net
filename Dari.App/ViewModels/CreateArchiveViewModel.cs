@@ -425,5 +425,9 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
     // Dispose
     // -----------------------------------------------------------------------
 
-    public void Dispose() => _cts?.Dispose();
+    public void Dispose()
+    {
+        _cts?.Cancel();
+        _cts?.Dispose();
+    }
 }

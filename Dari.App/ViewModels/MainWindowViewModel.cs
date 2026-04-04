@@ -185,7 +185,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (Browser is { } old)
         {
             Browser = null;
-            await old.DisposeAsync().ConfigureAwait(true);
+            await old.DisposeAsync().ConfigureAwait(false);
         }
+    }
+
+    /// <summary>
+    /// Called when the main window is closed (Alt+F4 or OS close button).
+    /// Cancels any running operation and disposes the archive reader.
+    /// </summary>
+    public async ValueTask ShutdownAsync()
+    {
+        await CloseCurrentBrowserAsync().ConfigureAwait(false);
     }
 }

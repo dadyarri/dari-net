@@ -15,6 +15,13 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        if (DataContext is MainWindowViewModel vm)
+            _ = vm.ShutdownAsync();
+    }
+
     private static void OnDragOver(object? sender, DragEventArgs e)
     {
         e.DragEffects = e.Data.Contains(DataFormats.Files)

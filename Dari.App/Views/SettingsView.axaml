@@ -13,17 +13,36 @@
 
     <Grid Margin="20" RowDefinitions="*,Auto">
 
-        <StackPanel Grid.Row="0" Spacing="8">
-            <TextBlock Text="{DynamicResource Settings.Language}" />
-            <ComboBox ItemsSource="{Binding AvailableLanguages}"
-                      SelectedItem="{Binding SelectedLanguage}"
-                      HorizontalAlignment="Stretch">
-                <ComboBox.ItemTemplate>
-                    <DataTemplate DataType="{x:Type services:LanguageItem}">
-                        <TextBlock Text="{Binding DisplayName}" />
-                    </DataTemplate>
-                </ComboBox.ItemTemplate>
-            </ComboBox>
+        <StackPanel Grid.Row="0" Spacing="12">
+
+            <!-- Language -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.Language}" />
+                <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                          SelectedItem="{Binding SelectedLanguage}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type services:LanguageItem}">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Theme -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.Theme}" />
+                <ComboBox ItemsSource="{Binding AvailableThemes}"
+                          SelectedItem="{Binding SelectedTheme}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type services:ThemeItem}">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
         </StackPanel>
 
         <StackPanel Grid.Row="1"

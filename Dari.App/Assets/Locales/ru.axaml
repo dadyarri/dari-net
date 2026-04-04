@@ -102,9 +102,15 @@
     <!-- Главное окно -->
     <x:String x:Key="MainWindow.Placeholder">Откройте архив .dar для начала работы.</x:String>
 
-    <!-- Диалог настроек -->
+    <!-- Settings dialog -->
     <x:String x:Key="Settings.Title">Настройки</x:String>
     <x:String x:Key="Settings.Language">Язык:</x:String>
+    <x:String x:Key="Settings.Theme">Тема:</x:String>
+
+    <!-- Theme options -->
+    <x:String x:Key="Theme.System">Системная (следовать ОС)</x:String>
+    <x:String x:Key="Theme.Light">Светлая</x:String>
+    <x:String x:Key="Theme.Dark">Тёмная</x:String>
     <!-- Статусные сообщения -->
     <x:String x:Key="Status.Ready">Готово</x:String>
     <x:String x:Key="Status.FailedToOpen">Не удалось открыть архив: {0}</x:String>
@@ -126,7 +132,11 @@
     <x:String x:Key="Dialog.NoSource.Message">Выберите исходную папку или файлы.</x:String>
     <x:String x:Key="Dialog.NoOutputPath.Title">Путь не указан</x:String>
     <x:String x:Key="Dialog.NoOutputPath.Message">Укажите путь для сохранения архива.</x:String>
-    <!-- Заголовки диалогов выбора файлов -->
+    <x:String x:Key="Dialog.NoSelection.Title">Ничего не выбрано</x:String>
+    <x:String x:Key="Dialog.NoSelection.Message">Отметьте хотя бы одну запись перед извлечением.</x:String>
+    <!-- Панель инструментов: плоские пути -->
+    <x:String x:Key="Toolbar.FlatPaths">Без путей</x:String>
+    <x:String x:Key="Tooltip.FlatPaths">Извлекать без воспроизведения структуры каталогов архива</x:String>
     <x:String x:Key="Dialog.OpenArchive.Title">Открыть архив Dari</x:String>
     <x:String x:Key="Dialog.PickFolder.Title">Выберите папку назначения</x:String>
     <x:String x:Key="Dialog.PickFiles.Title">Выберите файлы для архивации</x:String>
