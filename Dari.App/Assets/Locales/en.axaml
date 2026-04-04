@@ -40,6 +40,8 @@
     <x:String x:Key="Toolbar.SortName">Name</x:String>
     <x:String x:Key="Toolbar.SortSize">Size</x:String>
     <x:String x:Key="Toolbar.SortDate">Date</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Flat">Flat list</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Tree">Tree view</x:String>
     <x:String x:Key="Tooltip.ToggleView">Toggle flat/tree view</x:String>
     <x:String x:Key="Tooltip.ExtractSelected">Open extraction options for checked entries</x:String>
     <x:String x:Key="Tooltip.ExtractAll">Extract all entries to a folder</x:String>
@@ -90,7 +92,6 @@
     <x:String x:Key="Extract.Options.FlatPaths">Flat paths — do not replicate archive directory structure</x:String>
     <x:String x:Key="Extract.Options.FlatPathsTooltip">When enabled, files are placed directly in the destination folder or inside their selected directory without recreating parent folders.</x:String>
     <x:String x:Key="Extract.Options.Preview">Preview:</x:String>
-    <x:String x:Key="Extract.Options.ColumnArchive">Archive path</x:String>
     <x:String x:Key="Extract.Options.ColumnDest">Destination path</x:String>
 
     <!-- Extract dialog -->

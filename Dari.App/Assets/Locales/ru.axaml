@@ -40,6 +40,8 @@
     <x:String x:Key="Toolbar.SortName">Имя</x:String>
     <x:String x:Key="Toolbar.SortSize">Размер</x:String>
     <x:String x:Key="Toolbar.SortDate">Дата</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Flat">Плоский список</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Tree">Дерево каталогов</x:String>
     <x:String x:Key="Tooltip.ToggleView">Переключить плоский/древовидный вид</x:String>
     <x:String x:Key="Tooltip.ExtractSelected">Открыть параметры извлечения для отмеченных файлов</x:String>
     <x:String x:Key="Tooltip.ExtractAll">Извлечь все файлы в папку</x:String>
@@ -90,7 +92,6 @@
     <x:String x:Key="Extract.Options.FlatPaths">Без путей — не воспроизводить структуру каталогов архива</x:String>
     <x:String x:Key="Extract.Options.FlatPathsTooltip">При включении файлы помещаются непосредственно в папку назначения или в выбранный каталог без создания родительских папок.</x:String>
     <x:String x:Key="Extract.Options.Preview">Предпросмотр:</x:String>
-    <x:String x:Key="Extract.Options.ColumnArchive">Путь в архиве</x:String>
     <x:String x:Key="Extract.Options.ColumnDest">Путь назначения</x:String>
 
     <!-- Диалог извлечения -->

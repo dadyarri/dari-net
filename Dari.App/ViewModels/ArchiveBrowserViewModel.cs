@@ -77,6 +77,12 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     /// <summary>Optional passphrase retained for extraction (Phase C).</summary>
     public DariPassphrase? Passphrase => _passphrase;
 
+    /// <summary>Localized label for the view-mode toggle button.</summary>
+    public string ViewModeDisplay =>
+        LocalizationManager.Current[ViewMode == ViewMode.Flat
+            ? "Toolbar.ViewMode.Flat"
+            : "Toolbar.ViewMode.Tree"];
+
     // -----------------------------------------------------------------------
     // Constructor
     // -----------------------------------------------------------------------
@@ -113,7 +119,12 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     partial void OnSearchTextChanged(string value) => Refresh();
     partial void OnActiveSortColumnChanged(SortColumn value) => Refresh();
     partial void OnActiveSortDirectionChanged(SortDirection value) => Refresh();
-    partial void OnViewModeChanged(ViewMode value) => Refresh();
+
+    partial void OnViewModeChanged(ViewMode value)
+    {
+        OnPropertyChanged(nameof(ViewModeDisplay));
+        Refresh();
+    }
 
     // -----------------------------------------------------------------------
     // Commands
@@ -187,10 +198,23 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     // Entry selection → directory tri-state
     // -----------------------------------------------------------------------
 
+    private bool _dirUpdatePending;
+
     private void OnEntrySelectionChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName == nameof(ArchiveEntryViewModel.IsSelected))
-            UpdateDirSelectionStates();
+        if (e.PropertyName != nameof(ArchiveEntryViewModel.IsSelected)) return;
+
+        // Coalesce multiple rapid file-selection changes (e.g. from a directory check
+        // propagating to hundreds of children) into a single UI-thread update per frame.
+        if (_dirUpdatePending) return;
+        _dirUpdatePending = true;
+        Avalonia.Threading.Dispatcher.UIThread.Post(DeferredUpdateDirSelectionStates);
+    }
+
+    private void DeferredUpdateDirSelectionStates()
+    {
+        _dirUpdatePending = false;
+        UpdateDirSelectionStates();
     }
 
     private void UpdateDirSelectionStates()
@@ -282,6 +306,9 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         foreach (var child in root.Children)
             roots.Add(child);
         TreeRootNodes = roots;
+
+        // Initialise directory tri-state checkboxes from the current file selection state.
+        UpdateDirSelectionStates();
     }
 
     // -----------------------------------------------------------------------

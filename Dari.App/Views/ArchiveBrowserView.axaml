@@ -44,7 +44,7 @@
                      Margin="0,0,8,0" />
 
             <Button Grid.Column="1"
-                    Content="{Binding ViewMode}"
+                    Content="{Binding ViewModeDisplay}"
                     Command="{Binding ToggleViewModeCommand}"
                     ToolTip.Tip="{DynamicResource Tooltip.ToggleView}"
                     Margin="0,0,8,0" />

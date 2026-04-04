@@ -7,7 +7,7 @@ using Dari.App.Services;
 namespace Dari.App.ViewModels;
 
 /// <summary>One row in the extraction preview list.</summary>
-public sealed record ExtractPreviewItem(string ArchivePath, string DestinationPath);
+public sealed record ExtractPreviewItem(string DestinationPath);
 
 /// <summary>
 /// ViewModel for the "Extract Selected" options dialog.
@@ -115,7 +115,7 @@ public sealed partial class ExtractOptionsViewModel : ObservableObject, IDisposa
                 ? relPath
                 : Path.Combine(DestinationPath, relPath.Replace('/', Path.DirectorySeparatorChar));
 
-            items.Add(new ExtractPreviewItem(entry.Path, destPath));
+            items.Add(new ExtractPreviewItem(destPath));
         }
 
         PreviewItems = items;
