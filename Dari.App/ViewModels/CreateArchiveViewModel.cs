@@ -154,7 +154,7 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
 
         _selectedFiles = paths;
         SourcePath = Path.GetDirectoryName(paths[0]) ?? paths[0];
-        PreviewFiles = new ObservableCollection<string>(paths.Select(Path.GetFileName)!);
+        PreviewFiles = new ObservableCollection<string>(paths.Select(p => Path.GetFileName(p)!));
     }
 
     private async Task RefreshPreviewAsync()
