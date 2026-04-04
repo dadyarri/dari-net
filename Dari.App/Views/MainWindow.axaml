@@ -26,30 +26,33 @@
 
         <!-- Menu bar -->
         <Menu Grid.Row="0">
-            <MenuItem Header="_File">
-                <MenuItem Header="_New Archive…"
+            <MenuItem Header="{DynamicResource Menu.File}">
+                <MenuItem Header="{DynamicResource Menu.File.NewArchive}"
                           InputGesture="Ctrl+N"
                           Command="{Binding NewArchiveCommand}" />
-                <MenuItem Header="_Open…"
+                <MenuItem Header="{DynamicResource Menu.File.Open}"
                           InputGesture="Ctrl+O"
                           Command="{Binding OpenArchiveCommand}" />
-                <MenuItem Header="_Close"
+                <MenuItem Header="{DynamicResource Menu.File.Close}"
                           InputGesture="Ctrl+W"
                           Command="{Binding CloseArchiveCommand}" />
                 <Separator />
-                <MenuItem Header="E_xit"
+                <MenuItem Header="{DynamicResource Menu.File.Exit}"
                           Command="{Binding ExitCommand}" />
             </MenuItem>
-            <MenuItem Header="_Archive"
+            <MenuItem Header="{DynamicResource Menu.Archive}"
                       IsEnabled="{Binding Browser, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <MenuItem Header="Extract _All…"
+                <MenuItem Header="{DynamicResource Menu.Archive.ExtractAll}"
                           InputGesture="Ctrl+E"
                           Command="{Binding Browser.ExtractAllCommand}" />
-                <MenuItem Header="Extract _Selected…"
+                <MenuItem Header="{DynamicResource Menu.Archive.ExtractSelected}"
                           Command="{Binding Browser.ExtractSelectedCommand}" />
             </MenuItem>
-            <MenuItem Header="_Help">
-                <MenuItem Header="_About Dari" Command="{Binding AboutCommand}" />
+            <MenuItem Header="{DynamicResource Menu.Help}">
+                <MenuItem Header="{DynamicResource Menu.Help.Settings}"
+                          Command="{Binding SettingsCommand}" />
+                <MenuItem Header="{DynamicResource Menu.Help.About}"
+                          Command="{Binding AboutCommand}" />
             </MenuItem>
         </Menu>
 
@@ -57,7 +60,7 @@
         <Panel Grid.Row="1">
 
             <!-- Placeholder shown when no archive is open -->
-            <TextBlock Text="Open a .dar archive to get started."
+            <TextBlock Text="{DynamicResource MainWindow.Placeholder}"
                        HorizontalAlignment="Center"
                        VerticalAlignment="Center"
                        Opacity="0.5"

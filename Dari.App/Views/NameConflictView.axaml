@@ -3,7 +3,7 @@
         xmlns:vm="using:Dari.App.ViewModels"
         x:Class="Dari.App.Views.NameConflictView"
         x:DataType="vm:NameConflictViewModel"
-        Title="File Already Exists"
+        Title="{DynamicResource Conflict.Title}"
         Width="480"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -13,13 +13,13 @@
     <Grid RowDefinitions="*,Auto" Margin="20">
 
         <StackPanel Grid.Row="0" Spacing="8" VerticalAlignment="Center">
-            <TextBlock Text="A file already exists at the destination:"
+            <TextBlock Text="{DynamicResource Conflict.Prompt}"
                        TextWrapping="Wrap" />
             <TextBlock Text="{Binding ExistingPath}"
                        FontFamily="Monospace"
                        TextWrapping="Wrap"
                        Opacity="0.8" />
-            <TextBlock Text="How would you like to proceed?"
+            <TextBlock Text="{DynamicResource Conflict.Question}"
                        Margin="0,4,0,0" />
         </StackPanel>
 
@@ -28,11 +28,11 @@
                     HorizontalAlignment="Right"
                     Spacing="8"
                     Margin="0,16,0,0">
-            <Button Content="Skip"
+            <Button Content="{DynamicResource Button.Skip}"
                     Command="{Binding SkipCommand}" />
-            <Button Content="Rename"
+            <Button Content="{DynamicResource Button.Rename}"
                     Command="{Binding RenameCommand}" />
-            <Button Content="Overwrite"
+            <Button Content="{DynamicResource Button.Overwrite}"
                     Classes="accent"
                     Command="{Binding OverwriteCommand}" />
         </StackPanel>

@@ -91,7 +91,7 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
     {
         _cts.Cancel();
         WasCancelled = true;
-        StatusMessage = "Cancelling…";
+        StatusMessage = LocalizationManager.Current["Status.Cancelling"];
     }
 
     /// <summary>Opens the destination directory in the system file manager.</summary>
@@ -124,11 +124,11 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException)
         {
             WasCancelled = true;
-            StatusMessage = "Extraction cancelled.";
+            StatusMessage = LocalizationManager.Current["Status.ExtractionCancelled"];
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Unexpected error: {ex.Message}";
+            StatusMessage = LocalizationManager.Current.Format("Status.UnexpectedError", ex.Message);
         }
         finally
         {
@@ -136,7 +136,8 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
             IsCompleted = true;
 
             if (!WasCancelled && string.IsNullOrEmpty(StatusMessage))
-                StatusMessage = $"Done — extracted {ExtractedFiles} of {TotalCount} file(s).";
+                StatusMessage = LocalizationManager.Current.Format(
+                    "Status.Done.Extract", ExtractedFiles, TotalCount);
 
             Completed?.Invoke();
         }

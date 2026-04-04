@@ -3,7 +3,7 @@
         xmlns:vm="using:Dari.App.ViewModels"
         x:Class="Dari.App.Views.CreateArchiveView"
         x:DataType="vm:CreateArchiveViewModel"
-        Title="Create Archive"
+        Title="{DynamicResource Wizard.Title}"
         Width="520"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -17,9 +17,9 @@
              ================================================================ -->
         <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsStep1}">
 
-            <TextBlock Text="Step 1 of 3 — Select Source" FontWeight="SemiBold" FontSize="14" />
+            <TextBlock Text="{DynamicResource Wizard.Step1.Title}" FontWeight="SemiBold" FontSize="14" />
 
-            <TextBlock Text="Choose a directory or individual files to archive."
+            <TextBlock Text="{DynamicResource Wizard.Step1.Subtitle}"
                        TextWrapping="Wrap"
                        Opacity="0.7" />
 
@@ -28,32 +28,32 @@
                 <TextBox Grid.Column="0"
                          Margin="0,0,6,0"
                          Text="{Binding SourcePath}"
-                         Watermark="Source directory…"
+                         Watermark="{DynamicResource Watermark.SourceDirectory}"
                          IsReadOnly="True" />
                 <Button Grid.Column="1"
-                        Content="Browse Directory…"
+                        Content="{DynamicResource Button.BrowseDirectory}"
                         Command="{Binding BrowseSourceDirectoryCommand}" />
             </Grid>
 
             <!-- Individual file picker -->
-            <Button Content="Browse Individual Files…"
+            <Button Content="{DynamicResource Button.BrowseFiles}"
                     Command="{Binding BrowseSourceFilesCommand}"
                     HorizontalAlignment="Left" />
 
             <!-- File preview -->
             <StackPanel Spacing="4"
                         IsVisible="{Binding HasSourcePath}">
-                <TextBlock Text="Files to be archived (respects .darignore / .gitignore):"
+                <TextBlock Text="{DynamicResource Wizard.Step1.FilesLabel}"
                            Opacity="0.7"
                            FontSize="11" />
                 <ListBox ItemsSource="{Binding PreviewFiles}"
                          MaxHeight="180"
                          FontFamily="Monospace"
                          FontSize="11" />
-                <TextBlock Opacity="0.6" FontSize="11">
-                    <Run Text="{Binding PreviewFiles.Count}" />
-                    <Run Text="file(s)" />
-                </TextBlock>
+                <StackPanel Orientation="Horizontal" Spacing="4">
+                    <TextBlock Text="{Binding PreviewFiles.Count}" Opacity="0.6" FontSize="11" />
+                    <TextBlock Text="{DynamicResource Wizard.Step1.FileCount}" Opacity="0.6" FontSize="11" />
+                </StackPanel>
             </StackPanel>
 
         </StackPanel>
@@ -63,11 +63,11 @@
              ================================================================ -->
         <StackPanel Grid.Row="0" Spacing="12" IsVisible="{Binding IsStep2}">
 
-            <TextBlock Text="Step 2 of 3 — Options" FontWeight="SemiBold" FontSize="14" />
+            <TextBlock Text="{DynamicResource Wizard.Step2.Title}" FontWeight="SemiBold" FontSize="14" />
 
             <!-- Compression -->
             <StackPanel Spacing="4">
-                <TextBlock Text="Compression algorithm:" />
+                <TextBlock Text="{DynamicResource Wizard.Step2.CompressionLabel}" />
                 <ComboBox ItemsSource="{Binding CompressionOptions}"
                           SelectedItem="{Binding SelectedCompression}"
                           HorizontalAlignment="Stretch" />
@@ -75,19 +75,19 @@
 
             <!-- Deduplication -->
             <CheckBox IsChecked="{Binding EnableDeduplication}"
-                      Content="Enable deduplication (skip identical content blocks)" />
+                      Content="{DynamicResource Wizard.Step2.Deduplication}" />
 
             <!-- Encryption -->
             <CheckBox IsChecked="{Binding EnableEncryption}"
-                      Content="Encrypt the archive with a passphrase" />
+                      Content="{DynamicResource Wizard.Step2.Encryption}" />
 
             <StackPanel Spacing="6" IsVisible="{Binding ShowEncryptionFields}">
                 <TextBox PasswordChar="•"
                          Text="{Binding EncryptionPassphrase}"
-                         Watermark="Passphrase" />
+                         Watermark="{DynamicResource Watermark.Passphrase}" />
                 <TextBox PasswordChar="•"
                          Text="{Binding EncryptionPassphraseConfirm}"
-                         Watermark="Confirm passphrase" />
+                         Watermark="{DynamicResource Watermark.ConfirmPassphrase}" />
             </StackPanel>
 
             <!-- Validation error -->
@@ -103,29 +103,29 @@
              ================================================================ -->
         <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsStep3}">
 
-            <TextBlock Text="Step 3 of 3 — Destination" FontWeight="SemiBold" FontSize="14" />
+            <TextBlock Text="{DynamicResource Wizard.Step3.Title}" FontWeight="SemiBold" FontSize="14" />
 
             <!-- Output path (shown before creation starts) -->
             <StackPanel Spacing="6"
                         IsVisible="{Binding !IsCreating}">
                 <TextBlock IsVisible="{Binding !IsCompleted}"
-                           Text="Choose where to save the new .dar archive." Opacity="0.7" />
+                           Text="{DynamicResource Wizard.Step3.Subtitle}" Opacity="0.7" />
                 <Grid ColumnDefinitions="*,Auto"
                       IsVisible="{Binding !IsCompleted}">
                     <TextBox Grid.Column="0"
                              Margin="0,0,6,0"
                              Text="{Binding OutputPath}"
-                             Watermark="Output .dar path…"
+                             Watermark="{DynamicResource Watermark.OutputPath}"
                              IsReadOnly="True" />
                     <Button Grid.Column="1"
-                            Content="Browse…"
+                            Content="{DynamicResource Button.Browse}"
                             Command="{Binding BrowseOutputCommand}" />
                 </Grid>
             </StackPanel>
 
             <!-- In-progress panel -->
             <StackPanel Spacing="8" IsVisible="{Binding IsCreating}">
-                <TextBlock Text="Creating archive…" FontWeight="SemiBold" />
+                <TextBlock Text="{DynamicResource Wizard.Step3.Creating}" FontWeight="SemiBold" />
 
                 <ProgressBar Minimum="0"
                              Maximum="1"
@@ -173,48 +173,48 @@
                     Margin="0,16,0,0">
 
             <!-- Back (steps 2 and 3 pre-creation) -->
-            <Button Content="← Back"
+            <Button Content="{DynamicResource Button.Back}"
                     Command="{Binding PreviousStepCommand}"
                     IsVisible="{Binding IsStep2}" />
-            <Button Content="← Back"
+            <Button Content="{DynamicResource Button.Back}"
                     Command="{Binding PreviousStepCommand}"
                     IsVisible="{Binding IsReadyToCreate}" />
 
             <!-- Next (steps 1 and 2) -->
-            <Button Content="Next →"
+            <Button Content="{DynamicResource Button.Next}"
                     Classes="accent"
                     Command="{Binding NextStepCommand}"
                     IsVisible="{Binding IsStep1}" />
-            <Button Content="Next →"
+            <Button Content="{DynamicResource Button.Next}"
                     Classes="accent"
                     Command="{Binding NextStepCommand}"
                     IsVisible="{Binding IsStep2}" />
 
             <!-- Create (step 3, before creation starts) -->
-            <Button Content="Create"
+            <Button Content="{DynamicResource Button.Create}"
                     Classes="accent"
                     Command="{Binding CreateCommand}"
                     IsVisible="{Binding IsReadyToCreate}" />
 
             <!-- Cancel (while creating) -->
-            <Button Content="Cancel"
+            <Button Content="{DynamicResource Button.Cancel}"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding IsCreating}" />
 
             <!-- Post-completion buttons -->
-            <Button Content="Open in Explorer"
+            <Button Content="{DynamicResource Button.OpenInExplorer}"
                     Command="{Binding OpenInExplorerCommand}"
                     IsVisible="{Binding IsCompleted}" />
-            <Button Content="Close"
+            <Button Content="{DynamicResource Button.Close}"
                     Classes="accent"
                     Command="{Binding CloseWizardCommand}"
                     IsVisible="{Binding IsCompleted}" />
 
             <!-- Cancel on step 1/2 (dismiss without creating) -->
-            <Button Content="Cancel"
+            <Button Content="{DynamicResource Button.Cancel}"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding IsStep1}" />
-            <Button Content="Cancel"
+            <Button Content="{DynamicResource Button.Cancel}"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding IsStep2}" />
 

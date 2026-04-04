@@ -219,7 +219,8 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
             if (!HasSourcePath)
             {
                 await _dialogService.ShowMessageAsync(
-                    "No Source", "Please select a source directory or files.").ConfigureAwait(true);
+                    LocalizationManager.Current["Dialog.NoSource.Title"],
+                    LocalizationManager.Current["Dialog.NoSource.Message"]).ConfigureAwait(true);
                 return;
             }
             CurrentStep = 2;
@@ -245,13 +246,13 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
 
         if (string.IsNullOrEmpty(EncryptionPassphrase))
         {
-            OptionsError = "Please enter a passphrase.";
+            OptionsError = LocalizationManager.Current["Validation.NoPassphrase"];
             return false;
         }
 
         if (EncryptionPassphrase != EncryptionPassphraseConfirm)
         {
-            OptionsError = "Passphrases do not match.";
+            OptionsError = LocalizationManager.Current["Validation.PassphrasesMismatch"];
             return false;
         }
 
@@ -275,7 +276,8 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
         if (!HasOutputPath)
         {
             await _dialogService.ShowMessageAsync(
-                "No Output Path", "Please specify an output file path.").ConfigureAwait(true);
+                LocalizationManager.Current["Dialog.NoOutputPath.Title"],
+                LocalizationManager.Current["Dialog.NoOutputPath.Message"]).ConfigureAwait(true);
             return;
         }
 
@@ -292,18 +294,18 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
         catch (OperationCanceledException)
         {
             WasCancelled = true;
-            StatusMessage = "Creation cancelled.";
+            StatusMessage = LocalizationManager.Current["Status.CreationCancelled"];
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Error: {ex.Message}";
+            StatusMessage = LocalizationManager.Current.Format("Status.Error", ex.Message);
         }
         finally
         {
             IsCreating = false;
             IsCompleted = true;
             if (!WasCancelled && string.IsNullOrEmpty(StatusMessage))
-                StatusMessage = $"Done — archived {DoneCount} file(s).";
+                StatusMessage = LocalizationManager.Current.Format("Status.Done.Create", DoneCount);
         }
     }
 

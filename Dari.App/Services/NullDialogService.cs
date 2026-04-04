@@ -37,4 +37,6 @@ internal sealed class NullDialogService : IDialogService
     public ValueTask<string?> SaveDarFileAsync() => new((string?)null);
 
     public ValueTask ShowCreateArchiveDialogAsync(CreateArchiveViewModel vm) => ValueTask.CompletedTask;
+
+    public ValueTask ShowSettingsAsync(SettingsViewModel vm) => ValueTask.CompletedTask;
 }

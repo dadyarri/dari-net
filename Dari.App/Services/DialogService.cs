@@ -19,14 +19,15 @@ public sealed class DialogService : IDialogService
     /// <inheritdoc/>
     public async ValueTask<string?> OpenDarFileAsync()
     {
+        var loc = LocalizationManager.Current;
         var files = await _owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Open Dari Archive",
+            Title = loc["Dialog.OpenArchive.Title"],
             AllowMultiple = false,
             FileTypeFilter =
             [
-                new FilePickerFileType("Dari Archives") { Patterns = ["*.dar"] },
-                new FilePickerFileType("All Files") { Patterns = ["*.*"] },
+                new FilePickerFileType(loc["Dialog.FileType.DariArchives"]) { Patterns = ["*.dar"] },
+                new FilePickerFileType(loc["Dialog.FileType.AllFiles"]) { Patterns = ["*.*"] },
             ],
         }).ConfigureAwait(true);
 
@@ -51,7 +52,7 @@ public sealed class DialogService : IDialogService
     {
         var folders = await _owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
         {
-            Title = "Select Destination Folder",
+            Title = LocalizationManager.Current["Dialog.PickFolder.Title"],
             AllowMultiple = false,
         }).ConfigureAwait(true);
 
@@ -107,7 +108,7 @@ public sealed class DialogService : IDialogService
     {
         var files = await _owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
-            Title = "Select Files to Archive",
+            Title = LocalizationManager.Current["Dialog.PickFiles.Title"],
             AllowMultiple = true,
         }).ConfigureAwait(true);
 
@@ -125,13 +126,14 @@ public sealed class DialogService : IDialogService
     /// <inheritdoc/>
     public async ValueTask<string?> SaveDarFileAsync()
     {
+        var loc = LocalizationManager.Current;
         var file = await _owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
         {
-            Title = "Save Dari Archive",
+            Title = loc["Dialog.SaveArchive.Title"],
             DefaultExtension = "dar",
             FileTypeChoices =
             [
-                new FilePickerFileType("Dari Archives") { Patterns = ["*.dar"] },
+                new FilePickerFileType(loc["Dialog.FileType.DariArchives"]) { Patterns = ["*.dar"] },
             ],
         }).ConfigureAwait(true);
 
@@ -151,5 +153,12 @@ public sealed class DialogService : IDialogService
         {
             vm.Closed -= dialog.Close;
         }
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask ShowSettingsAsync(SettingsViewModel vm)
+    {
+        var dialog = new SettingsView { DataContext = vm };
+        await dialog.ShowDialog(_owner).ConfigureAwait(true);
     }
 }

@@ -58,4 +58,7 @@ public interface IDialogService
 
     /// <summary>Shows the <see cref="CreateArchiveViewModel"/> in a modal archive-creation wizard dialog.</summary>
     ValueTask ShowCreateArchiveDialogAsync(CreateArchiveViewModel vm);
+
+    /// <summary>Shows the application settings dialog.</summary>
+    ValueTask ShowSettingsAsync(SettingsViewModel vm);
 }
