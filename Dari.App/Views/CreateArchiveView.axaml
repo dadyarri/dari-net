@@ -1,0 +1,227 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        x:Class="Dari.App.Views.CreateArchiveView"
+        x:DataType="vm:CreateArchiveViewModel"
+        Title="Create Archive"
+        Width="520"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Grid Margin="20" RowDefinitions="*,Auto">
+
+        <!-- ================================================================
+             Step 1 — Source
+             ================================================================ -->
+        <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsStep1}">
+
+            <TextBlock Text="Step 1 of 3 — Select Source" FontWeight="SemiBold" FontSize="14" />
+
+            <TextBlock Text="Choose a directory or individual files to archive."
+                       TextWrapping="Wrap"
+                       Opacity="0.7" />
+
+            <!-- Directory picker -->
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBox Grid.Column="0"
+                         Margin="0,0,6,0"
+                         Text="{Binding SourcePath}"
+                         Watermark="Source directory…"
+                         IsReadOnly="True" />
+                <Button Grid.Column="1"
+                        Content="Browse Directory…"
+                        Command="{Binding BrowseSourceDirectoryCommand}" />
+            </Grid>
+
+            <!-- Individual file picker -->
+            <Button Content="Browse Individual Files…"
+                    Command="{Binding BrowseSourceFilesCommand}"
+                    HorizontalAlignment="Left" />
+
+            <!-- File preview -->
+            <StackPanel Spacing="4"
+                        IsVisible="{Binding HasSourcePath}">
+                <TextBlock Text="Files to be archived (respects .darignore / .gitignore):"
+                           Opacity="0.7"
+                           FontSize="11" />
+                <ListBox ItemsSource="{Binding PreviewFiles}"
+                         MaxHeight="180"
+                         FontFamily="Monospace"
+                         FontSize="11" />
+                <TextBlock Opacity="0.6" FontSize="11">
+                    <Run Text="{Binding PreviewFiles.Count}" />
+                    <Run Text="file(s)" />
+                </TextBlock>
+            </StackPanel>
+
+        </StackPanel>
+
+        <!-- ================================================================
+             Step 2 — Options
+             ================================================================ -->
+        <StackPanel Grid.Row="0" Spacing="12" IsVisible="{Binding IsStep2}">
+
+            <TextBlock Text="Step 2 of 3 — Options" FontWeight="SemiBold" FontSize="14" />
+
+            <!-- Compression -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="Compression algorithm:" />
+                <ComboBox ItemsSource="{Binding CompressionOptions}"
+                          SelectedItem="{Binding SelectedCompression}"
+                          HorizontalAlignment="Stretch" />
+            </StackPanel>
+
+            <!-- Deduplication -->
+            <CheckBox IsChecked="{Binding EnableDeduplication}"
+                      Content="Enable deduplication (skip identical content blocks)" />
+
+            <!-- Encryption -->
+            <CheckBox IsChecked="{Binding EnableEncryption}"
+                      Content="Encrypt the archive with a passphrase" />
+
+            <StackPanel Spacing="6" IsVisible="{Binding ShowEncryptionFields}">
+                <TextBox PasswordChar="•"
+                         Text="{Binding EncryptionPassphrase}"
+                         Watermark="Passphrase" />
+                <TextBox PasswordChar="•"
+                         Text="{Binding EncryptionPassphraseConfirm}"
+                         Watermark="Confirm passphrase" />
+            </StackPanel>
+
+            <!-- Validation error -->
+            <TextBlock Text="{Binding OptionsError}"
+                       Foreground="Red"
+                       TextWrapping="Wrap"
+                       IsVisible="{Binding OptionsError, Converter={x:Static StringConverters.IsNotNullOrEmpty}}" />
+
+        </StackPanel>
+
+        <!-- ================================================================
+             Step 3 — Destination + progress
+             ================================================================ -->
+        <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsStep3}">
+
+            <TextBlock Text="Step 3 of 3 — Destination" FontWeight="SemiBold" FontSize="14" />
+
+            <!-- Output path (shown before creation starts) -->
+            <StackPanel Spacing="6"
+                        IsVisible="{Binding !IsCreating}">
+                <TextBlock IsVisible="{Binding !IsCompleted}"
+                           Text="Choose where to save the new .dar archive." Opacity="0.7" />
+                <Grid ColumnDefinitions="*,Auto"
+                      IsVisible="{Binding !IsCompleted}">
+                    <TextBox Grid.Column="0"
+                             Margin="0,0,6,0"
+                             Text="{Binding OutputPath}"
+                             Watermark="Output .dar path…"
+                             IsReadOnly="True" />
+                    <Button Grid.Column="1"
+                            Content="Browse…"
+                            Command="{Binding BrowseOutputCommand}" />
+                </Grid>
+            </StackPanel>
+
+            <!-- In-progress panel -->
+            <StackPanel Spacing="8" IsVisible="{Binding IsCreating}">
+                <TextBlock Text="Creating archive…" FontWeight="SemiBold" />
+
+                <ProgressBar Minimum="0"
+                             Maximum="1"
+                             Value="{Binding Progress}"
+                             Height="12" />
+
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBlock Grid.Column="0"
+                               Text="{Binding CurrentFile}"
+                               TextTrimming="CharacterEllipsis"
+                               Opacity="0.7"
+                               FontSize="11" />
+                    <TextBlock Grid.Column="1"
+                               Margin="8,0,0,0"
+                               FontSize="11"
+                               Opacity="0.7">
+                        <Run Text="{Binding DoneCount}" />
+                        <Run Text="/" />
+                        <Run Text="{Binding TotalCount}" />
+                    </TextBlock>
+                </Grid>
+            </StackPanel>
+
+            <!-- Completion panel -->
+            <StackPanel Spacing="6" IsVisible="{Binding IsCompleted}">
+                <TextBlock Text="{Binding StatusMessage}"
+                           TextWrapping="Wrap"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="{Binding OutputPath}"
+                           FontFamily="Monospace"
+                           TextWrapping="Wrap"
+                           FontSize="11"
+                           Opacity="0.8" />
+            </StackPanel>
+
+        </StackPanel>
+
+        <!-- ================================================================
+             Navigation buttons (bottom row)
+             ================================================================ -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+
+            <!-- Back (steps 2 and 3 pre-creation) -->
+            <Button Content="← Back"
+                    Command="{Binding PreviousStepCommand}"
+                    IsVisible="{Binding IsStep2}" />
+            <Button Content="← Back"
+                    Command="{Binding PreviousStepCommand}"
+                    IsVisible="{Binding IsStep3}"
+                    IsEnabled="{Binding !IsCreating}" />
+
+            <!-- Next (steps 1 and 2) -->
+            <Button Content="Next →"
+                    Classes="accent"
+                    Command="{Binding NextStepCommand}"
+                    IsVisible="{Binding IsStep1}" />
+            <Button Content="Next →"
+                    Classes="accent"
+                    Command="{Binding NextStepCommand}"
+                    IsVisible="{Binding IsStep2}" />
+
+            <!-- Create (step 3, before creation) -->
+            <Button Content="Create"
+                    Classes="accent"
+                    Command="{Binding CreateCommand}"
+                    IsVisible="{Binding IsStep3}"
+                    IsEnabled="{Binding !IsCreating}" />
+
+            <!-- Cancel (while creating) -->
+            <Button Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsCreating}" />
+
+            <!-- Post-completion buttons -->
+            <Button Content="Open in Explorer"
+                    Command="{Binding OpenInExplorerCommand}"
+                    IsVisible="{Binding IsCompleted}" />
+            <Button Content="Close"
+                    Classes="accent"
+                    Command="{Binding CloseWizardCommand}"
+                    IsVisible="{Binding IsCompleted}" />
+
+            <!-- Cancel on step 1/2 (dismiss without creating) -->
+            <Button Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsStep1}" />
+            <Button Content="Cancel"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsStep2}" />
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>

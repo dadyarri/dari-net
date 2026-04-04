@@ -47,16 +47,18 @@ public sealed class ArchiveWriter : IAsyncDisposable
     /// <param name="path">Output file path. The file is created or truncated.</param>
     /// <param name="compressors">Compressor registry; defaults to <see cref="CompressorRegistry.Default"/>.</param>
     /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
+    /// <param name="enableDeduplication">When <see langword="false"/>, identical content is stored multiple times instead of being linked.</param>
     /// <param name="header">Archive header; defaults to a new header stamped with the current time.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<ArchiveWriter> CreateAsync(
         string path,
         CompressorRegistry? compressors = null,
         DariPassphrase? passphrase = null,
+        bool enableDeduplication = true,
         DariHeader? header = null,
         CancellationToken ct = default)
     {
-        var inner = await DariWriter.CreateAsync(path, header, passphrase, ct).ConfigureAwait(false);
+        var inner = await DariWriter.CreateAsync(path, header, passphrase, enableDeduplication, ct).ConfigureAwait(false);
         return new ArchiveWriter(inner, compressors ?? CompressorRegistry.Default);
     }
 
@@ -67,6 +69,7 @@ public sealed class ArchiveWriter : IAsyncDisposable
     /// <param name="leaveOpen">When <see langword="true"/> the stream is not disposed with the writer.</param>
     /// <param name="compressors">Compressor registry; defaults to <see cref="CompressorRegistry.Default"/>.</param>
     /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
+    /// <param name="enableDeduplication">When <see langword="false"/>, identical content is stored multiple times instead of being linked.</param>
     /// <param name="header">Archive header; defaults to a new header stamped with the current time.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<ArchiveWriter> CreateAsync(
@@ -74,10 +77,11 @@ public sealed class ArchiveWriter : IAsyncDisposable
         bool leaveOpen = false,
         CompressorRegistry? compressors = null,
         DariPassphrase? passphrase = null,
+        bool enableDeduplication = true,
         DariHeader? header = null,
         CancellationToken ct = default)
     {
-        var inner = await DariWriter.CreateAsync(stream, header, leaveOpen, passphrase, ct).ConfigureAwait(false);
+        var inner = await DariWriter.CreateAsync(stream, header, leaveOpen, passphrase, enableDeduplication, ct).ConfigureAwait(false);
         return new ArchiveWriter(inner, compressors ?? CompressorRegistry.Default);
     }
 
@@ -160,11 +164,17 @@ public sealed class ArchiveWriter : IAsyncDisposable
     ///   Custom ignore filter. When <see langword="null"/>, a <see cref="GitIgnoreFilter"/>
     ///   is built automatically by scanning for <c>.darignore</c> / <c>.gitignore</c> files.
     /// </param>
+    /// <param name="progress">
+    ///   Optional progress sink receiving <c>(done, total, currentFile)</c> tuples
+    ///   as each file is added.  <c>done</c> is the number of files added so far;
+    ///   <c>total</c> is the total number of files to add.
+    /// </param>
     /// <param name="ct">Cancellation token.</param>
     public async ValueTask AddDirectoryAsync(
         string sourceDirectory,
         string archivePrefix = "",
         IIgnoreFilter? ignoreFilter = null,
+        IProgress<(int done, int total, string currentFile)>? progress = null,
         CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(sourceDirectory);
@@ -179,40 +189,48 @@ public sealed class ArchiveWriter : IAsyncDisposable
 
         IIgnoreFilter filter = ignoreFilter ?? GitIgnoreFilter.Load(sourceDirectory);
 
-        await WalkDirectoryAsync(root, root, prefix, filter, ct).ConfigureAwait(false);
-    }
+        // Collect the full file list upfront so we know the total for progress reporting.
+        var files = new List<(FileInfo fi, string archivePath)>();
+        CollectFiles(root, root, prefix, filter, files);
 
-    private async ValueTask WalkDirectoryAsync(
-        DirectoryInfo root,
-        DirectoryInfo current,
-        string prefix,
-        IIgnoreFilter filter,
-        CancellationToken ct)
-    {
-        foreach (var fi in current.EnumerateFiles())
+        int total = files.Count;
+        for (int i = 0; i < total; i++)
         {
             ct.ThrowIfCancellationRequested();
 
-            string relPath = Path.GetRelativePath(root.FullName, fi.FullName)
-                                 .Replace(Path.DirectorySeparatorChar, '/');
-            if (filter.ShouldIgnore(relPath, isDirectory: false)) continue;
+            var (fi, archivePath) = files[i];
+            progress?.Report((i, total, archivePath));
 
-            string archivePath = prefix + relPath;
             var metadata = FileMetadata.FromFileInfo(fi);
             await using var fs = fi.Open(FileMode.Open, FileAccess.Read, FileShare.Read);
             await _inner.AddFileAsync(archivePath, fs, metadata, _registry, ct: ct)
                         .ConfigureAwait(false);
+
+            progress?.Report((i + 1, total, archivePath));
+        }
+    }
+
+    private static void CollectFiles(
+        DirectoryInfo root,
+        DirectoryInfo current,
+        string prefix,
+        IIgnoreFilter filter,
+        List<(FileInfo fi, string archivePath)> result)
+    {
+        foreach (var fi in current.EnumerateFiles())
+        {
+            string relPath = Path.GetRelativePath(root.FullName, fi.FullName)
+                                 .Replace(Path.DirectorySeparatorChar, '/');
+            if (filter.ShouldIgnore(relPath, isDirectory: false)) continue;
+            result.Add((fi, prefix + relPath));
         }
 
         foreach (var sub in current.EnumerateDirectories())
         {
-            ct.ThrowIfCancellationRequested();
-
             string relPath = Path.GetRelativePath(root.FullName, sub.FullName)
                                  .Replace(Path.DirectorySeparatorChar, '/');
             if (filter.ShouldIgnore(relPath, isDirectory: true)) continue;
-
-            await WalkDirectoryAsync(root, sub, prefix, filter, ct).ConfigureAwait(false);
+            CollectFiles(root, sub, prefix, filter, result);
         }
     }
 

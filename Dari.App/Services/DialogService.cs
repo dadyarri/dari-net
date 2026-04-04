@@ -101,4 +101,55 @@ public sealed class DialogService : IDialogService
         if (!extractTask.IsCompleted)
             await extractTask.ConfigureAwait(true);
     }
+
+    /// <inheritdoc/>
+    public async ValueTask<IReadOnlyList<string>?> PickFilesAsync()
+    {
+        var files = await _owner.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            Title = "Select Files to Archive",
+            AllowMultiple = true,
+        }).ConfigureAwait(true);
+
+        if (files.Count == 0) return null;
+
+        var paths = files
+            .Select(f => f.TryGetLocalPath())
+            .Where(p => p is not null)
+            .Select(p => p!)
+            .ToList();
+
+        return paths.Count == 0 ? null : paths;
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask<string?> SaveDarFileAsync()
+    {
+        var file = await _owner.StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
+        {
+            Title = "Save Dari Archive",
+            DefaultExtension = "dar",
+            FileTypeChoices =
+            [
+                new FilePickerFileType("Dari Archives") { Patterns = ["*.dar"] },
+            ],
+        }).ConfigureAwait(true);
+
+        return file?.TryGetLocalPath();
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask ShowCreateArchiveDialogAsync(CreateArchiveViewModel vm)
+    {
+        var dialog = new CreateArchiveView { DataContext = vm };
+        vm.Closed += dialog.Close;
+        try
+        {
+            await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        }
+        finally
+        {
+            vm.Closed -= dialog.Close;
+        }
+    }
 }

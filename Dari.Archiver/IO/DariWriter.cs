@@ -27,7 +27,7 @@ namespace Dari.Archiver.IO;
 /// <para>
 /// The output stream must be writable and seekable (seekability is required to back-fill
 /// the index offset in the footer).  When constructed via
-/// <see cref="CreateAsync(string,DariHeader?,DariPassphrase?,CancellationToken)"/> the file stream is owned
+/// <see cref="CreateAsync(string,DariHeader?,DariPassphrase?,bool,CancellationToken)"/> the file stream is owned
 /// and disposed together with the writer.
 /// </para>
 /// </remarks>
@@ -38,16 +38,18 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     private readonly List<IndexEntry> _entries;
     private readonly DariPassphrase? _passphrase;
     private readonly DeduplicationTracker _dedup;
+    private readonly bool _enableDeduplication;
     private bool _finalized;
     private bool _disposed;
 
-    private DariWriter(Stream stream, bool leaveOpen, DariPassphrase? passphrase, DeduplicationTracker? dedup)
+    private DariWriter(Stream stream, bool leaveOpen, DariPassphrase? passphrase, DeduplicationTracker? dedup, bool enableDeduplication)
     {
         _stream = stream;
         _leaveOpen = leaveOpen;
         _entries = new List<IndexEntry>(64);
         _passphrase = passphrase;
         _dedup = dedup ?? new DeduplicationTracker();
+        _enableDeduplication = enableDeduplication;
     }
 
     // -----------------------------------------------------------------------
@@ -64,19 +66,21 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     /// </param>
     /// <param name="leaveOpen">When <see langword="true"/>, the stream is not disposed with the writer.</param>
     /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
+    /// <param name="enableDeduplication">When <see langword="false"/>, identical content is stored multiple times instead of being linked.</param>
     /// <param name="ct">Cancellation token.</param>
     public static async ValueTask<DariWriter> CreateAsync(
         Stream stream,
         DariHeader? header = null,
         bool leaveOpen = false,
         DariPassphrase? passphrase = null,
+        bool enableDeduplication = true,
         CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(stream);
         if (!stream.CanWrite) throw new ArgumentException("Stream must be writable.", nameof(stream));
         if (!stream.CanSeek) throw new ArgumentException("Stream must be seekable.", nameof(stream));
 
-        var writer = new DariWriter(stream, leaveOpen, passphrase, dedup: null);
+        var writer = new DariWriter(stream, leaveOpen, passphrase, dedup: null, enableDeduplication);
         await writer.WriteHeaderAsync(header ?? DariHeader.CreateNew(), ct).ConfigureAwait(false);
         return writer;
     }
@@ -88,17 +92,19 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
     /// <param name="path">Output file path.</param>
     /// <param name="header">Header to write; defaults to a new header with the current timestamp.</param>
     /// <param name="passphrase">When non-null, all data blocks are encrypted with ChaCha20-Poly1305.</param>
+    /// <param name="enableDeduplication">When <see langword="false"/>, identical content is stored multiple times instead of being linked.</param>
     /// <param name="ct">Cancellation token.</param>
     public static ValueTask<DariWriter> CreateAsync(
         string path,
         DariHeader? header = null,
         DariPassphrase? passphrase = null,
+        bool enableDeduplication = true,
         CancellationToken ct = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(path);
         var fs = new FileStream(path, FileMode.Create, FileAccess.ReadWrite, FileShare.None,
                                 bufferSize: 65536, useAsync: true);
-        return CreateAsync(fs, header, leaveOpen: false, passphrase, ct);
+        return CreateAsync(fs, header, leaveOpen: false, passphrase, enableDeduplication, ct);
     }
 
     /// <summary>
@@ -113,7 +119,7 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
         DeduplicationTracker dedup)
     {
         ArgumentNullException.ThrowIfNull(stream);
-        return new DariWriter(stream, leaveOpen, passphrase, dedup);
+        return new DariWriter(stream, leaveOpen, passphrase, dedup, enableDeduplication: true);
     }
 
     /// <summary>
@@ -195,7 +201,7 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
         Blake3Hash checksum = ComputeBlake3(rawBytes);
 
         // 2. Deduplication check: if we have seen this content before, emit a linked entry.
-        if (_dedup.TryGetExisting(checksum, out ulong existingOffset, out CompressionMethod primaryMethod))
+        if (_enableDeduplication && _dedup.TryGetExisting(checksum, out ulong existingOffset, out CompressionMethod primaryMethod))
         {
             var linkedEntry = BuildEntry(
                 archivePath, extra, checksum, metadata,
@@ -261,7 +267,7 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
 
         // 5. Record the current stream position and register as primary in the dedup map.
         ulong dataOffset = (ulong)_stream.Position;
-        _dedup.TryRegisterPrimary(checksum, dataOffset, storedMethod);
+        if (_enableDeduplication) _dedup.TryRegisterPrimary(checksum, dataOffset, storedMethod);
 
         // 6. Write the data block.
         if (storedBytes.Length > 0)

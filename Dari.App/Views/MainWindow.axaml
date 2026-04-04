@@ -20,6 +20,9 @@
         <!-- Menu bar -->
         <Menu Grid.Row="0">
             <MenuItem Header="_File">
+                <MenuItem Header="_New Archive…"
+                          InputGesture="Ctrl+N"
+                          Command="{Binding NewArchiveCommand}" />
                 <MenuItem Header="_Open…"
                           InputGesture="Ctrl+O"
                           Command="{Binding OpenArchiveCommand}" />

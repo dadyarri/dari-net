@@ -83,6 +83,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private async Task NewArchiveAsync()
+    {
+        using var vm = new CreateArchiveViewModel(_dialogService);
+        await _dialogService.ShowCreateArchiveDialogAsync(vm).ConfigureAwait(true);
+
+        if (vm.CreatedArchivePath is { } path)
+            await OpenArchiveFromPathAsync(path).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
     private void Exit()
     {
         if (Avalonia.Application.Current?.ApplicationLifetime
@@ -134,6 +144,20 @@ public sealed partial class MainWindowViewModel : ObservableObject
         Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = $"Opened {reader.Entries.Count} entries.";
+    }
+
+    /// <summary>
+    /// Starts the "Create Archive" wizard pre-populated with <paramref name="sourceDirectory"/>.
+    /// Called from the main window's drag-and-drop handler when a folder is dropped.
+    /// </summary>
+    public async Task NewArchiveFromDirectoryAsync(string sourceDirectory)
+    {
+        using var vm = new CreateArchiveViewModel(_dialogService);
+        await vm.SetSourceDirectoryAsync(sourceDirectory).ConfigureAwait(true);
+        await _dialogService.ShowCreateArchiveDialogAsync(vm).ConfigureAwait(true);
+
+        if (vm.CreatedArchivePath is { } path)
+            await OpenArchiveFromPathAsync(path).ConfigureAwait(true);
     }
 
     // -----------------------------------------------------------------------

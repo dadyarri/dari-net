@@ -32,10 +32,17 @@ public partial class MainWindow : Window
         foreach (var file in files)
         {
             var path = file.TryGetLocalPath();
-            if (path is not null &&
-                path.EndsWith(".dar", StringComparison.OrdinalIgnoreCase))
+            if (path is null) continue;
+
+            if (path.EndsWith(".dar", StringComparison.OrdinalIgnoreCase))
             {
                 await vm.OpenArchiveFromPathAsync(path);
+                break;
+            }
+
+            if (Directory.Exists(path) && vm.Browser is null)
+            {
+                await vm.NewArchiveFromDirectoryAsync(path);
                 break;
             }
         }

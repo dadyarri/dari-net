@@ -43,4 +43,19 @@ public interface IDialogService
 
     /// <summary>Shows the <see cref="ExtractViewModel"/> in a modal extraction-progress dialog.</summary>
     ValueTask ShowExtractDialogAsync(ExtractViewModel vm);
+
+    /// <summary>
+    /// Opens a file picker allowing multiple file selections and returns the chosen paths,
+    /// or <see langword="null"/> if cancelled.
+    /// </summary>
+    ValueTask<IReadOnlyList<string>?> PickFilesAsync();
+
+    /// <summary>
+    /// Opens a save-file picker filtered to <c>.dar</c> archives and returns the chosen path,
+    /// or <see langword="null"/> if cancelled.
+    /// </summary>
+    ValueTask<string?> SaveDarFileAsync();
+
+    /// <summary>Shows the <see cref="CreateArchiveViewModel"/> in a modal archive-creation wizard dialog.</summary>
+    ValueTask ShowCreateArchiveDialogAsync(CreateArchiveViewModel vm);
 }
