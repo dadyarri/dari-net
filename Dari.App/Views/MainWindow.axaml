@@ -15,6 +15,13 @@
         MinHeight="480"
         DragDrop.AllowDrop="True">
 
+    <Window.KeyBindings>
+        <KeyBinding Gesture="Ctrl+N" Command="{Binding NewArchiveCommand}" />
+        <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenArchiveCommand}" />
+        <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseArchiveCommand}" />
+        <KeyBinding Gesture="Ctrl+E" Command="{Binding Browser.ExtractAllCommand}" />
+    </Window.KeyBindings>
+
     <Grid RowDefinitions="Auto,*,Auto">
 
         <!-- Menu bar -->

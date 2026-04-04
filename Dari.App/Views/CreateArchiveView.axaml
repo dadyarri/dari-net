@@ -178,8 +178,7 @@
                     IsVisible="{Binding IsStep2}" />
             <Button Content="← Back"
                     Command="{Binding PreviousStepCommand}"
-                    IsVisible="{Binding IsStep3}"
-                    IsEnabled="{Binding !IsCreating}" />
+                    IsVisible="{Binding IsReadyToCreate}" />
 
             <!-- Next (steps 1 and 2) -->
             <Button Content="Next →"
@@ -191,12 +190,11 @@
                     Command="{Binding NextStepCommand}"
                     IsVisible="{Binding IsStep2}" />
 
-            <!-- Create (step 3, before creation) -->
+            <!-- Create (step 3, before creation starts) -->
             <Button Content="Create"
                     Classes="accent"
                     Command="{Binding CreateCommand}"
-                    IsVisible="{Binding IsStep3}"
-                    IsEnabled="{Binding !IsCreating}" />
+                    IsVisible="{Binding IsReadyToCreate}" />
 
             <!-- Cancel (while creating) -->
             <Button Content="Cancel"

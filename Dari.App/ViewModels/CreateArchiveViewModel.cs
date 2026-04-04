@@ -30,12 +30,18 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
     // -----------------------------------------------------------------------
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsStep1), nameof(IsStep2), nameof(IsStep3))]
+    [NotifyPropertyChangedFor(nameof(IsStep1), nameof(IsStep2), nameof(IsStep3), nameof(IsReadyToCreate))]
     private int _currentStep = 1;
 
     public bool IsStep1 => CurrentStep == 1;
     public bool IsStep2 => CurrentStep == 2;
     public bool IsStep3 => CurrentStep == 3;
+
+    /// <summary>
+    /// <see langword="true"/> when the user is on step 3 but creation has not yet started or completed.
+    /// Controls the visibility of the Create and Back buttons in step 3.
+    /// </summary>
+    public bool IsReadyToCreate => IsStep3 && !IsCreating && !IsCompleted;
 
     // -----------------------------------------------------------------------
     // Step 1 — Source
@@ -89,9 +95,11 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
     public bool HasOutputPath => !string.IsNullOrWhiteSpace(OutputPath);
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReadyToCreate))]
     private bool _isCreating;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsReadyToCreate))]
     private bool _isCompleted;
 
     [ObservableProperty]
