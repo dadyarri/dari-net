@@ -218,7 +218,7 @@ Dari.App/
 
 ---
 
-### Phase E — Archive appending
+### Phase E — Archive appending ✅
 
 **Goal:** Add files to an already-open archive.
 
@@ -236,7 +236,7 @@ Dari.App/
 
 ### Phase F — File preview
 
-**Goal:** Add a resizable right-side preview pane to `ArchiveBrowserView` that renders text, syntax-highlighted code, images, and hex dumps for selected archive entries — without full extraction — plus an "Extract & Open" action.
+**Goal:** Add a resizable right-side preview pane to `ArchiveBrowserView` that renders text, syntax-highlighted code, images for selected archive entries — without full extraction — plus an "Extract & Open" action.
 
 **Overall approach:** extend `ArchiveReader` with a capped read helper; build a `PreviewViewModel` state machine with async debounce via `CancellationTokenSource` + `Task.Delay`; add AvaloniaEdit + TextMate for syntax highlighting; wire DataGrid/TreeView selection to a new `SelectedEntry` property; split `ArchiveBrowserView` into a two-column `Grid` with a `GridSplitter`.
 
@@ -245,232 +245,17 @@ Dari.App/
 - `PreviewViewModel` — reads the raw block via `ArchiveReader.OpenRawBlockAsync`, decodes on the fly; capped at 1 MB
 - Preview types:
   - **Text** — UTF-8 / Latin-1 / Windows-1251 for text; display in plain `TextBlock`
-  - **Code** - UTF-8 / Latin-1 / Windows-1251. Should have syntax highlight by common extensions
+  - **Code** - UTF-8 / Latin-1 / Windows-1251. Should have syntax highlight (support different filetypes of XML, like csproj, slnx, etc...)
+  - **Markdown** — render `.md` files as markdown
   - **Images** — `Bitmap` via Avalonia (`png`, `jpg`, `bmp`, `gif`, `webp`)
-  - **Other** — hex dump of the first 512 bytes
+  - **Other** — message about file is binary
 - Preview pane to the right of the entry list; updates on selection change (250 ms debounce)
 - "Extract & Open" button — extracts to a temp folder and opens with the system default app
+- To detect file type - reimplement `classify_bytes` from /mnt/dev/dari/src/tui/preview.rs
 
----
+Work on this phase step-by-step. After each step you should stop and ask for confirmation before moving on to the next one. This phase is more complex than the previous ones, so it should be broken down into smaller steps.
 
-#### Step 1 — Add NuGet packages to `Dari.App.csproj`
-
-Add `AvaloniaEdit` (11.x, the Avalonia port of AvalonEdit), `AvaloniaEdit.TextMate`, and `TextMateSharp.Grammars`.
-
-These three together provide VS Code-quality syntax highlighting for 200+ languages. Note: `TextMateSharp.Grammars` bundles all VS Code grammars (~15 MB). If binary size is a concern, AvaloniaEdit's built-in XSHD highlighting engine (much lighter, ~30 common languages) is the alternative — decide before implementation (see **Further Considerations**).
-
----
-
-#### Step 2 — Add `ReadPreviewAsync` to `Dari.Archiver/Archiving/ArchiveReader.cs`
-
-New public method:
-```csharp
-ValueTask<(ReadOnlyMemory<byte> Data, bool IsTruncated)> ReadPreviewAsync(
-    IndexEntry entry, int maxBytes = 1_048_576, CancellationToken ct = default)
-```
-
-- Check `entry.OriginalSize > (ulong)maxBytes` first — if so, return `(default, true)` without reading anything (avoids decompressing huge files).
-- Otherwise call the existing `ExtractAsync(entry, MemoryStream, verifyChecksum: true, ct)` and return the resulting bytes.
-
-This is cleaner than using `OpenRawBlockAsync` (which returns still-compressed bytes) and requires no breaking changes to the existing API.
-
----
-
-#### Step 3 — Create `Dari.App/Helpers/EncodingDetector.cs`
-
-Static class `EncodingDetector` with `Detect(ReadOnlySpan<byte> data) : Encoding`. Detection order:
-
-1. Check for UTF-8 BOM (`EF BB BF`) → return `Encoding.UTF8`.
-2. Try `Encoding.UTF8.GetCharCount(data)` (no exception) → valid UTF-8, return `Encoding.UTF8`.
-3. Windows-1251 heuristic: count bytes in `0xC0–0xFF` (Windows-1251 Cyrillic range) — if > 2% of data, return `Encoding.GetEncoding(1251)`.
-4. Fallback to `Encoding.Latin1`.
-
-> **Note:** `Encoding.GetEncoding(1251)` requires `System.Text.Encoding.CodePages` and a call to `Encoding.RegisterProvider(CodePagesEncodingProvider.Instance)` in `App.axaml.cs` at startup (needed on non-Windows).
-
----
-
-#### Step 4 — Create `Dari.App/Helpers/HexDumpFormatter.cs`
-
-Static class `HexDumpFormatter` with `Format(ReadOnlySpan<byte> data, int maxBytes = 512) : string`.
-
-- Emits the classic `OFFSET | HH HH HH ... (16 bytes) | ASCII` format using a `StringBuilder`.
-- Use `stackalloc char[16]` for the ASCII column; replace non-printable bytes with `.`.
-- Limit output to `maxBytes` before formatting.
-- Returns `string.Empty` for zero-length input.
-
----
-
-#### Step 5 — Create `Dari.App/ViewModels/PreviewViewModel.cs`
-
-##### Enums (declared in the same file)
-```csharp
-public enum PreviewState { Idle, Loading, Ready, Error, TooLarge }
-public enum PreviewKind  { None, Text, Code, Image, Hex }
-```
-
-##### Class: `sealed partial class PreviewViewModel : ObservableObject, IDisposable`
-Constructor takes `ArchiveReader reader`.
-
-**Observable properties:**
-| Property | Type | Purpose |
-|---|---|---|
-| `State` | `PreviewState` | Current display state |
-| `Kind` | `PreviewKind` | Which content panel to show |
-| `TextContent` | `string?` | Decoded text (Text + Code paths) |
-| `ImageSource` | `Bitmap?` | Decoded bitmap |
-| `HexContent` | `string?` | Formatted hex dump |
-| `ErrorMessage` | `string?` | Exception message when `State == Error` |
-| `IsTruncated` | `bool` | True when file exceeds 1 MB |
-| `CurrentEntry` | `ArchiveEntryViewModel?` | Currently previewed entry |
-| `SyntaxLanguage` | `string?` | TextMate language ID (e.g. `"csharp"`) |
-
-**Debounce — `LoadAsync(ArchiveEntryViewModel? entry)`:**
-1. Cancel + dispose the previous `_loadCts`.
-2. Create a new `CancellationTokenSource` stored in `_loadCts`.
-3. `await Task.Delay(250, ct).ConfigureAwait(true)`.
-4. Set `State = Loading`.
-5. Proceed to routing logic below.
-
-**Routing logic (after the 250 ms delay):**
-
-| Condition | Action |
-|---|---|
-| `entry` is `null` | `Kind = None, State = Idle` |
-| `entry.OriginalSize == 0` | `Kind = None, State = Idle` |
-| Extension in image set (`.png .jpg .jpeg .bmp .gif .webp`) | `ReadPreviewAsync` → `new Bitmap(MemoryStream)` → `Kind = Image` |
-| Extension in plain-text set (`.txt .md .log .csv .ini .toml .yaml .yml .json .xml .html .css`) | `ReadPreviewAsync` → `EncodingDetector.Detect` → decode → `Kind = Text` |
-| Extension in code set (`.cs .fs .py .js .ts .rs .go .cpp .c .h .java .sh .ps1 …`) | Same as text but also set `SyntaxLanguage` → `Kind = Code` |
-| Anything else | `ReadPreviewAsync(maxBytes: 512)` → `HexDumpFormatter.Format` → `Kind = Hex` |
-| `IsTruncated == true` | `State = TooLarge` (no content populated) |
-
-All paths wrap in `try/catch`, setting `State = Error` + `ErrorMessage` on failure.
-
-**`[RelayCommand] ExtractAndOpenAsync()`:**
-1. Extract `CurrentEntry` to `Path.Combine(Path.GetTempPath(), "dari-preview", Guid.NewGuid().ToString("N"), fileName)` via `_reader.ExtractToFileAsync(...)`.
-2. `Process.Start(new ProcessStartInfo { FileName = tempPath, UseShellExecute = true })`.
-3. Track temp paths in a `List<string>`; attempt to delete them in `Dispose()`, swallowing `IOException` silently (external app may still have the file open on Windows).
-
-> Note: "Extract & Open" opens a file in an external app that may lock it; deleting in `Dispose()` may fail on Windows. Solution: swallow `IOException` silently and leave cleanup to the OS temp folder purge.
-
-**`Dispose()`:**
-```csharp
-_loadCts?.Cancel();
-_loadCts?.Dispose();
-ImageSource?.Dispose();
-// delete temp files (swallow IOException)
-```
-
----
-
-#### Step 6 — Extend `Dari.App/ViewModels/ArchiveBrowserViewModel.cs`
-
-- Add `[ObservableProperty] private ArchiveEntryViewModel? _selectedEntry`.
-- Add `public PreviewViewModel Preview { get; }` initialized in the constructor (with `_reader`).
-- In `partial void OnSelectedEntryChanged(ArchiveEntryViewModel? value)` → call `_ = Preview.LoadAsync(value)` (fire-and-forget; `LoadAsync` manages its own cancellation).
-- In `Dispose()` / `DisposeAsync()` → add `Preview.Dispose()`.
-
----
-
-#### Step 7 — Create `Dari.App/Views/PreviewView.axaml` + `PreviewView.axaml.cs`
-
-##### AXAML layout
-
-Root: `UserControl` with `x:DataType="vm:PreviewViewModel"`.
-
-```
-Grid RowDefinitions="Auto,*"
-├── Row 0 — Header bar
-│   ├── TextBlock — CurrentEntry.Name
-│   ├── Border (badge) — "Truncated" (IsVisible=IsTruncated)
-│   └── Button — "Extract & Open" (Command=ExtractAndOpenCommand, IsEnabled=CurrentEntry!=null)
-└── Row 1 — Content panel (Panel with overlapping children, each IsVisible-bound)
-    ├── ProgressBar IsIndeterminate — State == Loading
-    ├── TextBlock (centered, muted) — State == Idle  →  "Select a file to preview"
-    ├── TextBlock (error) — State == Error  →  ErrorMessage
-    ├── TextBlock (too large) — State == TooLarge
-    ├── ScrollViewer + TextBlock (monospace, NoWrap) — Kind == Text  →  TextContent
-    ├── aedit:TextEditor x:Name="CodeEditor"  — Kind == Code  (IsReadOnly, ShowLineNumbers)
-    ├── ScrollViewer + Image — Kind == Image  →  Source=ImageSource
-    └── ScrollViewer + TextBlock (monospace) — Kind == Hex  →  HexContent
-```
-
-> Use `x:CompileBindings="False"` on `TextEditor` because `TextEditor.Text` is a plain CLR property, not an Avalonia styled property.
-
-##### Code-behind (`PreviewView.axaml.cs`)
-
-- On `OnDataContextChanged`: subscribe to `PreviewViewModel.PropertyChanged`.
-- In the `PropertyChanged` handler: when `Kind == Code` and `SyntaxLanguage` changes, call `_textMateInstallation.SetGrammar(registryOptions.GetScopeByLanguageId(SyntaxLanguage))` and set `CodeEditor.Text = TextContent ?? ""`. When `Kind == Text`, only update `TextContent` binding (handled by AXAML).
-- Initialize TextMate once (lazily on first `Kind == Code`):
-  ```csharp
-  var registryOptions = new RegistryOptions(ThemeName.DarkPlus);
-  _textMateInstallation = CodeEditor.InstallTextMate(registryOptions);
-  ```
-- On DataContext detach: `_textMateInstallation?.Dispose()`.
-- **Theme synchronisation for AvaloniaEdit**: the TextMate theme (`DarkPlus`) should switch when the user toggles light/dark in Settings. Hook into `LocalizationManager.ThemeChanged` (or `ActualThemeVariant` on the root window) and call `_textMateInstallation.SetTheme(registryOptions.LoadTheme(newThemeName))`.
-
----
-
-#### Step 8 — Modify `ArchiveBrowserView.axaml` + `ArchiveBrowserView.axaml.cs`
-
-##### AXAML
-
-Wrap the existing entry list in a new outer `Grid ColumnDefinitions="*,4,340"`:
-- `Column 0` — existing entry list (DataGrid + TreeView).
-- `Column 1` — `GridSplitter` (allows user to resize the pane).
-- `Column 2` — `views:PreviewView DataContext="{Binding Preview}"`.
-
-##### Code-behind
-
-Hook selection events to update `vm.SelectedEntry`:
-
-```csharp
-FlatGrid.SelectionChanged += (_, e) => {
-    if (e.AddedItems.Count > 0 && e.AddedItems[0] is ArchiveEntryViewModel entry)
-        ((ArchiveBrowserViewModel)DataContext!).SelectedEntry = entry;
-};
-TreeViewControl.SelectionChanged += (_, e) => { /* similar, unwrap FileNodeViewModel */ };
-```
-
----
-
-#### Step 9 — Add i18n strings to locale files
-
-Add to both `en.axaml` and `ru.axaml`:
-
-| Key | English | Russian |
-|---|---|---|
-| `Preview.Loading` | Loading preview… | Загрузка… |
-| `Preview.Empty` | Select a file to preview | Выберите файл для просмотра |
-| `Preview.Error` | Failed to load preview | Не удалось загрузить предпросмотр |
-| `Preview.TooLarge` | File exceeds 1 MB preview limit | Файл превышает лимит предпросмотра 1 МБ |
-| `Preview.Truncated` | Preview capped at 1 MB | Предпросмотр ограничен 1 МБ |
-| `Preview.Directory` | Directory — no preview | Каталог — предпросмотр недоступен |
-| `Button.ExtractAndOpen` | Extract & Open | Извлечь и открыть |
-
----
-
-#### Step 10 — Write unit tests
-
-##### `Dari.App.Tests/EncodingDetectorTests.cs`
-- UTF-8 BOM bytes → returns `Encoding.UTF8`.
-- Pure ASCII bytes → returns `Encoding.UTF8`.
-- Known Cyrillic UTF-8 bytes → returns `Encoding.UTF8`.
-- Bytes valid in Windows-1251 but invalid in UTF-8, with > 2% Cyrillic bytes → returns `1251` (or `Latin1` per platform decision).
-- Mixed-Latin bytes (no high bytes) → returns `Latin1`.
-
-##### `Dari.App.Tests/HexDumpFormatterTests.cs`
-- 16-byte input produces correct offset / hex / ASCII columns.
-- Zero-length input produces `string.Empty`.
-- 600-byte input truncates at 512 bytes (counts output lines × 16).
-
-##### `Dari.App.Tests/PreviewViewModelTests.cs`
-(Use a real `ArchiveReader` backed by a `MemoryStream` containing a programmatically-built `.dar` archive via `ArchiveWriter`.)
-- Entry with `OriginalSize > 1 MB` → `State == TooLarge`.
-- `.txt` entry → `State == Ready`, `Kind == Text`, `TextContent` is non-empty.
-- `.png` entry → `Kind == Image`, `ImageSource` is non-null.
-- Unknown extension entry → `Kind == Hex`, `HexContent` starts with `00000000`.
-- Rapid two `LoadAsync` calls → only the second entry is reflected in the final state (debounce/cancellation).
-- `ExtractAndOpenAsync` creates a temp file at the expected path.
+After each step there should be a working implementation of a feature, testable by user in the interface of the app, even if it's not fully complete yet. For example, after step 1, the preview pane should be able to show raw bytes of the selected entry, even if it doesn't have syntax highlighting or image rendering yet.
 
 ---
 
