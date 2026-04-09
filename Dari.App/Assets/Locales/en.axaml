@@ -175,5 +175,6 @@
     <x:String x:Key="Preview.Binary">Binary file ({0})</x:String>
     <x:String x:Key="Preview.Encrypted">File is encrypted</x:String>
     <x:String x:Key="Preview.Error">Error: {0}</x:String>
+    <x:String x:Key="Preview.Truncated">Showing first {0} MB</x:String>
 
 </ResourceDictionary>

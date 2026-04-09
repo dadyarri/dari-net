@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
@@ -13,6 +14,7 @@ public partial class App : Application
 {
     public override void Initialize()
     {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         AvaloniaXamlLoader.Load(this);
     }
 

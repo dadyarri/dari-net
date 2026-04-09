@@ -19,9 +19,13 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _statusMessage = "";
 
+    [ObservableProperty]
+    private string _previewText = "";
+
     // Computed visibility helpers for compiled bindings in AXAML.
     public bool IsEmptyVisible => State == PreviewState.Empty;
     public bool IsLoadingVisible => State == PreviewState.Loading;
+    public bool IsTextVisible => State == PreviewState.Text;
     public bool IsStatusVisible => State is PreviewState.Binary or PreviewState.Error or PreviewState.Encrypted;
     public bool IsBottomStatusVisible => State != PreviewState.Empty;
 
@@ -29,6 +33,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(IsEmptyVisible));
         OnPropertyChanged(nameof(IsLoadingVisible));
+        OnPropertyChanged(nameof(IsTextVisible));
         OnPropertyChanged(nameof(IsStatusVisible));
         OnPropertyChanged(nameof(IsBottomStatusVisible));
     }
@@ -76,17 +81,33 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     {
         try
         {
+            var maxBytes = MaxPreviewMegaBytes * 1024 * 1024;
             var bytes = await _reader
-                .ReadDecompressedPreviewAsync(entry.Entry, MaxPreviewMegaBytes * 1024 * 1024, ct)
+                .ReadDecompressedPreviewAsync(entry.Entry, maxBytes, ct)
                 .ConfigureAwait(true);
 
             // Discard stale result if a newer load was triggered while awaiting I/O.
             ct.ThrowIfCancellationRequested();
 
-            State = PreviewState.Binary;
-            StatusMessage = string.Format(
-                LocalizationManager.Current["Preview.Binary"],
-                DisplayFormatter.FormatSize((ulong)bytes.Length));
+            var classifyResult = ContentClassifier.ClassifyBytes(bytes.Span, maxBytes);
+
+            if (classifyResult.Kind == ContentKind.Binary)
+            {
+                State = PreviewState.Binary;
+                StatusMessage = string.Format(
+                    LocalizationManager.Current["Preview.Binary"],
+                    DisplayFormatter.FormatSize((ulong)bytes.Length));
+                return;
+            }
+
+            // Text: decode and display. Code/Markdown routing added in Steps 5/6.
+            PreviewText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
+            State = PreviewState.Text;
+
+            var truncated = entry.Entry.OriginalSize > (ulong)maxBytes;
+            StatusMessage = truncated
+                ? string.Format(LocalizationManager.Current["Preview.Truncated"], MaxPreviewMegaBytes)
+                : "";
         }
         catch (InvalidOperationException)
         {

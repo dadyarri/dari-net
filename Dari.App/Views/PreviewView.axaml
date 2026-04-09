@@ -38,6 +38,17 @@
                        TextWrapping="Wrap"
                        Margin="16" />
 
+            <!-- Text / Code (Step 3: all text content shown as plain text) -->
+            <ScrollViewer IsVisible="{Binding IsTextVisible}"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <TextBlock FontFamily="Courier New, Cascadia Code, Consolas, monospace"
+                           FontSize="12"
+                           Text="{Binding PreviewText}"
+                           TextWrapping="NoWrap"
+                           Margin="8" />
+            </ScrollViewer>
+
         </Panel>
 
         <!-- Bottom status strip (hidden when empty) -->
