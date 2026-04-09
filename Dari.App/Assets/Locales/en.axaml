@@ -89,7 +89,7 @@
     <x:String x:Key="Extract.Options.Title">Extract Selected</x:String>
     <x:String x:Key="Extract.Options.Destination">Destination folder:</x:String>
     <x:String x:Key="Extract.Options.OptionsLabel">Options:</x:String>
-    <x:String x:Key="Extract.Options.FlatPaths">Flat paths — do not replicate archive directory structure</x:String>
+    <x:String x:Key="Extract.Options.FlatPaths">Do not replicate archive directory structure</x:String>
     <x:String x:Key="Extract.Options.FlatPathsTooltip">When enabled, files are placed directly in the destination folder or inside their selected directory without recreating parent folders.</x:String>
     <x:String x:Key="Extract.Options.Preview">Preview:</x:String>
     <x:String x:Key="Extract.Options.ColumnDest">Destination path</x:String>

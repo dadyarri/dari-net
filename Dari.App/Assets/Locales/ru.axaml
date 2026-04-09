@@ -89,7 +89,7 @@
     <x:String x:Key="Extract.Options.Title">Извлечь выбранное</x:String>
     <x:String x:Key="Extract.Options.Destination">Папка назначения:</x:String>
     <x:String x:Key="Extract.Options.OptionsLabel">Параметры:</x:String>
-    <x:String x:Key="Extract.Options.FlatPaths">Без путей — не воспроизводить структуру каталогов архива</x:String>
+    <x:String x:Key="Extract.Options.FlatPaths">Не воспроизводить структуру каталогов архива</x:String>
     <x:String x:Key="Extract.Options.FlatPathsTooltip">При включении файлы помещаются непосредственно в папку назначения или в выбранный каталог без создания родительских папок.</x:String>
     <x:String x:Key="Extract.Options.Preview">Предпросмотр:</x:String>
     <x:String x:Key="Extract.Options.ColumnDest">Путь назначения</x:String>
