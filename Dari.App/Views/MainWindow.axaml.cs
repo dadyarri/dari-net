@@ -36,18 +36,32 @@ public partial class MainWindow : Window
         var files = e.DataTransfer.TryGetFiles();
         if (files is null) return;
 
-        foreach (var file in files)
-        {
-            var path = file.TryGetLocalPath();
-            if (path is null) continue;
+        // Collect all local paths from the drop.
+        var paths = files
+            .Select(f => f.TryGetLocalPath())
+            .Where(p => p is not null)
+            .Select(p => p!)
+            .ToList();
 
+        if (paths.Count == 0) return;
+
+        // If an archive is open, any drop (files or folders) appends to it.
+        if (vm.Browser is not null)
+        {
+            await vm.AppendFilesFromPathsAsync(paths);
+            return;
+        }
+
+        // No archive open: handle .dar files and folder drops as before.
+        foreach (var path in paths)
+        {
             if (path.EndsWith(".dar", StringComparison.OrdinalIgnoreCase))
             {
                 await vm.OpenArchiveFromPathAsync(path);
                 break;
             }
 
-            if (Directory.Exists(path) && vm.Browser is null)
+            if (Directory.Exists(path))
             {
                 await vm.NewArchiveFromDirectoryAsync(path);
                 break;

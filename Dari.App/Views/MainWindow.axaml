@@ -20,6 +20,7 @@
         <KeyBinding Gesture="Ctrl+O" Command="{Binding OpenArchiveCommand}" />
         <KeyBinding Gesture="Ctrl+W" Command="{Binding CloseArchiveCommand}" />
         <KeyBinding Gesture="Ctrl+E" Command="{Binding Browser.ExtractAllCommand}" />
+        <KeyBinding Gesture="Ctrl+Shift+A" Command="{Binding AppendFilesCommand}" />
     </Window.KeyBindings>
 
     <Grid RowDefinitions="Auto,*,Auto">
@@ -47,6 +48,10 @@
                           Command="{Binding Browser.ExtractAllCommand}" />
                 <MenuItem Header="{DynamicResource Menu.Archive.ExtractSelected}"
                           Command="{Binding Browser.ExtractSelectedCommand}" />
+                <Separator />
+                <MenuItem Header="{DynamicResource Menu.Archive.AppendFiles}"
+                          InputGesture="Ctrl+Shift+A"
+                          Command="{Binding AppendFilesCommand}" />
             </MenuItem>
             <MenuItem Header="{DynamicResource Menu.Help}">
                 <MenuItem Header="{DynamicResource Menu.Help.Settings}"

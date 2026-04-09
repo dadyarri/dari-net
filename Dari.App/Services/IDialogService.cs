@@ -67,4 +67,13 @@ public interface IDialogService
     /// On return check <see cref="ExtractOptionsViewModel.IsConfirmed"/> for the user's choice.
     /// </summary>
     ValueTask ShowExtractOptionsDialogAsync(ExtractOptionsViewModel vm);
+
+    /// <summary>
+    /// Opens a folder picker for selecting a directory to append to the archive,
+    /// and returns the chosen path, or <see langword="null"/> if cancelled.
+    /// </summary>
+    ValueTask<string?> PickAppendFolderAsync();
+
+    /// <summary>Shows the <see cref="AppendViewModel"/> in a modal append-progress dialog.</summary>
+    ValueTask ShowAppendDialogAsync(AppendViewModel vm);
 }

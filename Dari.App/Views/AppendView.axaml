@@ -1,0 +1,142 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        x:Class="Dari.App.Views.AppendView"
+        x:DataType="vm:AppendViewModel"
+        Title="{DynamicResource Append.Title}"
+        Width="480"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Grid Margin="20" RowDefinitions="*,Auto">
+
+        <!-- ================================================================
+             Selection panel — shown while the user is still picking items
+             ================================================================ -->
+        <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsSelecting}">
+
+            <TextBlock Text="{DynamicResource Append.SelectFiles}"
+                       TextWrapping="Wrap"
+                       Opacity="0.7" />
+
+            <!-- File list -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Append.FilesLabel}"
+                           FontWeight="SemiBold"
+                           FontSize="12" />
+                <ListBox ItemsSource="{Binding SourceItems}"
+                         MaxHeight="200">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:SourceItem}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding DisplayName}"
+                                           FontFamily="Monospace"
+                                           FontSize="11"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           ToolTip.Tip="{Binding FullPath}" />
+                                <Button Grid.Column="1"
+                                        Content="✕"
+                                        FontSize="10"
+                                        Padding="4,2"
+                                        Margin="6,0,0,0"
+                                        Command="{Binding $parent[Window].((vm:AppendViewModel)DataContext).RemoveItemCommand}"
+                                        CommandParameter="{Binding}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </StackPanel>
+
+            <!-- Browse buttons -->
+            <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="{DynamicResource Button.BrowseFiles}"
+                        Command="{Binding BrowseFilesCommand}" />
+                <Button Content="{DynamicResource Button.BrowseDirectory}"
+                        Command="{Binding BrowseDirectoryCommand}" />
+            </StackPanel>
+
+        </StackPanel>
+
+        <!-- ================================================================
+             Progress panel — shown while appending
+             ================================================================ -->
+        <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsRunning}">
+
+            <TextBlock Text="{DynamicResource Append.Appending}"
+                       FontWeight="SemiBold" />
+
+            <ProgressBar Minimum="0"
+                         Maximum="1"
+                         Value="{Binding Progress}"
+                         Height="12" />
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Grid.Column="0"
+                           Text="{Binding CurrentFile}"
+                           TextTrimming="CharacterEllipsis"
+                           Opacity="0.7"
+                           FontSize="11" />
+                <TextBlock Grid.Column="1"
+                           Margin="8,0,0,0"
+                           FontSize="11"
+                           Opacity="0.7">
+                    <Run Text="{Binding DoneCount}" />
+                    <Run Text="/" />
+                    <Run Text="{Binding TotalCount}" />
+                </TextBlock>
+            </Grid>
+
+        </StackPanel>
+
+        <!-- ================================================================
+             Completion panel — shown after the append finishes
+             ================================================================ -->
+        <StackPanel Grid.Row="0" Spacing="10" IsVisible="{Binding IsCompleted}">
+
+            <TextBlock Text="{Binding StatusMessage}"
+                       TextWrapping="Wrap"
+                       FontWeight="SemiBold" />
+
+        </StackPanel>
+
+        <!-- ================================================================
+             Action buttons (bottom row)
+             ================================================================ -->
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+
+            <!-- While selecting -->
+            <Button Content="{DynamicResource Button.Append}"
+                    Classes="accent"
+                    Command="{Binding AppendCommand}"
+                    IsEnabled="{Binding HasSelection}"
+                    IsVisible="{Binding IsSelecting}" />
+
+            <Button Content="{DynamicResource Button.Cancel}"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsSelecting}" />
+
+            <!-- While running -->
+            <Button Content="{DynamicResource Button.Cancel}"
+                    Command="{Binding CancelCommand}"
+                    IsVisible="{Binding IsRunning}" />
+
+            <!-- After completion -->
+            <Button Content="{DynamicResource Button.Close}"
+                    Classes="accent"
+                    Command="{Binding CloseDialogCommand}"
+                    IsVisible="{Binding IsCompleted}" />
+
+        </StackPanel>
+
+    </Grid>
+
+</Window>
+

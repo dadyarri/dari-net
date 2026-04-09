@@ -194,4 +194,31 @@ public sealed class DialogService : IDialogService
             vm.Closed -= dialog.Close;
         }
     }
+
+    /// <inheritdoc/>
+    public async ValueTask<string?> PickAppendFolderAsync()
+    {
+        var folders = await _owner.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions
+        {
+            Title = LocalizationManager.Current["Dialog.PickAppendFolder.Title"],
+            AllowMultiple = false,
+        }).ConfigureAwait(true);
+
+        return folders.Count > 0 ? folders[0].TryGetLocalPath() : null;
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask ShowAppendDialogAsync(AppendViewModel vm)
+    {
+        var dialog = new AppendView { DataContext = vm };
+        vm.Closed += dialog.Close;
+        try
+        {
+            await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        }
+        finally
+        {
+            vm.Closed -= dialog.Close;
+        }
+    }
 }

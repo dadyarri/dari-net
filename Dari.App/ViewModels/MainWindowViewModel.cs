@@ -14,6 +14,9 @@ public sealed partial class MainWindowViewModel : ObservableObject
     private readonly IConfigService _configService;
     private readonly ILocalizationManager _localization;
 
+    /// <summary>Path of the currently open archive; null when no archive is open.</summary>
+    private string? _currentArchivePath;
+
     [ObservableProperty]
     private string _title = "Dari";
 
@@ -73,6 +76,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
+        _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
     }
@@ -158,6 +162,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
 
         Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
+        _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
     }
@@ -177,6 +182,81 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     // -----------------------------------------------------------------------
+    // Append files (Phase E)
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// Shows the Append Files dialog for the currently open archive.
+    /// If the archive is encrypted, the user is prompted to re-enter the passphrase
+    /// (which must match the one used when the archive was opened) before the dialog appears.
+    /// After a successful append the archive is reloaded so the new entries are visible.
+    /// </summary>
+    [RelayCommand]
+    private async Task AppendFilesAsync()
+    {
+        if (Browser is null || _currentArchivePath is null) return;
+
+        // For encrypted archives: require the user to re-enter the passphrase.
+        // The validator opens a temporary reader to verify it matches the archive.
+        DariPassphrase? passphrase = null;
+        if (Browser.Passphrase is not null)
+        {
+            var archivePath = _currentArchivePath;
+            passphrase = await _dialogService.ShowPasswordPromptAsync(async p =>
+            {
+                using var tempReader = await ArchiveReader.OpenAsync(archivePath).ConfigureAwait(false);
+                return await tempReader.VerifyPassphraseAsync(p).ConfigureAwait(false);
+            }).ConfigureAwait(true);
+
+            if (passphrase is null) return; // user cancelled
+        }
+
+        using var vm = new AppendViewModel(_currentArchivePath, passphrase, _dialogService);
+        await _dialogService.ShowAppendDialogAsync(vm).ConfigureAwait(true);
+        passphrase?.Dispose();
+
+        if (vm.AppendedCount > 0)
+        {
+            // Reload the archive so the browser reflects the newly appended entries.
+            await OpenArchiveFromPathAsync(_currentArchivePath).ConfigureAwait(true);
+            StatusText = _localization.Format("Status.Done.Append", vm.AppendedCount);
+        }
+    }
+
+    /// <summary>
+    /// Called from the main window's drag-and-drop handler when files or folders are dropped
+    /// onto an open archive browser. Opens the Append dialog pre-populated with the dropped paths.
+    /// </summary>
+    public async Task AppendFilesFromPathsAsync(IEnumerable<string> paths)
+    {
+        if (Browser is null || _currentArchivePath is null) return;
+
+        DariPassphrase? passphrase = null;
+        if (Browser.Passphrase is not null)
+        {
+            var archivePath = _currentArchivePath;
+            passphrase = await _dialogService.ShowPasswordPromptAsync(async p =>
+            {
+                using var tempReader = await ArchiveReader.OpenAsync(archivePath).ConfigureAwait(false);
+                return await tempReader.VerifyPassphraseAsync(p).ConfigureAwait(false);
+            }).ConfigureAwait(true);
+
+            if (passphrase is null) return;
+        }
+
+        using var vm = new AppendViewModel(_currentArchivePath, passphrase, _dialogService);
+        vm.AddPaths(paths);
+        await _dialogService.ShowAppendDialogAsync(vm).ConfigureAwait(true);
+        passphrase?.Dispose();
+
+        if (vm.AppendedCount > 0)
+        {
+            await OpenArchiveFromPathAsync(_currentArchivePath).ConfigureAwait(true);
+            StatusText = _localization.Format("Status.Done.Append", vm.AppendedCount);
+        }
+    }
+
+    // -----------------------------------------------------------------------
     // Helpers
     // -----------------------------------------------------------------------
 
@@ -185,6 +265,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         if (Browser is { } old)
         {
             Browser = null;
+            _currentArchivePath = null;
             await old.DisposeAsync().ConfigureAwait(false);
         }
     }

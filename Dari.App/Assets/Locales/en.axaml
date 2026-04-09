@@ -10,6 +10,7 @@
     <x:String x:Key="Menu.Archive">_Archive</x:String>
     <x:String x:Key="Menu.Archive.ExtractAll">Extract _All…</x:String>
     <x:String x:Key="Menu.Archive.ExtractSelected">Extract _Selected…</x:String>
+    <x:String x:Key="Menu.Archive.AppendFiles">_Append Files…</x:String>
     <x:String x:Key="Menu.Help">_Help</x:String>
     <x:String x:Key="Menu.Help.Settings">_Settings…</x:String>
     <x:String x:Key="Menu.Help.About">_About Dari</x:String>
@@ -21,6 +22,7 @@
     <x:String x:Key="Button.Next">Next →</x:String>
     <x:String x:Key="Button.Back">← Back</x:String>
     <x:String x:Key="Button.Create">Create</x:String>
+    <x:String x:Key="Button.Append">Append</x:String>
     <x:String x:Key="Button.Cancel">Cancel</x:String>
     <x:String x:Key="Button.Close">Close</x:String>
     <x:String x:Key="Button.OpenInExplorer">Open in Explorer</x:String>
@@ -135,6 +137,8 @@
     <x:String x:Key="Status.CreationCancelled">Creation cancelled.</x:String>
     <x:String x:Key="Status.Error">Error: {0}</x:String>
     <x:String x:Key="Status.Done.Create">Done — archived {0} file(s).</x:String>
+    <x:String x:Key="Status.Done.Append">Done — {0} file(s) appended.</x:String>
+    <x:String x:Key="Status.AppendCancelled">Append cancelled.</x:String>
 
     <!-- Validation messages (used from ViewModels) -->
     <x:String x:Key="Validation.NoPassphrase">Please enter a passphrase.</x:String>
@@ -156,5 +160,12 @@
     <x:String x:Key="Dialog.SaveArchive.Title">Save Dari Archive</x:String>
     <x:String x:Key="Dialog.FileType.DariArchives">Dari Archives</x:String>
     <x:String x:Key="Dialog.FileType.AllFiles">All Files</x:String>
+
+    <!-- Append dialog -->
+    <x:String x:Key="Append.Title">Append to Archive</x:String>
+    <x:String x:Key="Append.SelectFiles">Select files or folders to append to the archive.</x:String>
+    <x:String x:Key="Append.FilesLabel">Items to append:</x:String>
+    <x:String x:Key="Append.Appending">Appending files…</x:String>
+    <x:String x:Key="Dialog.PickAppendFolder.Title">Select Folder to Append</x:String>
 
 </ResourceDictionary>

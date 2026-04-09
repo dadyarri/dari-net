@@ -10,6 +10,7 @@
     <x:String x:Key="Menu.Archive">_Архив</x:String>
     <x:String x:Key="Menu.Archive.ExtractAll">Извлечь _всё…</x:String>
     <x:String x:Key="Menu.Archive.ExtractSelected">Извлечь _выбранное…</x:String>
+    <x:String x:Key="Menu.Archive.AppendFiles">_Добавить файлы…</x:String>
     <x:String x:Key="Menu.Help">_Справка</x:String>
     <x:String x:Key="Menu.Help.Settings">_Настройки…</x:String>
     <x:String x:Key="Menu.Help.About">_О программе Dari</x:String>
@@ -21,6 +22,7 @@
     <x:String x:Key="Button.Next">Далее →</x:String>
     <x:String x:Key="Button.Back">← Назад</x:String>
     <x:String x:Key="Button.Create">Создать</x:String>
+    <x:String x:Key="Button.Append">Добавить</x:String>
     <x:String x:Key="Button.Cancel">Отмена</x:String>
     <x:String x:Key="Button.Close">Закрыть</x:String>
     <x:String x:Key="Button.OpenInExplorer">Открыть в проводнике</x:String>
@@ -135,6 +137,8 @@
     <x:String x:Key="Status.CreationCancelled">Создание архива отменено.</x:String>
     <x:String x:Key="Status.Error">Ошибка: {0}</x:String>
     <x:String x:Key="Status.Done.Create">Готово — заархивировано {0} файл(ов).</x:String>
+    <x:String x:Key="Status.Done.Append">Готово — добавлено {0} файл(ов).</x:String>
+    <x:String x:Key="Status.AppendCancelled">Добавление отменено.</x:String>
 
     <!-- Сообщения валидации -->
     <x:String x:Key="Validation.NoPassphrase">Введите пароль.</x:String>
@@ -156,5 +160,12 @@
     <x:String x:Key="Dialog.SaveArchive.Title">Сохранить архив Dari</x:String>
     <x:String x:Key="Dialog.FileType.DariArchives">Архивы Dari</x:String>
     <x:String x:Key="Dialog.FileType.AllFiles">Все файлы</x:String>
+
+    <!-- Диалог добавления файлов -->
+    <x:String x:Key="Append.Title">Добавить в архив</x:String>
+    <x:String x:Key="Append.SelectFiles">Выберите файлы или папки для добавления в архив.</x:String>
+    <x:String x:Key="Append.FilesLabel">Элементы для добавления:</x:String>
+    <x:String x:Key="Append.Appending">Добавление файлов…</x:String>
+    <x:String x:Key="Dialog.PickAppendFolder.Title">Выберите папку для добавления</x:String>
 
 </ResourceDictionary>
