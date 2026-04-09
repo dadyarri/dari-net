@@ -281,6 +281,7 @@ Dari.App/
 
 - Library should support both versions. Currently read the version from the header of the archive (stays the same format) and work as usual for v5, but throw NotImplementedException for v6
 - App should handle that exception and show message that version 6 is currently unsupported
+- Migrate app to Avalonia 12: https://docs.avaloniaui.net/docs/avalonia12-breaking-changes
 
 ---
 
