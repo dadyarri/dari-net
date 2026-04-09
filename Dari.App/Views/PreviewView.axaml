@@ -1,0 +1,56 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:Dari.App.ViewModels"
+             x:Class="Dari.App.Views.PreviewView"
+             x:DataType="vm:PreviewViewModel">
+
+    <Grid RowDefinitions="*,Auto">
+
+        <!-- Main content area -->
+        <Panel Grid.Row="0">
+
+            <!-- Empty: no entry selected -->
+            <TextBlock IsVisible="{Binding IsEmptyVisible}"
+                       Text="{DynamicResource Preview.Empty}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.45"
+                       TextAlignment="Center"
+                       Margin="16" />
+
+            <!-- Loading: debounce passed, fetching bytes -->
+            <StackPanel IsVisible="{Binding IsLoadingVisible}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="10">
+                <ProgressBar IsIndeterminate="True" Width="120" />
+                <TextBlock Text="{DynamicResource Preview.Loading}"
+                           HorizontalAlignment="Center"
+                           Opacity="0.6" />
+            </StackPanel>
+
+            <!-- Binary / Encrypted / Error: show StatusMessage centred -->
+            <TextBlock IsVisible="{Binding IsStatusVisible}"
+                       Text="{Binding StatusMessage}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="16" />
+
+        </Panel>
+
+        <!-- Bottom status strip (hidden when empty) -->
+        <Border Grid.Row="1"
+                IsVisible="{Binding IsBottomStatusVisible}"
+                Padding="8,4"
+                BorderThickness="0,1,0,0">
+            <TextBlock Text="{Binding StatusMessage}"
+                       FontSize="11"
+                       Opacity="0.65"
+                       TextTrimming="CharacterEllipsis" />
+        </Border>
+
+    </Grid>
+
+</UserControl>

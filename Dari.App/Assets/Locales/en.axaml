@@ -168,4 +168,11 @@
     <x:String x:Key="Append.Appending">Appending files…</x:String>
     <x:String x:Key="Dialog.PickAppendFolder.Title">Select Folder to Append</x:String>
 
+    <!-- Preview pane -->
+    <x:String x:Key="Preview.Empty">Select a file to preview</x:String>
+    <x:String x:Key="Preview.Loading">Loading…</x:String>
+    <x:String x:Key="Preview.Binary">Binary file ({0})</x:String>
+    <x:String x:Key="Preview.Encrypted">File is encrypted</x:String>
+    <x:String x:Key="Preview.Error">Error: {0}</x:String>
+
 </ResourceDictionary>

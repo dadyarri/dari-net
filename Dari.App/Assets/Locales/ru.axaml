@@ -168,4 +168,11 @@
     <x:String x:Key="Append.Appending">Добавление файлов…</x:String>
     <x:String x:Key="Dialog.PickAppendFolder.Title">Выберите папку для добавления</x:String>
 
+    <!-- Панель предпросмотра -->
+    <x:String x:Key="Preview.Empty">Выберите файл для просмотра</x:String>
+    <x:String x:Key="Preview.Loading">Загрузка…</x:String>
+    <x:String x:Key="Preview.Binary">Бинарный файл ({0})</x:String>
+    <x:String x:Key="Preview.Encrypted">Файл зашифрован</x:String>
+    <x:String x:Key="Preview.Error">Ошибка: {0}</x:String>
+
 </ResourceDictionary>

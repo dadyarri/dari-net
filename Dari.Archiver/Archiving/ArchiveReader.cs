@@ -168,6 +168,33 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
         _inner.ReadRawBlockAsync(entry, ct);
 
     /// <summary>
+    /// Reads and decompresses up to <paramref name="maxBytes"/> of <paramref name="entry"/>'s
+    /// content without writing it anywhere — intended for in-pane preview.
+    /// </summary>
+    /// <exception cref="InvalidOperationException">Thrown when the entry is encrypted.</exception>
+    public async ValueTask<ReadOnlyMemory<byte>> ReadDecompressedPreviewAsync(
+        IndexEntry entry, int maxBytes = 1 << 20, CancellationToken ct = default)
+    {
+        ArgumentNullException.ThrowIfNull(entry);
+
+        if (entry.IsEncrypted)
+            throw new InvalidOperationException("Entry is encrypted");
+
+        var rawBlock = await _inner.ReadRawBlockAsync(entry, ct).ConfigureAwait(false);
+
+        if (entry.Compression == CompressionMethod.None)
+            return rawBlock.Length <= maxBytes ? rawBlock : rawBlock[..maxBytes];
+
+        var writer = new ArrayBufferWriter<byte>((int)entry.OriginalSize);
+        var compressor = _registry.Get(entry.Compression);
+        await compressor.DecompressAsync(rawBlock, entry.OriginalSize, writer, ct)
+                        .ConfigureAwait(false);
+
+        var decompressed = writer.WrittenMemory;
+        return decompressed.Length <= maxBytes ? decompressed : decompressed[..maxBytes];
+    }
+
+    /// <summary>
     /// Verifies <paramref name="passphrase"/> by attempting to decrypt the first encrypted entry.
     /// Returns <see langword="true"/> if correct (or if the archive has no encrypted entries),
     /// <see langword="false"/> if the passphrase is wrong.

@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Dari.App.ViewModels"
              xmlns:models="using:Dari.App.Models"
+             xmlns:views="using:Dari.App.Views"
              xmlns:dgrid="clr-namespace:Avalonia.Controls;assembly=Avalonia.Controls.DataGrid"
              x:Class="Dari.App.Views.ArchiveBrowserView"
              x:DataType="vm:ArchiveBrowserViewModel">
@@ -85,8 +86,11 @@
 
         </Grid>
 
-        <!-- Main content: flat DataGrid or tree TreeView -->
-        <Panel Grid.Row="2">
+        <!-- Main content: flat DataGrid or tree TreeView, plus preview pane -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,4,300">
+
+            <!-- Entry list (flat / tree) -->
+            <Panel Grid.Column="0">
 
             <!-- Flat list -->
             <dgrid:DataGrid x:Name="FlatGrid"
@@ -188,7 +192,13 @@
                 </TreeView.DataTemplates>
             </TreeView>
 
-        </Panel>
+            </Panel>
+
+            <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
+
+            <views:PreviewView Grid.Column="2" DataContext="{Binding Preview}" />
+
+        </Grid>
 
     </Grid>
 

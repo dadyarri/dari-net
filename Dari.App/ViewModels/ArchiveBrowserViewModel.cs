@@ -52,6 +52,15 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     [ObservableProperty]
     private ObservableCollection<TreeNodeViewModel> _treeRootNodes = [];
 
+    /// <summary>Preview pane state machine for the currently selected entry.</summary>
+    public PreviewViewModel Preview { get; }
+
+    [ObservableProperty]
+    private ArchiveEntryViewModel? _selectedEntry;
+
+    partial void OnSelectedEntryChanged(ArchiveEntryViewModel? value) =>
+        Preview.LoadAsync(value);
+
     // -----------------------------------------------------------------------
     // Archive metadata
     // -----------------------------------------------------------------------
@@ -94,6 +103,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
         _passphrase = passphrase;
         _dialogService = dialogService ?? NullDialogService.Instance;
         _allEntries = reader.Entries.Select(e => new ArchiveEntryViewModel(e)).ToList();
+        Preview = new PreviewViewModel(reader);
 
         ulong totalSize = 0UL, totalCompressed = 0UL;
         foreach (var e in _allEntries)
@@ -353,6 +363,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     {
         foreach (var entry in _allEntries)
             entry.PropertyChanged -= OnEntrySelectionChanged;
+        Preview.Dispose();
         _reader.Dispose();
         _passphrase?.Dispose();
     }
@@ -361,6 +372,7 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     {
         foreach (var entry in _allEntries)
             entry.PropertyChanged -= OnEntrySelectionChanged;
+        Preview.Dispose();
         await _reader.DisposeAsync().ConfigureAwait(false);
         _passphrase?.Dispose();
     }
