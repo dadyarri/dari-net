@@ -9,6 +9,7 @@ public sealed class CompressorRegistry
 
     private readonly Dictionary<CompressionMethod, ICompressor> _compressors;
     private readonly FrozenDictionary<string, CompressionMethod> _extensionMap;
+    private readonly CompressionMethod? _forcedMethod;
 
     public CompressorRegistry()
     {
@@ -23,8 +24,21 @@ public sealed class CompressorRegistry
         _extensionMap = BuildExtensionMap();
     }
 
+    private CompressorRegistry(CompressionMethod forced) : this()
+    {
+        _forcedMethod = forced;
+    }
+
+    /// <summary>
+    /// Creates a registry that always selects <paramref name="method"/> regardless of file extension.
+    /// Useful when the user explicitly chooses a compression algorithm.
+    /// </summary>
+    public static CompressorRegistry CreateFixed(CompressionMethod method) => new(method);
+
     public CompressionMethod SelectForExtension(ReadOnlySpan<char> extension)
     {
+        if (_forcedMethod.HasValue) return _forcedMethod.Value;
+
         var ext = extension.StartsWith(".") ? extension[1..] : extension;
         var key = ext.ToString().ToLowerInvariant();
         return _extensionMap.TryGetValue(key, out var method) ? method : CompressionMethod.Zstandard;

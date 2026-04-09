@@ -3,7 +3,7 @@
         xmlns:vm="using:Dari.App.ViewModels"
         x:Class="Dari.App.Views.ExtractView"
         x:DataType="vm:ExtractViewModel"
-        Title="Extracting…"
+        Title="{DynamicResource Extract.Title}"
         Width="460"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -16,7 +16,7 @@
         <StackPanel Grid.Row="0"
                     Spacing="10"
                     IsVisible="{Binding !IsCompleted}">
-            <TextBlock Text="Extracting files…" FontWeight="SemiBold" />
+            <TextBlock Text="{DynamicResource Extract.Extracting}" FontWeight="SemiBold" />
 
             <ProgressBar Minimum="0"
                          Maximum="1"
@@ -61,15 +61,15 @@
                     Spacing="8"
                     Margin="0,16,0,0">
             <!-- Cancel button (visible while running) -->
-            <Button Content="Cancel"
+            <Button Content="{DynamicResource Button.Cancel}"
                     Command="{Binding CancelCommand}"
                     IsVisible="{Binding IsRunning}" />
 
             <!-- Post-completion buttons -->
-            <Button Content="Open in Explorer"
+            <Button Content="{DynamicResource Button.OpenInExplorer}"
                     Command="{Binding OpenInExplorerCommand}"
                     IsVisible="{Binding IsCompleted}" />
-            <Button Content="Close"
+            <Button Content="{DynamicResource Button.Close}"
                     Classes="accent"
                     IsVisible="{Binding IsCompleted}"
                     Click="OnCloseClicked" />

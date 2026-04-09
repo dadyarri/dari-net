@@ -1,0 +1,62 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        xmlns:services="using:Dari.App.Services"
+        x:Class="Dari.App.Views.SettingsView"
+        x:DataType="vm:SettingsViewModel"
+        Title="{DynamicResource Settings.Title}"
+        Width="320"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <Grid Margin="20" RowDefinitions="*,Auto">
+
+        <StackPanel Grid.Row="0" Spacing="12">
+
+            <!-- Language -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.Language}" />
+                <ComboBox ItemsSource="{Binding AvailableLanguages}"
+                          SelectedItem="{Binding SelectedLanguage}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type services:LanguageItem}">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Theme -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.Theme}" />
+                <ComboBox ItemsSource="{Binding AvailableThemes}"
+                          SelectedItem="{Binding SelectedTheme}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type services:ThemeItem}">
+                            <TextBlock Text="{Binding DisplayName}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+        </StackPanel>
+
+        <StackPanel Grid.Row="1"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,16,0,0">
+            <Button Content="{DynamicResource Button.Cancel}"
+                    Command="{Binding CancelCommand}" />
+            <Button Content="{DynamicResource Button.Save}"
+                    Classes="accent"
+                    Command="{Binding SaveCommand}" />
+        </StackPanel>
+
+    </Grid>
+
+</Window>

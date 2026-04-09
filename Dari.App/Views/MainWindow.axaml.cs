@@ -15,9 +15,16 @@ public partial class MainWindow : Window
         AddHandler(DragDrop.DragOverEvent, OnDragOver);
     }
 
+    protected override void OnClosed(EventArgs e)
+    {
+        base.OnClosed(e);
+        if (DataContext is MainWindowViewModel vm)
+            _ = vm.ShutdownAsync();
+    }
+
     private static void OnDragOver(object? sender, DragEventArgs e)
     {
-        e.DragEffects = e.Data.Contains(DataFormats.Files)
+        e.DragEffects = e.DataTransfer.Contains(DataFormat.File)
             ? DragDropEffects.Copy
             : DragDropEffects.None;
     }
@@ -26,16 +33,23 @@ public partial class MainWindow : Window
     {
         if (DataContext is not MainWindowViewModel vm) return;
 
-        var files = e.Data.GetFiles();
+        var files = e.DataTransfer.TryGetFiles();
         if (files is null) return;
 
         foreach (var file in files)
         {
             var path = file.TryGetLocalPath();
-            if (path is not null &&
-                path.EndsWith(".dar", StringComparison.OrdinalIgnoreCase))
+            if (path is null) continue;
+
+            if (path.EndsWith(".dar", StringComparison.OrdinalIgnoreCase))
             {
                 await vm.OpenArchiveFromPathAsync(path);
+                break;
+            }
+
+            if (Directory.Exists(path) && vm.Browser is null)
+            {
+                await vm.NewArchiveFromDirectoryAsync(path);
                 break;
             }
         }

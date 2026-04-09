@@ -1,0 +1,160 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Menu -->
+    <x:String x:Key="Menu.File">_File</x:String>
+    <x:String x:Key="Menu.File.NewArchive">_New Archive…</x:String>
+    <x:String x:Key="Menu.File.Open">_Open…</x:String>
+    <x:String x:Key="Menu.File.Close">_Close</x:String>
+    <x:String x:Key="Menu.File.Exit">E_xit</x:String>
+    <x:String x:Key="Menu.Archive">_Archive</x:String>
+    <x:String x:Key="Menu.Archive.ExtractAll">Extract _All…</x:String>
+    <x:String x:Key="Menu.Archive.ExtractSelected">Extract _Selected…</x:String>
+    <x:String x:Key="Menu.Help">_Help</x:String>
+    <x:String x:Key="Menu.Help.Settings">_Settings…</x:String>
+    <x:String x:Key="Menu.Help.About">_About Dari</x:String>
+
+    <!-- Buttons -->
+    <x:String x:Key="Button.BrowseDirectory">Browse Directory…</x:String>
+    <x:String x:Key="Button.BrowseFiles">Browse Individual Files…</x:String>
+    <x:String x:Key="Button.Browse">Browse…</x:String>
+    <x:String x:Key="Button.Next">Next →</x:String>
+    <x:String x:Key="Button.Back">← Back</x:String>
+    <x:String x:Key="Button.Create">Create</x:String>
+    <x:String x:Key="Button.Cancel">Cancel</x:String>
+    <x:String x:Key="Button.Close">Close</x:String>
+    <x:String x:Key="Button.OpenInExplorer">Open in Explorer</x:String>
+    <x:String x:Key="Button.ExtractSelected">Extract Selected…</x:String>
+    <x:String x:Key="Button.Extract">Extract</x:String>
+    <x:String x:Key="Button.ExtractAll">Extract All</x:String>
+    <x:String x:Key="Button.Skip">Skip</x:String>
+    <x:String x:Key="Button.Rename">Rename</x:String>
+    <x:String x:Key="Button.Overwrite">Overwrite</x:String>
+    <x:String x:Key="Button.Abort">Abort</x:String>
+    <x:String x:Key="Button.Continue">Continue</x:String>
+    <x:String x:Key="Button.OK">OK</x:String>
+    <x:String x:Key="Button.Save">Save</x:String>
+
+    <!-- Toolbar / sort -->
+    <x:String x:Key="Toolbar.Sort">Sort:</x:String>
+    <x:String x:Key="Toolbar.SortName">Name</x:String>
+    <x:String x:Key="Toolbar.SortSize">Size</x:String>
+    <x:String x:Key="Toolbar.SortDate">Date</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Flat">Flat list</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Tree">Tree view</x:String>
+    <x:String x:Key="Tooltip.ToggleView">Toggle flat/tree view</x:String>
+    <x:String x:Key="Tooltip.ExtractSelected">Open extraction options for checked entries</x:String>
+    <x:String x:Key="Tooltip.ExtractAll">Extract all entries to a folder</x:String>
+
+    <!-- DataGrid column headers -->
+    <x:String x:Key="Column.Select">✓</x:String>
+    <x:String x:Key="Column.Name">Name</x:String>
+    <x:String x:Key="Column.Path">Path</x:String>
+    <x:String x:Key="Column.Size">Size</x:String>
+    <x:String x:Key="Column.Compressed">Compressed</x:String>
+    <x:String x:Key="Column.Ratio">Ratio</x:String>
+    <x:String x:Key="Column.Algorithm">Algorithm</x:String>
+    <x:String x:Key="Column.Date">Date</x:String>
+    <x:String x:Key="Column.Permissions">Permissions</x:String>
+
+    <!-- Archive metadata -->
+    <x:String x:Key="Archive.Created">Created: </x:String>
+    <x:String x:Key="Archive.Files">Files: </x:String>
+    <x:String x:Key="Archive.TotalSize">Total size: </x:String>
+    <x:String x:Key="Archive.Compressed">Compressed: </x:String>
+
+    <!-- Create wizard -->
+    <x:String x:Key="Wizard.Title">Create Archive</x:String>
+    <x:String x:Key="Wizard.Step1.Title">Step 1 of 3 — Select Source</x:String>
+    <x:String x:Key="Wizard.Step1.Subtitle">Choose a directory or individual files to archive.</x:String>
+    <x:String x:Key="Wizard.Step1.FilesLabel">Files to be archived (respects .darignore / .gitignore):</x:String>
+    <x:String x:Key="Wizard.Step1.FileCount">file(s)</x:String>
+    <x:String x:Key="Wizard.Step2.Title">Step 2 of 3 — Options</x:String>
+    <x:String x:Key="Wizard.Step2.CompressionLabel">Compression algorithm:</x:String>
+    <x:String x:Key="Wizard.Step2.Deduplication">Enable deduplication (skip identical content blocks)</x:String>
+    <x:String x:Key="Wizard.Step2.Encryption">Encrypt the archive with a passphrase</x:String>
+    <x:String x:Key="Wizard.Step3.Title">Step 3 of 3 — Destination</x:String>
+    <x:String x:Key="Wizard.Step3.Subtitle">Choose where to save the new .dar archive.</x:String>
+    <x:String x:Key="Wizard.Step3.Creating">Creating archive…</x:String>
+
+    <!-- Watermarks / placeholders -->
+    <x:String x:Key="Watermark.Search">Search…</x:String>
+    <x:String x:Key="Watermark.SourceDirectory">Source directory…</x:String>
+    <x:String x:Key="Watermark.OutputPath">Output .dar path…</x:String>
+    <x:String x:Key="Watermark.DestinationPath">Destination folder…</x:String>
+    <x:String x:Key="Watermark.Passphrase">Passphrase</x:String>
+    <x:String x:Key="Watermark.ConfirmPassphrase">Confirm passphrase</x:String>
+
+    <!-- Extract options dialog -->
+    <x:String x:Key="Extract.Options.Title">Extract Selected</x:String>
+    <x:String x:Key="Extract.Options.Destination">Destination folder:</x:String>
+    <x:String x:Key="Extract.Options.OptionsLabel">Options:</x:String>
+    <x:String x:Key="Extract.Options.FlatPaths">Do not replicate archive directory structure</x:String>
+    <x:String x:Key="Extract.Options.FlatPathsTooltip">When enabled, files are placed directly in the destination folder or inside their selected directory without recreating parent folders.</x:String>
+    <x:String x:Key="Extract.Options.Preview">Preview:</x:String>
+    <x:String x:Key="Extract.Options.ColumnDest">Destination path</x:String>
+
+    <!-- Extract dialog -->
+    <x:String x:Key="Extract.Title">Extracting…</x:String>
+    <x:String x:Key="Extract.Extracting">Extracting files…</x:String>
+
+    <!-- Password dialog -->
+    <x:String x:Key="Password.Title">Enter Passphrase</x:String>
+    <x:String x:Key="Password.Prompt">This archive is encrypted. Enter the passphrase to continue.</x:String>
+
+    <!-- Checksum error dialog -->
+    <x:String x:Key="Checksum.Title">Checksum Error</x:String>
+    <x:String x:Key="Checksum.Prompt">A checksum error occurred for the following entry:</x:String>
+    <x:String x:Key="Checksum.Continue">Would you like to continue extracting the remaining files?</x:String>
+
+    <!-- Name conflict dialog -->
+    <x:String x:Key="Conflict.Title">File Already Exists</x:String>
+    <x:String x:Key="Conflict.Prompt">A file already exists at the destination:</x:String>
+    <x:String x:Key="Conflict.Question">How would you like to proceed?</x:String>
+
+    <!-- Main window -->
+    <x:String x:Key="MainWindow.Placeholder">Open a .dar archive to get started.</x:String>
+
+    <!-- Settings dialog -->
+    <x:String x:Key="Settings.Title">Settings</x:String>
+    <x:String x:Key="Settings.Language">Language:</x:String>
+    <x:String x:Key="Settings.Theme">Theme:</x:String>
+
+    <!-- Theme options -->
+    <x:String x:Key="Theme.System">System (follow OS)</x:String>
+    <x:String x:Key="Theme.Light">Light</x:String>
+    <x:String x:Key="Theme.Dark">Dark</x:String>
+    <!-- Status messages (used from ViewModels) -->
+    <x:String x:Key="Status.Ready">Ready</x:String>
+    <x:String x:Key="Status.FailedToOpen">Failed to open archive: {0}</x:String>
+    <x:String x:Key="Status.Opened">Opened {0} entries.</x:String>
+    <x:String x:Key="Status.Cancelling">Cancelling…</x:String>
+    <x:String x:Key="Status.ExtractionCancelled">Extraction cancelled.</x:String>
+    <x:String x:Key="Status.UnexpectedError">Unexpected error: {0}</x:String>
+    <x:String x:Key="Status.Done.Extract">Done — extracted {0} of {1} file(s).</x:String>
+    <x:String x:Key="Status.CreationCancelled">Creation cancelled.</x:String>
+    <x:String x:Key="Status.Error">Error: {0}</x:String>
+    <x:String x:Key="Status.Done.Create">Done — archived {0} file(s).</x:String>
+
+    <!-- Validation messages (used from ViewModels) -->
+    <x:String x:Key="Validation.NoPassphrase">Please enter a passphrase.</x:String>
+    <x:String x:Key="Validation.PassphrasesMismatch">Passphrases do not match.</x:String>
+
+    <!-- Dialog messages (used from ViewModels) -->
+    <x:String x:Key="Dialog.NoSource.Title">No Source</x:String>
+    <x:String x:Key="Dialog.NoSource.Message">Please select a source directory or files.</x:String>
+    <x:String x:Key="Dialog.NoOutputPath.Title">No Output Path</x:String>
+    <x:String x:Key="Dialog.NoOutputPath.Message">Please specify an output file path.</x:String>
+    <x:String x:Key="Dialog.NoSelection.Title">No Selection</x:String>
+    <x:String x:Key="Dialog.NoSelection.Message">Please check at least one entry before extracting.</x:String>
+    <!-- Toolbar: flat-paths option -->
+    <x:String x:Key="Toolbar.FlatPaths">Flat paths</x:String>
+    <x:String x:Key="Tooltip.FlatPaths">Extract without replicating archive directory structure</x:String>
+    <x:String x:Key="Dialog.OpenArchive.Title">Open Dari Archive</x:String>
+    <x:String x:Key="Dialog.PickFolder.Title">Select Destination Folder</x:String>
+    <x:String x:Key="Dialog.PickFiles.Title">Select Files to Archive</x:String>
+    <x:String x:Key="Dialog.SaveArchive.Title">Save Dari Archive</x:String>
+    <x:String x:Key="Dialog.FileType.DariArchives">Dari Archives</x:String>
+    <x:String x:Key="Dialog.FileType.AllFiles">All Files</x:String>
+
+</ResourceDictionary>

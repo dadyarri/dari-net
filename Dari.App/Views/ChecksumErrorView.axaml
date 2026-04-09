@@ -3,7 +3,7 @@
         xmlns:vm="using:Dari.App.ViewModels"
         x:Class="Dari.App.Views.ChecksumErrorView"
         x:DataType="vm:ChecksumErrorViewModel"
-        Title="Checksum Error"
+        Title="{DynamicResource Checksum.Title}"
         Width="460"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -13,7 +13,7 @@
     <Grid RowDefinitions="*,Auto" Margin="20">
 
         <StackPanel Grid.Row="0" Spacing="8" VerticalAlignment="Center">
-            <TextBlock Text="A checksum error occurred for the following entry:"
+            <TextBlock Text="{DynamicResource Checksum.Prompt}"
                        TextWrapping="Wrap" />
             <TextBlock Text="{Binding EntryPath}"
                        FontFamily="Monospace"
@@ -24,7 +24,7 @@
                        Foreground="Red"
                        FontSize="11"
                        Margin="0,4,0,0" />
-            <TextBlock Text="Would you like to continue extracting the remaining files?"
+            <TextBlock Text="{DynamicResource Checksum.Continue}"
                        TextWrapping="Wrap"
                        Margin="0,4,0,0" />
         </StackPanel>
@@ -34,9 +34,9 @@
                     HorizontalAlignment="Right"
                     Spacing="8"
                     Margin="0,16,0,0">
-            <Button Content="Abort"
+            <Button Content="{DynamicResource Button.Abort}"
                     Command="{Binding AbortCommand}" />
-            <Button Content="Continue"
+            <Button Content="{DynamicResource Button.Continue}"
                     Classes="accent"
                     Command="{Binding ContinueCommand}" />
         </StackPanel>

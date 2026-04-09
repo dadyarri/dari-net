@@ -13,74 +13,74 @@
                 Padding="12,8"
                 BorderThickness="0,0,0,1">
             <WrapPanel Orientation="Horizontal">
-                <TextBlock Margin="0,0,20,0">
-                    <Run Text="Created: " FontWeight="SemiBold"/>
-                    <Run Text="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
-                </TextBlock>
-                <TextBlock Margin="0,0,20,0">
-                    <Run Text="Files: " FontWeight="SemiBold"/>
-                    <Run Text="{Binding FileCount}" />
-                </TextBlock>
-                <TextBlock Margin="0,0,20,0">
-                    <Run Text="Total size: " FontWeight="SemiBold"/>
-                    <Run Text="{Binding TotalSizeDisplay}" />
-                </TextBlock>
-                <TextBlock>
-                    <Run Text="Compressed: " FontWeight="SemiBold"/>
-                    <Run Text="{Binding TotalCompressedSizeDisplay}" />
-                </TextBlock>
+                <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBlock Text="{DynamicResource Archive.Created}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:yyyy-MM-dd HH:mm}'}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBlock Text="{DynamicResource Archive.Files}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding FileCount}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="0,0,20,0">
+                    <TextBlock Text="{DynamicResource Archive.TotalSize}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding TotalSizeDisplay}" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="{DynamicResource Archive.Compressed}" FontWeight="SemiBold" />
+                    <TextBlock Text="{Binding TotalCompressedSizeDisplay}" />
+                </StackPanel>
             </WrapPanel>
         </Border>
 
         <!-- Toolbar: search + view-mode toggle + sort buttons + extract buttons -->
         <Grid Grid.Row="1"
-              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+              ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
               Margin="8,4"
               VerticalAlignment="Center">
 
             <TextBox Grid.Column="0"
                      Text="{Binding SearchText}"
-                     Watermark="Search…"
+                     Watermark="{DynamicResource Watermark.Search}"
                      Margin="0,0,8,0" />
 
             <Button Grid.Column="1"
-                    Content="{Binding ViewMode}"
+                    Content="{Binding ViewModeDisplay}"
                     Command="{Binding ToggleViewModeCommand}"
-                    ToolTip.Tip="Toggle flat/tree view"
+                    ToolTip.Tip="{DynamicResource Tooltip.ToggleView}"
                     Margin="0,0,8,0" />
 
             <TextBlock Grid.Column="2"
-                       Text="Sort:"
+                       Text="{DynamicResource Toolbar.Sort}"
                        VerticalAlignment="Center"
                        Margin="0,0,4,0" />
 
             <Button Grid.Column="3"
-                    Content="Name"
+                    Content="{DynamicResource Toolbar.SortName}"
                     Command="{Binding SortByCommand}"
                     CommandParameter="Name"
                     Margin="0,0,4,0" />
             <Button Grid.Column="4"
-                    Content="Size"
+                    Content="{DynamicResource Toolbar.SortSize}"
                     Command="{Binding SortByCommand}"
                     CommandParameter="Size"
                     Margin="0,0,4,0" />
             <Button Grid.Column="5"
-                    Content="Date"
+                    Content="{DynamicResource Toolbar.SortDate}"
                     Command="{Binding SortByCommand}"
                     CommandParameter="Date"
                     Margin="0,0,16,0" />
 
             <!-- Extraction buttons -->
             <Button Grid.Column="6"
-                    Content="Extract Selected"
+                    Content="{DynamicResource Button.ExtractSelected}"
                     Command="{Binding ExtractSelectedCommand}"
-                    ToolTip.Tip="Extract checked entries to a folder"
+                    ToolTip.Tip="{DynamicResource Tooltip.ExtractSelected}"
                     Margin="0,0,4,0" />
             <Button Grid.Column="7"
-                    Content="Extract All"
+                    Content="{DynamicResource Button.ExtractAll}"
                     Classes="accent"
                     Command="{Binding ExtractAllCommand}"
-                    ToolTip.Tip="Extract all entries to a folder"
+                    ToolTip.Tip="{DynamicResource Tooltip.ExtractAll}"
                     Margin="0,0,0,0" />
 
         </Grid>
@@ -100,34 +100,61 @@
                       GridLinesVisibility="Horizontal"
                       SelectionMode="Extended">
                 <dgrid:DataGrid.Columns>
-                    <dgrid:DataGridCheckBoxColumn Header="✓"
+                    <dgrid:DataGridCheckBoxColumn Width="36"
                                             Binding="{Binding IsSelected}"
-                                            Width="36"
-                                            IsReadOnly="False" />
-                    <dgrid:DataGridTextColumn Header="Name"
-                                        Binding="{Binding Name}"
-                                        Width="*" />
-                    <dgrid:DataGridTextColumn Header="Path"
-                                        Binding="{Binding Path}"
-                                        Width="2*" />
-                    <dgrid:DataGridTextColumn Header="Size"
-                                        Binding="{Binding OriginalSizeDisplay}"
-                                        Width="80" />
-                    <dgrid:DataGridTextColumn Header="Compressed"
-                                        Binding="{Binding CompressedSizeDisplay}"
-                                        Width="90" />
-                    <dgrid:DataGridTextColumn Header="Ratio"
-                                        Binding="{Binding CompressionRatioDisplay}"
-                                        Width="70" />
-                    <dgrid:DataGridTextColumn Header="Algorithm"
-                                        Binding="{Binding Algorithm}"
-                                        Width="90" />
-                    <dgrid:DataGridTextColumn Header="Date"
-                                        Binding="{Binding ModifiedAtDisplay}"
-                                        Width="130" />
-                    <dgrid:DataGridTextColumn Header="Permissions"
-                                        Binding="{Binding PermissionsDisplay}"
-                                        Width="90" />
+                                            IsReadOnly="False">
+                        <dgrid:DataGridCheckBoxColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Select}" />
+                        </dgrid:DataGridCheckBoxColumn.Header>
+                    </dgrid:DataGridCheckBoxColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding Name}"
+                                        Width="*">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Name}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding Path}"
+                                        Width="2*">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Path}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding OriginalSizeDisplay}"
+                                        Width="80">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Size}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding CompressedSizeDisplay}"
+                                        Width="90">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Compressed}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding CompressionRatioDisplay}"
+                                        Width="70">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Ratio}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding Algorithm}"
+                                        Width="90">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Algorithm}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding ModifiedAtDisplay}"
+                                        Width="130">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Date}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
+                    <dgrid:DataGridTextColumn Binding="{Binding PermissionsDisplay}"
+                                        Width="90">
+                        <dgrid:DataGridTextColumn.Header>
+                            <TextBlock Text="{DynamicResource Column.Permissions}" />
+                        </dgrid:DataGridTextColumn.Header>
+                    </dgrid:DataGridTextColumn>
                 </dgrid:DataGrid.Columns>
             </dgrid:DataGrid>
 
@@ -138,7 +165,13 @@
                 <TreeView.DataTemplates>
                     <TreeDataTemplate DataType="{x:Type vm:DirectoryNodeViewModel}"
                                       ItemsSource="{Binding Children}">
-                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />
+                        <StackPanel Orientation="Horizontal" Spacing="6">
+                            <CheckBox IsChecked="{Binding IsSelected}"
+                                      VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding Name}"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
                     </TreeDataTemplate>
                     <DataTemplate DataType="{x:Type vm:FileNodeViewModel}">
                         <StackPanel Orientation="Horizontal" Spacing="8">

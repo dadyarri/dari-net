@@ -141,7 +141,7 @@ Dari.App/
     └── PreviewView.axaml
 ```
 
-### Dependencies
+### Dependencies ✅
 
 | Package | Purpose |
 |---------|---------|
@@ -153,7 +153,7 @@ Dari.App/
 
 ---
 
-### Phase A — Project setup
+### Phase A — Project setup ✅
 
 **Goal:** Create the solution skeleton; app launches and runs on all three platforms.
 
@@ -167,7 +167,7 @@ Dari.App/
 
 ---
 
-### Phase B — Archive browser
+### Phase B — Archive browser ✅
 
 **Goal:** Open a `.dar` file and display its entries.
 
@@ -184,7 +184,7 @@ Dari.App/
 
 ---
 
-### Phase C — Extraction
+### Phase C — Extraction ✅
 
 **Goal:** Extract selected entries or the entire archive to disk.
 
@@ -202,7 +202,7 @@ Dari.App/
 
 ---
 
-### Phase D — Archive creation
+### Phase D — Archive creation ✅
 
 **Goal:** Create a new `.dar` archive from selected files or a directory.
 
@@ -229,7 +229,7 @@ Dari.App/
 - File picker dialog for selecting files to add
 - Uses `ArchiveAppender.OpenAsync` under the hood
 - Shows progress and refreshes `ArchiveBrowserViewModel` on success
-- If the archive is encrypted, prompts for the passphrase before appending
+- If the archive is encrypted, prompts for the passphrase before appending, that must match passphrase already used in the archive. Show error to user after confirmation in separate popup and ask for passphrase again if not.
 - Success notification with count of added files and deduplicated blocks
 
 ---
@@ -242,10 +242,11 @@ Dari.App/
 
 - `PreviewViewModel` — reads the raw block via `ArchiveReader.OpenRawBlockAsync`, decodes on the fly; capped at 1 MB
 - Preview types:
-  - **Text** — UTF-8 / Latin-1 / hex dump for binary; `AvaloniaEdit` or plain `TextBlock`
+  - **Text** — UTF-8 / Latin-1 / Windows-1251 for text; display in plain `TextBlock`
+  - **Code** - UTF-8 / Latin-1 / Windows-1251. Should have syntax highlight by common extensions
   - **Images** — `Bitmap` via Avalonia (`png`, `jpg`, `bmp`, `gif`, `webp`)
   - **Other** — hex dump of the first 512 bytes
-- Preview pane to the right of the entry list; updates on selection change (150 ms debounce)
+- Preview pane to the right of the entry list; updates on selection change (250 ms debounce)
 - "Extract & Open" button — extracts to a temp folder and opens with the system default app
 
 ---
@@ -255,26 +256,32 @@ Dari.App/
 **Goal:** Native feel on every platform; final UX refinement.
 
 **Windows:**
-- Register `.dar` file association via installer (NSIS or WiX Toolset)
+- Generate `.msi` installer with WiX Toolset (without code signing)
+- Register `.dar` file association on installation
 - Explorer context menu: "Open with Dari", "Extract here"
-- Native title bar via `Avalonia.Win32.TitleBarCustomization`
-
-**macOS:**
-- NSDocument-style architecture via Avalonia; support for "Open with…"
-- Icons in `icns` format for Finder
-- Native menu bar (File / Edit / Window / Help)
-- Code signing and notarization (`codesign` + `notarytool`)
+- Add to installer creating associations with `application/x-dari-archive` MIME type for `.dar` files
 
 **Linux:**
 - `.desktop` file with MIME type `application/x-dari-archive`
 - XDG `MimeInfo.cache` updated by installer via `update-mime-database`
 - Wayland and X11 support via Avalonia
+- Pack AppImage file
 
 **General:**
 - Light / dark theme following the system `ActualThemeVariant`
 - Keyboard shortcuts: `Ctrl+O` (open), `Ctrl+E` (extract), `Ctrl+N` (new), `Ctrl+W` (close)
-- Recent files list in menu (stored in `%APPDATA%` / `~/.config/dari/recent.json`)
-- Settings: default extraction directory, theme, language
+- Recent files list in menu (stored in `%APPDATA%` / `~/.config/dari/recent.json`) with check if files are existing and button to remove item from recent
+- Settings: default extraction directory, theme, language, separate buttons `Apply` (save settings without closing the window) and `Ok` (Save settings and close the window)
+- About -> About Dari should open popup with information of the app (stop here and ask, what information needs to be put there with some examples of what is usually resides there)
+- Introduce some tool to publish releases in SemVer notation (i. e. GitVersion?) and github workflow actions to publish releases with binaries for windows and linux on tags push.
+
+---
+
+### Phase H - Refactor and preparation to support next version of the archive (with preservation of old logic at the same time)
+
+- Library should support both versions. Currently read the version from the header of the archive (stays the same format) and work as usual for v5, but throw NotImplementedException for v6
+- App should handle that exception and show message that version 6 is currently unsupported
+- Migrate app to Avalonia 12: https://docs.avaloniaui.net/docs/avalonia12-breaking-changes
 
 ---
 
@@ -301,6 +308,7 @@ Phase D  →  Archive creation (wizard, progress, ignore-filter preview)
 Phase E  →  Archive appending (ArchiveAppender, drag & drop)
 Phase F  →  File preview (text, images, hex dump)
 Phase G  →  Platform integration (file associations, native menus, notarization)
+Phase H  →  Prepare lib and gui app to support multple archive versions (current is 5, next is 6, currently is in progress)
 ```
 
 Each phase is independently compilable and testable before moving on to the next.

@@ -1,0 +1,160 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Меню -->
+    <x:String x:Key="Menu.File">_Файл</x:String>
+    <x:String x:Key="Menu.File.NewArchive">_Создать архив…</x:String>
+    <x:String x:Key="Menu.File.Open">_Открыть…</x:String>
+    <x:String x:Key="Menu.File.Close">_Закрыть</x:String>
+    <x:String x:Key="Menu.File.Exit">В_ыход</x:String>
+    <x:String x:Key="Menu.Archive">_Архив</x:String>
+    <x:String x:Key="Menu.Archive.ExtractAll">Извлечь _всё…</x:String>
+    <x:String x:Key="Menu.Archive.ExtractSelected">Извлечь _выбранное…</x:String>
+    <x:String x:Key="Menu.Help">_Справка</x:String>
+    <x:String x:Key="Menu.Help.Settings">_Настройки…</x:String>
+    <x:String x:Key="Menu.Help.About">_О программе Dari</x:String>
+
+    <!-- Кнопки -->
+    <x:String x:Key="Button.BrowseDirectory">Выбрать папку…</x:String>
+    <x:String x:Key="Button.BrowseFiles">Выбрать файлы…</x:String>
+    <x:String x:Key="Button.Browse">Обзор…</x:String>
+    <x:String x:Key="Button.Next">Далее →</x:String>
+    <x:String x:Key="Button.Back">← Назад</x:String>
+    <x:String x:Key="Button.Create">Создать</x:String>
+    <x:String x:Key="Button.Cancel">Отмена</x:String>
+    <x:String x:Key="Button.Close">Закрыть</x:String>
+    <x:String x:Key="Button.OpenInExplorer">Открыть в проводнике</x:String>
+    <x:String x:Key="Button.ExtractSelected">Извлечь выбранное…</x:String>
+    <x:String x:Key="Button.Extract">Извлечь</x:String>
+    <x:String x:Key="Button.ExtractAll">Извлечь всё</x:String>
+    <x:String x:Key="Button.Skip">Пропустить</x:String>
+    <x:String x:Key="Button.Rename">Переименовать</x:String>
+    <x:String x:Key="Button.Overwrite">Перезаписать</x:String>
+    <x:String x:Key="Button.Abort">Прервать</x:String>
+    <x:String x:Key="Button.Continue">Продолжить</x:String>
+    <x:String x:Key="Button.OK">ОК</x:String>
+    <x:String x:Key="Button.Save">Сохранить</x:String>
+
+    <!-- Панель инструментов / сортировка -->
+    <x:String x:Key="Toolbar.Sort">Сортировка:</x:String>
+    <x:String x:Key="Toolbar.SortName">Имя</x:String>
+    <x:String x:Key="Toolbar.SortSize">Размер</x:String>
+    <x:String x:Key="Toolbar.SortDate">Дата</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Flat">Плоский список</x:String>
+    <x:String x:Key="Toolbar.ViewMode.Tree">Дерево каталогов</x:String>
+    <x:String x:Key="Tooltip.ToggleView">Переключить плоский/древовидный вид</x:String>
+    <x:String x:Key="Tooltip.ExtractSelected">Открыть параметры извлечения для отмеченных файлов</x:String>
+    <x:String x:Key="Tooltip.ExtractAll">Извлечь все файлы в папку</x:String>
+
+    <!-- Заголовки столбцов DataGrid -->
+    <x:String x:Key="Column.Select">✓</x:String>
+    <x:String x:Key="Column.Name">Имя</x:String>
+    <x:String x:Key="Column.Path">Путь</x:String>
+    <x:String x:Key="Column.Size">Размер</x:String>
+    <x:String x:Key="Column.Compressed">Сжато</x:String>
+    <x:String x:Key="Column.Ratio">Коэффициент</x:String>
+    <x:String x:Key="Column.Algorithm">Алгоритм</x:String>
+    <x:String x:Key="Column.Date">Дата</x:String>
+    <x:String x:Key="Column.Permissions">Права</x:String>
+
+    <!-- Метаданные архива -->
+    <x:String x:Key="Archive.Created">Создан: </x:String>
+    <x:String x:Key="Archive.Files">Файлов: </x:String>
+    <x:String x:Key="Archive.TotalSize">Исходный размер: </x:String>
+    <x:String x:Key="Archive.Compressed">Сжатый размер: </x:String>
+
+    <!-- Мастер создания архива -->
+    <x:String x:Key="Wizard.Title">Создать архив</x:String>
+    <x:String x:Key="Wizard.Step1.Title">Шаг 1 из 3 — Источник</x:String>
+    <x:String x:Key="Wizard.Step1.Subtitle">Выберите папку или отдельные файлы для архивации.</x:String>
+    <x:String x:Key="Wizard.Step1.FilesLabel">Файлы для архивации (учитывает .darignore / .gitignore):</x:String>
+    <x:String x:Key="Wizard.Step1.FileCount">файл(ов)</x:String>
+    <x:String x:Key="Wizard.Step2.Title">Шаг 2 из 3 — Параметры</x:String>
+    <x:String x:Key="Wizard.Step2.CompressionLabel">Алгоритм сжатия:</x:String>
+    <x:String x:Key="Wizard.Step2.Deduplication">Включить дедупликацию (пропускать одинаковые блоки)</x:String>
+    <x:String x:Key="Wizard.Step2.Encryption">Зашифровать архив с паролем</x:String>
+    <x:String x:Key="Wizard.Step3.Title">Шаг 3 из 3 — Назначение</x:String>
+    <x:String x:Key="Wizard.Step3.Subtitle">Укажите путь для сохранения архива .dar.</x:String>
+    <x:String x:Key="Wizard.Step3.Creating">Создание архива…</x:String>
+
+    <!-- Подсказки для полей ввода -->
+    <x:String x:Key="Watermark.Search">Поиск…</x:String>
+    <x:String x:Key="Watermark.SourceDirectory">Исходная папка…</x:String>
+    <x:String x:Key="Watermark.OutputPath">Путь к архиву .dar…</x:String>
+    <x:String x:Key="Watermark.DestinationPath">Папка назначения…</x:String>
+    <x:String x:Key="Watermark.Passphrase">Пароль</x:String>
+    <x:String x:Key="Watermark.ConfirmPassphrase">Подтвердите пароль</x:String>
+
+    <!-- Диалог параметров извлечения -->
+    <x:String x:Key="Extract.Options.Title">Извлечь выбранное</x:String>
+    <x:String x:Key="Extract.Options.Destination">Папка назначения:</x:String>
+    <x:String x:Key="Extract.Options.OptionsLabel">Параметры:</x:String>
+    <x:String x:Key="Extract.Options.FlatPaths">Не воспроизводить структуру каталогов архива</x:String>
+    <x:String x:Key="Extract.Options.FlatPathsTooltip">При включении файлы помещаются непосредственно в папку назначения или в выбранный каталог без создания родительских папок.</x:String>
+    <x:String x:Key="Extract.Options.Preview">Предпросмотр:</x:String>
+    <x:String x:Key="Extract.Options.ColumnDest">Путь назначения</x:String>
+
+    <!-- Диалог извлечения -->
+    <x:String x:Key="Extract.Title">Извлечение…</x:String>
+    <x:String x:Key="Extract.Extracting">Извлечение файлов…</x:String>
+
+    <!-- Диалог ввода пароля -->
+    <x:String x:Key="Password.Title">Введите пароль</x:String>
+    <x:String x:Key="Password.Prompt">Архив зашифрован. Введите пароль для продолжения.</x:String>
+
+    <!-- Диалог ошибки контрольной суммы -->
+    <x:String x:Key="Checksum.Title">Ошибка контрольной суммы</x:String>
+    <x:String x:Key="Checksum.Prompt">Произошла ошибка контрольной суммы для следующей записи:</x:String>
+    <x:String x:Key="Checksum.Continue">Продолжить извлечение оставшихся файлов?</x:String>
+
+    <!-- Диалог конфликта имён -->
+    <x:String x:Key="Conflict.Title">Файл уже существует</x:String>
+    <x:String x:Key="Conflict.Prompt">Файл уже существует по пути назначения:</x:String>
+    <x:String x:Key="Conflict.Question">Как поступить с этим файлом?</x:String>
+
+    <!-- Главное окно -->
+    <x:String x:Key="MainWindow.Placeholder">Откройте архив .dar для начала работы.</x:String>
+
+    <!-- Settings dialog -->
+    <x:String x:Key="Settings.Title">Настройки</x:String>
+    <x:String x:Key="Settings.Language">Язык:</x:String>
+    <x:String x:Key="Settings.Theme">Тема:</x:String>
+
+    <!-- Theme options -->
+    <x:String x:Key="Theme.System">Системная (следовать ОС)</x:String>
+    <x:String x:Key="Theme.Light">Светлая</x:String>
+    <x:String x:Key="Theme.Dark">Тёмная</x:String>
+    <!-- Статусные сообщения -->
+    <x:String x:Key="Status.Ready">Готово</x:String>
+    <x:String x:Key="Status.FailedToOpen">Не удалось открыть архив: {0}</x:String>
+    <x:String x:Key="Status.Opened">Открыто записей: {0}.</x:String>
+    <x:String x:Key="Status.Cancelling">Отмена…</x:String>
+    <x:String x:Key="Status.ExtractionCancelled">Извлечение отменено.</x:String>
+    <x:String x:Key="Status.UnexpectedError">Непредвиденная ошибка: {0}</x:String>
+    <x:String x:Key="Status.Done.Extract">Готово — извлечено {0} из {1} файл(ов).</x:String>
+    <x:String x:Key="Status.CreationCancelled">Создание архива отменено.</x:String>
+    <x:String x:Key="Status.Error">Ошибка: {0}</x:String>
+    <x:String x:Key="Status.Done.Create">Готово — заархивировано {0} файл(ов).</x:String>
+
+    <!-- Сообщения валидации -->
+    <x:String x:Key="Validation.NoPassphrase">Введите пароль.</x:String>
+    <x:String x:Key="Validation.PassphrasesMismatch">Пароли не совпадают.</x:String>
+
+    <!-- Диалоговые сообщения -->
+    <x:String x:Key="Dialog.NoSource.Title">Источник не выбран</x:String>
+    <x:String x:Key="Dialog.NoSource.Message">Выберите исходную папку или файлы.</x:String>
+    <x:String x:Key="Dialog.NoOutputPath.Title">Путь не указан</x:String>
+    <x:String x:Key="Dialog.NoOutputPath.Message">Укажите путь для сохранения архива.</x:String>
+    <x:String x:Key="Dialog.NoSelection.Title">Ничего не выбрано</x:String>
+    <x:String x:Key="Dialog.NoSelection.Message">Отметьте хотя бы одну запись перед извлечением.</x:String>
+    <!-- Панель инструментов: плоские пути -->
+    <x:String x:Key="Toolbar.FlatPaths">Без путей</x:String>
+    <x:String x:Key="Tooltip.FlatPaths">Извлекать без воспроизведения структуры каталогов архива</x:String>
+    <x:String x:Key="Dialog.OpenArchive.Title">Открыть архив Dari</x:String>
+    <x:String x:Key="Dialog.PickFolder.Title">Выберите папку назначения</x:String>
+    <x:String x:Key="Dialog.PickFiles.Title">Выберите файлы для архивации</x:String>
+    <x:String x:Key="Dialog.SaveArchive.Title">Сохранить архив Dari</x:String>
+    <x:String x:Key="Dialog.FileType.DariArchives">Архивы Dari</x:String>
+    <x:String x:Key="Dialog.FileType.AllFiles">Все файлы</x:String>
+
+</ResourceDictionary>

@@ -19,6 +19,8 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
     private readonly string _destinationPath;
     private readonly IDialogService _dialogService;
     private readonly CancellationTokenSource _cts = new();
+    private readonly bool _flatPaths;
+    private readonly IReadOnlyList<string> _selectedDirPrefixes;
 
     // -----------------------------------------------------------------------
     // Observable state
@@ -73,12 +75,16 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
         IReadOnlyList<IndexEntry> entries,
         ArchiveReader reader,
         string destinationPath,
-        IDialogService dialogService)
+        IDialogService dialogService,
+        bool flatPaths = false,
+        IReadOnlyList<string>? selectedDirectoryPrefixes = null)
     {
         _entries = entries;
         _reader = reader;
         _destinationPath = destinationPath;
         _dialogService = dialogService;
+        _flatPaths = flatPaths;
+        _selectedDirPrefixes = selectedDirectoryPrefixes ?? [];
         TotalCount = entries.Count;
     }
 
@@ -91,7 +97,7 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
     {
         _cts.Cancel();
         WasCancelled = true;
-        StatusMessage = "Cancelling…";
+        StatusMessage = LocalizationManager.Current["Status.Cancelling"];
     }
 
     /// <summary>Opens the destination directory in the system file manager.</summary>
@@ -124,11 +130,11 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
         catch (OperationCanceledException)
         {
             WasCancelled = true;
-            StatusMessage = "Extraction cancelled.";
+            StatusMessage = LocalizationManager.Current["Status.ExtractionCancelled"];
         }
         catch (Exception ex)
         {
-            StatusMessage = $"Unexpected error: {ex.Message}";
+            StatusMessage = LocalizationManager.Current.Format("Status.UnexpectedError", ex.Message);
         }
         finally
         {
@@ -136,7 +142,8 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
             IsCompleted = true;
 
             if (!WasCancelled && string.IsNullOrEmpty(StatusMessage))
-                StatusMessage = $"Done — extracted {ExtractedFiles} of {TotalCount} file(s).";
+                StatusMessage = LocalizationManager.Current.Format(
+                    "Status.Done.Extract", ExtractedFiles, TotalCount);
 
             Completed?.Invoke();
         }
@@ -151,7 +158,10 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
             var entry = _entries[i];
             CurrentFile = entry.Path;
 
-            string relPath = entry.Path.Replace('/', Path.DirectorySeparatorChar);
+            string relPath = (_flatPaths
+                    ? ComputeFlatPath(entry.Path, _selectedDirPrefixes)
+                    : entry.Path)
+                .Replace('/', Path.DirectorySeparatorChar);
             string fullPath = Path.Combine(_destinationPath, relPath);
 
             // Handle name conflicts.
@@ -209,7 +219,11 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
     // Dispose
     // -----------------------------------------------------------------------
 
-    public void Dispose() => _cts.Dispose();
+    public void Dispose()
+    {
+        _cts.Cancel();
+        _cts.Dispose();
+    }
 
     // -----------------------------------------------------------------------
     // Helpers
@@ -230,5 +244,31 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
             string candidate = Path.Combine(dir, $"{nameWithoutExt} ({n}){ext}");
             if (!File.Exists(candidate)) return candidate;
         }
+    }
+
+    /// <summary>
+    /// Computes the output-relative path for <paramref name="entryPath"/> in flat-paths mode.
+    /// <list type="bullet">
+    ///   <item>If the entry belongs to an explicitly selected directory, the selected directory
+    ///   name and the path within it are preserved (parent path stripped).</item>
+    ///   <item>Otherwise (individually selected file) only the file name is used.</item>
+    /// </list>
+    /// </summary>
+    internal static string ComputeFlatPath(string entryPath, IReadOnlyList<string> selectedDirPrefixes)
+    {
+        foreach (var prefix in selectedDirPrefixes)
+        {
+            if (entryPath.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                // Strip the path leading up to the selected directory, keep the dir name + rest.
+                // e.g. "a/b/" selected: "a/b/c.txt" → "b/c.txt"
+                string parentPart = Path.GetDirectoryName(prefix.TrimEnd('/')) ?? "";
+                string stripPrefix = parentPart.Length > 0 ? parentPart + "/" : "";
+                return entryPath[stripPrefix.Length..];
+            }
+        }
+
+        // Not under any selected directory — use just the filename.
+        return Path.GetFileName(entryPath);
     }
 }
