@@ -13,9 +13,10 @@ The repository contains two projects:
 ## Build & Test
 ```sh
 dotnet build          # build everything (TreatWarningsAsErrors=true)
-dotnet test           # run all xUnit tests
+dotnet test           # run all xUnit tests (always run after build; never use --no-build)
 dotnet format         # run after completing any task to enforce code style
 ```
+**Never pass `--no-build` to `dotnet test`.** Always build first so stale assemblies don't mask errors.
 SDK version is pinned to `10.0.x` via `global.json`. `LangVersion=preview` is set, so all C# 13/preview features are available.
 
 ## General Rules

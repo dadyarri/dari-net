@@ -75,7 +75,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             reader = await ArchiveReader.OpenAsync(path, passphrase: passphrase).ConfigureAwait(true);
         }
 
-        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
+        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService,
+            _configService.Load().PreviewMaxMegaBytes);
         _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
@@ -100,6 +101,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
     {
         var vm = new SettingsViewModel(_configService, _localization);
         await _dialogService.ShowSettingsAsync(vm).ConfigureAwait(true);
+
+        // Sync preview cap in case the user changed it.
+        if (Browser is { } browser)
+            browser.Preview.MaxPreviewMegaBytes = _configService.Load().PreviewMaxMegaBytes;
     }
 
     [RelayCommand]
@@ -161,7 +166,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
             reader = await ArchiveReader.OpenAsync(path, passphrase: passphrase).ConfigureAwait(true);
         }
 
-        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService);
+        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService,
+            _configService.Load().PreviewMaxMegaBytes);
         _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);

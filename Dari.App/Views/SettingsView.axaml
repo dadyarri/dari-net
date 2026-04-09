@@ -43,6 +43,16 @@
                 </ComboBox>
             </StackPanel>
 
+            <!-- Preview size limit -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.PreviewMaxBytes}" />
+                <NumericUpDown Value="{Binding PreviewMaxMb}"
+                               Minimum="1"
+                               Maximum="512"
+                               FormatString="0 MB"
+                               HorizontalAlignment="Stretch" />
+            </StackPanel>
+
         </StackPanel>
 
         <StackPanel Grid.Row="1"

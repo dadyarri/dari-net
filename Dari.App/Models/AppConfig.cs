@@ -14,4 +14,10 @@ public sealed class AppConfig
     /// Defaults to <c>"System"</c>.
     /// </summary>
     public string Theme { get; set; } = "System";
+
+    /// <summary>
+    /// Maximum number of megabytes loaded into the preview pane.
+    /// Defaults to <c>10</c> MB.
+    /// </summary>
+    public int PreviewMaxMegaBytes { get; set; } = 10;
 }

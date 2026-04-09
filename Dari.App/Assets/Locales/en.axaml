@@ -121,6 +121,7 @@
     <x:String x:Key="Settings.Title">Settings</x:String>
     <x:String x:Key="Settings.Language">Language:</x:String>
     <x:String x:Key="Settings.Theme">Theme:</x:String>
+    <x:String x:Key="Settings.PreviewMaxBytes">Preview size limit:</x:String>
 
     <!-- Theme options -->
     <x:String x:Key="Theme.System">System (follow OS)</x:String>

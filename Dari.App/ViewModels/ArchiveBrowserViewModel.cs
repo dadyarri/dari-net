@@ -97,13 +97,14 @@ public sealed partial class ArchiveBrowserViewModel : ObservableObject, IDisposa
     // -----------------------------------------------------------------------
 
     public ArchiveBrowserViewModel(ArchiveReader reader, DariPassphrase? passphrase = null,
-                                   IDialogService? dialogService = null)
+                                   IDialogService? dialogService = null,
+                                   int previewMaxMegaBytes = 10)
     {
         _reader = reader;
         _passphrase = passphrase;
         _dialogService = dialogService ?? NullDialogService.Instance;
         _allEntries = reader.Entries.Select(e => new ArchiveEntryViewModel(e)).ToList();
-        Preview = new PreviewViewModel(reader);
+        Preview = new PreviewViewModel(reader, previewMaxMegaBytes);
 
         ulong totalSize = 0UL, totalCompressed = 0UL;
         foreach (var e in _allEntries)

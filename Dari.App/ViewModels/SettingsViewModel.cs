@@ -22,6 +22,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private ThemeItem _selectedTheme;
 
+    [ObservableProperty]
+    private int _previewMaxMb;
+
     /// <summary>Raised when the dialog should be closed.</summary>
     public event Action? Closed;
 
@@ -45,6 +48,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         _selectedTheme = AvailableThemes.FirstOrDefault(
             t => t.Code == config.Theme,
             AvailableThemes[0]);
+
+        _previewMaxMb = Math.Clamp(config.PreviewMaxMegaBytes, 1, 512);
     }
 
     [RelayCommand]
@@ -55,6 +60,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         var config = _configService.Load();
         config.Language = SelectedLanguage.Code;
         config.Theme = SelectedTheme.Code;
+        config.PreviewMaxMegaBytes = Math.Clamp(PreviewMaxMb, 1, 512);
         _configService.Save(config);
 
         ApplyTheme(SelectedTheme.Code);

@@ -121,6 +121,7 @@
     <x:String x:Key="Settings.Title">Настройки</x:String>
     <x:String x:Key="Settings.Language">Язык:</x:String>
     <x:String x:Key="Settings.Theme">Тема:</x:String>
+    <x:String x:Key="Settings.PreviewMaxBytes">Лимит размера просмотра:</x:String>
 
     <!-- Theme options -->
     <x:String x:Key="Theme.System">Системная (следовать ОС)</x:String>

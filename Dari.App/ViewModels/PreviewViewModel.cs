@@ -33,9 +33,12 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsBottomStatusVisible));
     }
 
-    public PreviewViewModel(ArchiveReader reader)
+    public int MaxPreviewMegaBytes { get; set; }
+
+    public PreviewViewModel(ArchiveReader reader, int maxPreviewMegaBytes = 10)
     {
         _reader = reader;
+        MaxPreviewMegaBytes = maxPreviewMegaBytes;
     }
 
     public void LoadAsync(ArchiveEntryViewModel? entry)
@@ -74,7 +77,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         try
         {
             var bytes = await _reader
-                .ReadDecompressedPreviewAsync(entry.Entry, ct: ct)
+                .ReadDecompressedPreviewAsync(entry.Entry, MaxPreviewMegaBytes * 1024 * 1024, ct)
                 .ConfigureAwait(true);
 
             // Discard stale result if a newer load was triggered while awaiting I/O.
