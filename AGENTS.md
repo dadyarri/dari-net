@@ -18,6 +18,10 @@ dotnet format         # run after completing any task to enforce code style
 ```
 SDK version is pinned to `10.0.x` via `global.json`. `LangVersion=preview` is set, so all C# 13/preview features are available.
 
+## General Rules
+
+- **Do NOT use `ilspycmd`, `dotnet-ildasm`, `dnSpy`, or any other decompilation / IL-inspection tool to explore library internals.** If you need to understand how a NuGet package or framework API works, consult its official online documentation, README, or source repository instead (e.g. docs.microsoft.com, NuGet.org, GitHub).
+
 ---
 
 ## Dari.Archiver — Library
