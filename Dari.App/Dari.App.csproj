@@ -13,25 +13,27 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Desktop" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.2.3" />
-        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.2.3" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageReference Include="Avalonia" Version="11.3.13"/>
+        <PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.13"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.13"/>
+        <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.13"/>
+        <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.13"/>
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0"/>
+        <PackageReference Include="Tmds.Dbus" Version="0.92.0"/>
+        <PackageReference Include="Tmds.Dbus.Protocol" Version="0.92.0"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\Dari.Archiver\Dari.Archiver.csproj" />
+        <ProjectReference Include="..\Dari.Archiver\Dari.Archiver.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-        <AvaloniaResource Include="Assets\**" />
+        <AvaloniaResource Include="Assets\**"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(OS)' == 'Unix'">
-        <None Include="platform\Info.plist" />
-        <None Include="platform\dari.desktop" />
+        <None Include="platform\Info.plist"/>
+        <None Include="platform\dari.desktop"/>
     </ItemGroup>
 
 </Project>
