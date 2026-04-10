@@ -2,7 +2,9 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Dari.App.ViewModels"
              x:Class="Dari.App.Views.PreviewView"
-             x:DataType="vm:PreviewViewModel">
+             x:DataType="vm:PreviewViewModel"
+             HorizontalAlignment="Stretch"
+             VerticalAlignment="Stretch">
 
     <Grid RowDefinitions="*,Auto">
 

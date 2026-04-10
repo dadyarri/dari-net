@@ -196,7 +196,9 @@
 
             <GridSplitter Grid.Column="1" ResizeDirection="Columns" />
 
-            <views:PreviewView Grid.Column="2" DataContext="{Binding Preview}" />
+            <views:PreviewView Grid.Column="2"
+                               VerticalAlignment="Stretch"
+                               DataContext="{Binding Preview}" />
 
         </Grid>
 

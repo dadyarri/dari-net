@@ -78,7 +78,8 @@
                             VerticalContentAlignment="Stretch">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="{x:Type vm:ArchiveBrowserViewModel}">
-                        <views:ArchiveBrowserView />
+                        <views:ArchiveBrowserView HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch" />
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>
