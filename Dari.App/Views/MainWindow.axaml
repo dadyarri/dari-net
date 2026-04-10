@@ -95,10 +95,10 @@
                 <!-- Right side: preview pane status (type label • truncation notice) -->
                 <StackPanel DockPanel.Dock="Right"
                             Orientation="Horizontal"
-                            IsVisible="{Binding Browser.Preview.IsBottomStatusVisible}">
+                            IsVisible="{Binding Browser.Preview.IsBottomStatusVisible, FallbackValue=False}">
                     <views:StatusBarWidget Label="{Binding Browser.Preview.PreviewTypeName}"
                                           Value="{Binding Browser.Preview.PreviewTypeEncoding}" />
-                    <views:StatusBarWidget IsVisible="{Binding Browser.Preview.IsTruncationVisible}"
+                    <views:StatusBarWidget IsVisible="{Binding Browser.Preview.IsTruncationVisible, FallbackValue=False}"
                                           ShowBulletBefore="True"
                                           Label="{DynamicResource Preview.Truncated.Label}"
                                           Value="{Binding Browser.Preview.TruncationDisplay}" />
