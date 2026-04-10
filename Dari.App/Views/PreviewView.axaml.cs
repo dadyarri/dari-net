@@ -25,12 +25,12 @@ public partial class PreviewView : UserControl
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromLogicalTree(e);
-        DataContextChanged -= OnDataContextChanged;
         if (_vm is not null)
         {
             _vm.PropertyChanged -= OnVmPropertyChanged;
             _vm = null;
         }
+        DataContextChanged -= OnDataContextChanged;
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)

@@ -122,7 +122,7 @@ internal static class ContentClassifier
 
         // Skip leading whitespace.
         int i = 0;
-        while (i < data.Length && data[i] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
+        while (i < data.Length && IsAsciiWhitespace(data[i]))
             i++;
 
         if (i >= data.Length || data[i] != '<')
@@ -132,9 +132,14 @@ internal static class ContentClassifier
         if (i >= data.Length)
             return false;
 
-        var next = data[i];
-        return (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z') || next == '!' || next == '?';
+        return IsXmlTagStart(data[i]);
     }
+
+    private static bool IsAsciiWhitespace(byte b) =>
+        b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
+
+    private static bool IsXmlTagStart(byte b) =>
+        char.IsAsciiLetter((char)b) || b == '!' || b == '?';
 
     /// <summary>
     /// Decodes <paramref name="bytes"/> using the encoding name returned by
