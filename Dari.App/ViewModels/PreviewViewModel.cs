@@ -114,7 +114,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             }
 
             // Route to Text / Code / Markdown based on extension.
-            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, maxBytes);
+            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, entry.Name, maxBytes);
             var typeKey = detectedState switch
             {
                 PreviewState.Code => "Preview.Type.Code",

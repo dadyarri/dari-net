@@ -73,7 +73,9 @@
                        IsVisible="{Binding Browser, Converter={x:Static ObjectConverters.IsNull}}" />
 
             <!-- Archive browser (visible when an archive is open) -->
-            <ContentControl Content="{Binding Browser}">
+            <ContentControl Content="{Binding Browser}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="{x:Type vm:ArchiveBrowserViewModel}">
                         <views:ArchiveBrowserView />

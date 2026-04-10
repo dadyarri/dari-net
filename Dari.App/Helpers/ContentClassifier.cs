@@ -12,7 +12,7 @@ internal static class ContentClassifier
     private static readonly HashSet<string> CodeExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".cs", ".fs", ".vb",
-        ".xml", ".axaml", ".csproj", ".slnx", ".props", ".targets", ".xaml",
+        ".xml", ".axaml", ".csproj", ".slnx", ".sln", ".props", ".targets", ".xaml",
         ".json", ".toml", ".yaml", ".yml",
         ".py", ".rs", ".go",
         ".js", ".mjs", ".ts",
@@ -22,6 +22,19 @@ internal static class ContentClassifier
         ".rb", ".php",
         ".html", ".css",
         ".sql", ".dart", ".swift", ".zig",
+        ".env", ".lock",
+    };
+
+    /// <summary>
+    /// Well-known filenames (case-insensitive) that have no conventional extension
+    /// but are plainly code or configuration files.
+    /// </summary>
+    private static readonly HashSet<string> CodeFilenames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".gitignore", ".dockerignore", ".gitattributes", ".editorconfig",
+        ".npmrc", ".yarnrc", ".nvmrc",
+        "Makefile", "Dockerfile", "Containerfile",
+        ".htaccess",
     };
 
     /// <summary>
@@ -73,10 +86,10 @@ internal static class ContentClassifier
 
     /// <summary>
     /// Classifies <paramref name="bytes"/> and routes to the correct <see cref="PreviewState"/>
-    /// based on content kind and file extension.
+    /// based on content kind, file extension, and file name.
     /// </summary>
     public static PreviewState ClassifyForPreview(
-        ReadOnlySpan<byte> bytes, string extension, int maxBytes)
+        ReadOnlySpan<byte> bytes, string extension, string fileName, int maxBytes)
     {
         var result = ClassifyBytes(bytes, maxBytes);
 
@@ -86,7 +99,41 @@ internal static class ContentClassifier
         var ext = extension.ToLowerInvariant();
         if (ext == ".md") return PreviewState.Markdown;
         if (CodeExtensions.Contains(ext)) return PreviewState.Code;
+        if (CodeFilenames.Contains(fileName)) return PreviewState.Code;
+
+        // XML-like heuristic: classify as Code if the content starts with a tag.
+        if (LooksLikeXml(bytes)) return PreviewState.Code;
+
         return PreviewState.Text;
+    }
+
+    /// <summary>
+    /// Returns <see langword="true"/> when <paramref name="bytes"/> appear to start with
+    /// an XML/HTML tag construct (<c>&lt;?</c>, <c>&lt;!</c>, or <c>&lt;Letter</c>),
+    /// after skipping optional UTF-8 BOM and leading whitespace.
+    /// </summary>
+    private static bool LooksLikeXml(ReadOnlySpan<byte> bytes)
+    {
+        var data = bytes;
+
+        // Skip UTF-8 BOM (EF BB BF).
+        if (data.Length >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
+            data = data[3..];
+
+        // Skip leading whitespace.
+        int i = 0;
+        while (i < data.Length && data[i] is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n')
+            i++;
+
+        if (i >= data.Length || data[i] != '<')
+            return false;
+
+        i++;
+        if (i >= data.Length)
+            return false;
+
+        var next = data[i];
+        return (next >= 'a' && next <= 'z') || (next >= 'A' && next <= 'Z') || next == '!' || next == '?';
     }
 
     /// <summary>
