@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using Avalonia.Controls;
+using Avalonia.LogicalTree;
 using Dari.App.ViewModels;
 
 namespace Dari.App.Views;
@@ -7,11 +8,29 @@ namespace Dari.App.Views;
 public partial class PreviewView : UserControl
 {
     private PreviewViewModel? _vm;
+    private ScrollViewer? _scrollViewer;
 
     public PreviewView()
     {
         InitializeComponent();
         DataContextChanged += OnDataContextChanged;
+    }
+
+    protected override void OnAttachedToLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToLogicalTree(e);
+        _scrollViewer = this.FindControl<ScrollViewer>("TextScrollViewer");
+    }
+
+    protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
+    {
+        base.OnDetachedFromLogicalTree(e);
+        DataContextChanged -= OnDataContextChanged;
+        if (_vm is not null)
+        {
+            _vm.PropertyChanged -= OnVmPropertyChanged;
+            _vm = null;
+        }
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
@@ -28,6 +47,6 @@ public partial class PreviewView : UserControl
         if (e.PropertyName != nameof(PreviewViewModel.State))
             return;
         if (_vm?.State is PreviewState.Text or PreviewState.Code or PreviewState.Markdown)
-            this.FindControl<ScrollViewer>("TextScrollViewer")?.ScrollToHome();
+            _scrollViewer?.ScrollToHome();
     }
 }

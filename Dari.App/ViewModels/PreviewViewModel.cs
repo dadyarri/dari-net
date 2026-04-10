@@ -114,8 +114,8 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             }
 
             // Route to Text / Code / Markdown based on extension.
-            var previewState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, maxBytes);
-            var typeKey = previewState switch
+            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, maxBytes);
+            var typeKey = detectedState switch
             {
                 PreviewState.Code => "Preview.Type.Code",
                 PreviewState.Markdown => "Preview.Type.Markdown",
@@ -123,7 +123,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             };
             PreviewText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
             PreviewTypeLabel = $"{LocalizationManager.Current[typeKey]} · {classifyResult.Encoding}";
-            State = previewState;
+            State = detectedState;
 
             var truncated = entry.Entry.OriginalSize > (ulong)maxBytes;
             StatusMessage = truncated
