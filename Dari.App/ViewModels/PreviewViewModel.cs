@@ -277,8 +277,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         {
             var tempDir = Path.Combine(Path.GetTempPath(), "dari-preview");
             Directory.CreateDirectory(tempDir);
+            CleanupOldTempPreviewFiles(tempDir);
 
-            var fileName = Path.GetFileName(CurrentEntry.Entry.Path);
+            var fileName = SanitizeFileName(Path.GetFileName(CurrentEntry.Entry.Path));
             var destination = Path.Combine(tempDir, $"{Guid.NewGuid():N}_{fileName}");
 
             await _reader.ExtractToFileAsync(CurrentEntry.Entry, destination, ct: ct).ConfigureAwait(true);
@@ -301,6 +302,39 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     private bool CanExtractAndOpen() =>
         CurrentEntry is not null && State is not PreviewState.Empty and not PreviewState.Loading;
+
+    private static string SanitizeFileName(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return "preview.bin";
+
+        Span<char> invalid = stackalloc char[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
+        foreach (var c in invalid)
+            fileName = fileName.Replace(c, '_');
+
+        foreach (var c in Path.GetInvalidFileNameChars())
+            fileName = fileName.Replace(c, '_');
+
+        return fileName;
+    }
+
+    private static void CleanupOldTempPreviewFiles(string tempDir)
+    {
+        var cutoff = DateTime.UtcNow.AddDays(-1);
+
+        foreach (var file in Directory.EnumerateFiles(tempDir))
+        {
+            try
+            {
+                if (File.GetLastWriteTimeUtc(file) < cutoff)
+                    File.Delete(file);
+            }
+            catch
+            {
+                // Ignore cleanup errors; preview/open should still proceed.
+            }
+        }
+    }
 
     public void Dispose()
     {

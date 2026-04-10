@@ -76,6 +76,7 @@ public sealed class ContentClassifierTests
     [InlineData(".md", PreviewState.Markdown)]
     [InlineData(".cs", PreviewState.Code)]
     [InlineData(".txt", PreviewState.Text)]
+    [InlineData(".unknown", PreviewState.Text)]
     public void ClassifyForPreview_TextContent_UsesExtension(string extension, PreviewState expected)
     {
         ReadOnlySpan<byte> bytes = "hello"u8.ToArray();
