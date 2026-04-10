@@ -14,6 +14,8 @@ public enum PreviewState { Empty, Loading, Text, Code, Image, Markdown, Binary, 
 
 public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 {
+    private const string PreviewTempDirectoryName = "dari-preview";
+
     private static readonly FrozenSet<string> ImageExtensions =
         FrozenSet.ToFrozenSet([".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"]);
 
@@ -275,7 +277,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
         try
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), "dari-preview");
+            var tempDir = Path.Combine(Path.GetTempPath(), PreviewTempDirectoryName);
             Directory.CreateDirectory(tempDir);
             CleanupOldTempPreviewFiles(tempDir);
 

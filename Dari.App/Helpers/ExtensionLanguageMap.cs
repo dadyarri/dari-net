@@ -25,7 +25,7 @@ internal static class ExtensionLanguageMap
             ".sh" or ".bash" or ".fish" => "source.shell",
 
             ".c" or ".h" => "source.c",
-            ".cpp" => "source.cpp",
+            ".cpp" or ".hpp" => "source.cpp",
             ".java" => "source.java",
             ".kt" => "source.kotlin",
 
