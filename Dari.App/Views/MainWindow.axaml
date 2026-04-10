@@ -96,23 +96,12 @@
                 <StackPanel DockPanel.Dock="Right"
                             Orientation="Horizontal"
                             IsVisible="{Binding Browser.Preview.IsBottomStatusVisible}">
-                    <TextBlock Text="{Binding Browser.Preview.PreviewTypeLabel}"
-                               FontSize="11"
-                               FontWeight="SemiBold"
-                               Opacity="0.65"
-                               VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" />
-                    <TextBlock IsVisible="{Binding Browser.Preview.IsTruncationVisible}"
-                               Text=" • "
-                               FontSize="11"
-                               Opacity="0.45"
-                               VerticalAlignment="Center" />
-                    <TextBlock IsVisible="{Binding Browser.Preview.IsTruncationVisible}"
-                               Text="{Binding Browser.Preview.StatusMessage}"
-                               FontSize="11"
-                               Opacity="0.65"
-                               VerticalAlignment="Center"
-                               TextTrimming="CharacterEllipsis" />
+                    <views:StatusBarWidget Label="{Binding Browser.Preview.PreviewTypeName}"
+                                          Value="{Binding Browser.Preview.PreviewTypeEncoding}" />
+                    <views:StatusBarWidget IsVisible="{Binding Browser.Preview.IsTruncationVisible}"
+                                          ShowBulletBefore="True"
+                                          Label="{DynamicResource Preview.Truncated.Label}"
+                                          Value="{Binding Browser.Preview.TruncationDisplay}" />
                 </StackPanel>
 
                 <!-- Left side: archive status text • total size • compressed size -->
@@ -123,41 +112,17 @@
                                FontSize="11"
                                Opacity="0.7"
                                VerticalAlignment="Center" />
-                    <!-- Archive open: DynamicResource label + live count + size stats -->
+                    <!-- Archive open: all widgets via StatusBarWidget -->
                     <StackPanel Orientation="Horizontal"
                                 IsVisible="{Binding Browser, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <TextBlock Text="{DynamicResource Status.Opened.Label}"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Browser.FileCount}"
-                                   FontSize="11"
-                                   Opacity="0.7"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text=" • "
-                                   FontSize="11"
-                                   Opacity="0.45"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{DynamicResource Archive.TotalSize}"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Browser.TotalSizeDisplay}"
-                                   FontSize="11"
-                                   Opacity="0.7"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text=" • "
-                                   FontSize="11"
-                                   Opacity="0.45"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{DynamicResource Archive.Compressed}"
-                                   FontSize="11"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text="{Binding Browser.TotalCompressedSizeDisplay}"
-                                   FontSize="11"
-                                   Opacity="0.7"
-                                   VerticalAlignment="Center" />
+                        <views:StatusBarWidget Label="{DynamicResource Status.Opened.Label}"
+                                              Value="{Binding Browser.FileCount}" />
+                        <views:StatusBarWidget ShowBulletBefore="True"
+                                              Label="{DynamicResource Archive.TotalSize}"
+                                              Value="{Binding Browser.TotalSizeDisplay}" />
+                        <views:StatusBarWidget ShowBulletBefore="True"
+                                              Label="{DynamicResource Archive.Compressed}"
+                                              Value="{Binding Browser.TotalCompressedSizeDisplay}" />
                     </StackPanel>
                 </StackPanel>
 
