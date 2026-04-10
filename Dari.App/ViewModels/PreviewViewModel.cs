@@ -22,12 +22,16 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _previewText = "";
 
+    [ObservableProperty]
+    private string _previewTypeLabel = "";
+
     // Computed visibility helpers for compiled bindings in AXAML.
     public bool IsEmptyVisible => State == PreviewState.Empty;
     public bool IsLoadingVisible => State == PreviewState.Loading;
-    public bool IsTextVisible => State == PreviewState.Text;
+    public bool IsTextVisible => State is PreviewState.Text or PreviewState.Code or PreviewState.Markdown;
     public bool IsStatusVisible => State is PreviewState.Binary or PreviewState.Error or PreviewState.Encrypted;
-    public bool IsBottomStatusVisible => State != PreviewState.Empty;
+    public bool IsBottomStatusVisible => State is not (PreviewState.Empty or PreviewState.Loading);
+    public bool IsTruncationVisible => IsTextVisible && StatusMessage != "";
 
     partial void OnStateChanged(PreviewState value)
     {
@@ -36,6 +40,12 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsTextVisible));
         OnPropertyChanged(nameof(IsStatusVisible));
         OnPropertyChanged(nameof(IsBottomStatusVisible));
+        OnPropertyChanged(nameof(IsTruncationVisible));
+    }
+
+    partial void OnStatusMessageChanged(string value)
+    {
+        OnPropertyChanged(nameof(IsTruncationVisible));
     }
 
     public int MaxPreviewMegaBytes { get; set; }
@@ -61,6 +71,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         {
             State = PreviewState.Empty;
             StatusMessage = "";
+            PreviewTypeLabel = "";
             return;
         }
 
@@ -69,6 +80,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             await Task.Delay(250, ct).ConfigureAwait(true);
             State = PreviewState.Loading;
             StatusMessage = "";
+            PreviewTypeLabel = "";
             await LoadContentAsync(entry, ct).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
@@ -93,6 +105,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
             if (classifyResult.Kind == ContentKind.Binary)
             {
+                PreviewTypeLabel = LocalizationManager.Current["Preview.Type.Binary"];
                 State = PreviewState.Binary;
                 StatusMessage = string.Format(
                     LocalizationManager.Current["Preview.Binary"],
@@ -100,9 +113,17 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            // Text: decode and display. Code/Markdown routing added in Steps 5/6.
+            // Route to Text / Code / Markdown based on extension.
+            var previewState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, maxBytes);
+            var typeKey = previewState switch
+            {
+                PreviewState.Code => "Preview.Type.Code",
+                PreviewState.Markdown => "Preview.Type.Markdown",
+                _ => "Preview.Type.Text",
+            };
             PreviewText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
-            State = PreviewState.Text;
+            PreviewTypeLabel = $"{LocalizationManager.Current[typeKey]} · {classifyResult.Encoding}";
+            State = previewState;
 
             var truncated = entry.Entry.OriginalSize > (ulong)maxBytes;
             StatusMessage = truncated
@@ -111,11 +132,13 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
         catch (InvalidOperationException)
         {
+            PreviewTypeLabel = LocalizationManager.Current["Preview.Type.Encrypted"];
             State = PreviewState.Encrypted;
             StatusMessage = LocalizationManager.Current["Preview.Encrypted"];
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            PreviewTypeLabel = LocalizationManager.Current["Preview.Type.Error"];
             State = PreviewState.Error;
             StatusMessage = string.Format(
                 LocalizationManager.Current["Preview.Error"], ex.Message);

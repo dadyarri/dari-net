@@ -176,5 +176,11 @@
     <x:String x:Key="Preview.Encrypted">File is encrypted</x:String>
     <x:String x:Key="Preview.Error">Error: {0}</x:String>
     <x:String x:Key="Preview.Truncated">Showing first {0} MB</x:String>
+    <x:String x:Key="Preview.Type.Text">Text</x:String>
+    <x:String x:Key="Preview.Type.Code">Code</x:String>
+    <x:String x:Key="Preview.Type.Markdown">Markdown</x:String>
+    <x:String x:Key="Preview.Type.Binary">Binary</x:String>
+    <x:String x:Key="Preview.Type.Encrypted">Encrypted</x:String>
+    <x:String x:Key="Preview.Type.Error">Error</x:String>
 
 </ResourceDictionary>
