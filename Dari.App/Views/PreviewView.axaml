@@ -1,54 +1,107 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Dari.App.ViewModels"
+             xmlns:aedit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
+             xmlns:mda="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              x:Class="Dari.App.Views.PreviewView"
              x:DataType="vm:PreviewViewModel"
              HorizontalAlignment="Stretch"
              VerticalAlignment="Stretch">
 
-    <Panel>
+    <Grid RowDefinitions="Auto,*,Auto">
 
-        <!-- Empty: no entry selected -->
-        <TextBlock IsVisible="{Binding IsEmptyVisible}"
-                   Text="{DynamicResource Preview.Empty}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Opacity="0.45"
-                   TextAlignment="Center"
-                   Margin="16" />
+        <Button Grid.Row="0"
+                HorizontalAlignment="Right"
+                Margin="4"
+                Content="{DynamicResource Button.ExtractAndOpen}"
+                ToolTip.Tip="{DynamicResource Tooltip.ExtractAndOpen}"
+                Command="{Binding ExtractAndOpenCommand}" />
 
-        <!-- Loading: debounce passed, fetching bytes -->
-        <StackPanel IsVisible="{Binding IsLoadingVisible}"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="10">
-            <ProgressBar IsIndeterminate="True" Width="120" />
-            <TextBlock Text="{DynamicResource Preview.Loading}"
+        <Panel Grid.Row="1">
+
+            <!-- Empty: no entry selected -->
+            <TextBlock IsVisible="{Binding IsEmptyVisible}"
+                       Text="{DynamicResource Preview.Empty}"
                        HorizontalAlignment="Center"
-                       Opacity="0.6" />
-        </StackPanel>
+                       VerticalAlignment="Center"
+                       Opacity="0.45"
+                       TextAlignment="Center"
+                       Margin="16" />
 
-        <!-- Binary / Encrypted / Error: show StatusMessage centred -->
-        <TextBlock IsVisible="{Binding IsStatusVisible}"
-                   Text="{Binding StatusMessage}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   TextAlignment="Center"
-                   TextWrapping="Wrap"
-                   Margin="16" />
+            <!-- Loading: debounce passed, fetching bytes -->
+            <StackPanel IsVisible="{Binding IsLoadingVisible}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="10">
+                <ProgressBar IsIndeterminate="True" Width="120" />
+                <TextBlock Text="{DynamicResource Preview.Loading}"
+                           HorizontalAlignment="Center"
+                           Opacity="0.6" />
+            </StackPanel>
 
-        <!-- Text / Code / Markdown -->
-        <ScrollViewer x:Name="TextScrollViewer"
-                      IsVisible="{Binding IsTextVisible}"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
-            <TextBlock FontFamily="Courier New, Cascadia Code, Consolas, monospace"
-                       FontSize="12"
-                       Text="{Binding PreviewText}"
-                       TextWrapping="NoWrap"
-                       Margin="8" />
-        </ScrollViewer>
+            <!-- Binary / Encrypted / Error: show StatusMessage centred -->
+            <TextBlock IsVisible="{Binding IsStatusVisible}"
+                       Text="{Binding StatusMessage}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="16" />
 
-    </Panel>
+            <!-- Text -->
+            <ScrollViewer x:Name="TextScrollViewer"
+                          IsVisible="{Binding IsTextVisible}"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <TextBlock FontFamily="Courier New, Cascadia Code, Consolas, monospace"
+                           FontSize="12"
+                           Text="{Binding PreviewText}"
+                           TextWrapping="NoWrap"
+                           Margin="8" />
+            </ScrollViewer>
+
+            <!-- Code -->
+            <aedit:TextEditor x:Name="CodeEditor"
+                              IsVisible="{Binding IsCodeVisible}"
+                              IsReadOnly="True"
+                              ShowLineNumbers="True"
+                              FontFamily="Courier New, Cascadia Code, Consolas, monospace"
+                              FontSize="12"
+                              WordWrap="False" />
+
+            <!-- Markdown -->
+            <mda:MarkdownScrollViewer IsVisible="{Binding IsMarkdownVisible}"
+                                      Markdown="{Binding PreviewText}" />
+
+            <!-- Image -->
+            <ScrollViewer IsVisible="{Binding IsImageVisible}"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <Image Source="{Binding PreviewBitmap}"
+                       Stretch="None" />
+            </ScrollViewer>
+
+        </Panel>
+
+        <Grid Grid.Row="2"
+              IsVisible="{Binding IsBottomStatusVisible}"
+              ColumnDefinitions="Auto,Auto,Auto,*"
+              Margin="8,4">
+            <TextBlock Grid.Column="0"
+                       Text="{Binding PreviewTypeName}" />
+            <TextBlock Grid.Column="1"
+                       Text="{Binding PreviewTypeEncoding}" />
+
+            <StackPanel Grid.Column="2"
+                        IsVisible="{Binding IsTruncationVisible}"
+                        Orientation="Horizontal"
+                        Margin="10,0,0,0"
+                        Spacing="4">
+                <TextBlock Text="{DynamicResource Preview.Truncated.Label}" Opacity="0.75" />
+                <TextBlock Text="{Binding TruncationDisplay}" Opacity="0.75" />
+            </StackPanel>
+        </Grid>
+
+    </Grid>
 
 </UserControl>

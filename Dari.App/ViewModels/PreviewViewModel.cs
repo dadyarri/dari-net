@@ -1,4 +1,8 @@
+using System.Collections.Frozen;
+using System.Diagnostics;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Dari.App.Helpers;
 using Dari.App.Models;
 using Dari.App.Services;
@@ -10,10 +14,14 @@ public enum PreviewState { Empty, Loading, Text, Code, Image, Markdown, Binary, 
 
 public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 {
+    private static readonly FrozenSet<string> ImageExtensions =
+        FrozenSet.ToFrozenSet([".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"]);
+
     private readonly ArchiveReader _reader;
     private CancellationTokenSource? _loadCts;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExtractAndOpenCommand))]
     private PreviewState _state = PreviewState.Empty;
 
     [ObservableProperty]
@@ -21,6 +29,16 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private string _previewText = "";
+
+    [ObservableProperty]
+    private Bitmap? _previewBitmap;
+
+    [ObservableProperty]
+    private string? _textMateScope;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ExtractAndOpenCommand))]
+    private ArchiveEntryViewModel? _currentEntry;
 
     // Status bar: translated type word (e.g. "Text") — updates on language change.
     [ObservableProperty]
@@ -42,16 +60,22 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     // Computed visibility helpers for compiled bindings in AXAML.
     public bool IsEmptyVisible => State == PreviewState.Empty;
     public bool IsLoadingVisible => State == PreviewState.Loading;
-    public bool IsTextVisible => State is PreviewState.Text or PreviewState.Code or PreviewState.Markdown;
+    public bool IsTextVisible => State == PreviewState.Text;
+    public bool IsCodeVisible => State == PreviewState.Code;
+    public bool IsMarkdownVisible => State == PreviewState.Markdown;
+    public bool IsImageVisible => State == PreviewState.Image;
     public bool IsStatusVisible => State is PreviewState.Binary or PreviewState.Error or PreviewState.Encrypted;
     public bool IsBottomStatusVisible => State is not (PreviewState.Empty or PreviewState.Loading);
-    public bool IsTruncationVisible => IsTextVisible && _isTruncated;
+    public bool IsTruncationVisible => (State is PreviewState.Text or PreviewState.Code or PreviewState.Markdown) && _isTruncated;
 
     partial void OnStateChanged(PreviewState value)
     {
         OnPropertyChanged(nameof(IsEmptyVisible));
         OnPropertyChanged(nameof(IsLoadingVisible));
         OnPropertyChanged(nameof(IsTextVisible));
+        OnPropertyChanged(nameof(IsCodeVisible));
+        OnPropertyChanged(nameof(IsMarkdownVisible));
+        OnPropertyChanged(nameof(IsImageVisible));
         OnPropertyChanged(nameof(IsStatusVisible));
         OnPropertyChanged(nameof(IsBottomStatusVisible));
         OnPropertyChanged(nameof(IsTruncationVisible));
@@ -87,9 +111,13 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     {
         if (entry is null)
         {
+            CurrentEntry = null;
             State = PreviewState.Empty;
             StatusMessage = "";
+            PreviewText = "";
+            TextMateScope = null;
             ResetStatusBarFields();
+            ClearPreviewBitmap();
             return;
         }
 
@@ -98,6 +126,8 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             await Task.Delay(250, ct).ConfigureAwait(true);
             State = PreviewState.Loading;
             StatusMessage = "";
+            PreviewText = "";
+            TextMateScope = null;
             ResetStatusBarFields();
             await LoadContentAsync(entry, ct).ConfigureAwait(true);
         }
@@ -118,10 +148,18 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsTruncationVisible));
     }
 
+    private void ClearPreviewBitmap()
+    {
+        var old = PreviewBitmap;
+        PreviewBitmap = null;
+        old?.Dispose();
+    }
+
     private async Task LoadContentAsync(ArchiveEntryViewModel entry, CancellationToken ct)
     {
         try
         {
+            CurrentEntry = entry;
             var maxBytes = MaxPreviewMegaBytes * 1024 * 1024;
             var bytes = await _reader
                 .ReadDecompressedPreviewAsync(entry.Entry, maxBytes, ct)
@@ -130,10 +168,46 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             // Discard stale result if a newer load was triggered while awaiting I/O.
             ct.ThrowIfCancellationRequested();
 
+            var ext = entry.Extension.ToLowerInvariant();
+            if (ImageExtensions.Contains(ext))
+            {
+                try
+                {
+                    var old = PreviewBitmap;
+                    using var ms = new MemoryStream(bytes.ToArray());
+                    PreviewBitmap = new Bitmap(ms);
+                    old?.Dispose();
+                    TextMateScope = null;
+                    PreviewText = "";
+                    _typeLabelKey = "Preview.Type.Image";
+                    PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+                    PreviewTypeEncoding = "";
+                    _isTruncated = false;
+                    TruncationDisplay = "";
+                    OnPropertyChanged(nameof(IsTruncationVisible));
+                    State = PreviewState.Image;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    ClearPreviewBitmap();
+                    TextMateScope = null;
+                    _typeLabelKey = "Preview.Type.Error";
+                    PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+                    PreviewTypeEncoding = "";
+                    State = PreviewState.Error;
+                    StatusMessage = string.Format(LocalizationManager.Current["Preview.ImageDecodeFailed"], ex.Message);
+                    return;
+                }
+            }
+
+            ClearPreviewBitmap();
             var classifyResult = ContentClassifier.ClassifyBytes(bytes.Span, maxBytes);
 
             if (classifyResult.Kind == ContentKind.Binary)
             {
+                TextMateScope = null;
+                PreviewText = "";
                 _typeLabelKey = "Preview.Type.Binary";
                 PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
                 PreviewTypeEncoding = "";
@@ -145,7 +219,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             }
 
             // Route to Text / Code / Markdown based on extension.
-            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, entry.Name, maxBytes);
+            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, maxBytes);
             _typeLabelKey = detectedState switch
             {
                 PreviewState.Code => "Preview.Type.Code",
@@ -153,6 +227,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 _ => "Preview.Type.Text",
             };
             PreviewText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
+            TextMateScope = detectedState == PreviewState.Code
+                ? ExtensionLanguageMap.GetScopeByExtension(ext)
+                : null;
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = $" · {classifyResult.Encoding}";
             State = detectedState;
@@ -167,6 +244,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
         catch (InvalidOperationException)
         {
+            ClearPreviewBitmap();
+            TextMateScope = null;
+            PreviewText = "";
             _typeLabelKey = "Preview.Type.Encrypted";
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = "";
@@ -175,6 +255,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            ClearPreviewBitmap();
+            TextMateScope = null;
+            PreviewText = "";
             _typeLabelKey = "Preview.Type.Error";
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = "";
@@ -184,10 +267,46 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
     }
 
+    [RelayCommand(CanExecute = nameof(CanExtractAndOpen))]
+    private async Task ExtractAndOpenAsync(CancellationToken ct)
+    {
+        if (CurrentEntry is null)
+            return;
+
+        try
+        {
+            var tempDir = Path.Combine(Path.GetTempPath(), "dari-preview");
+            Directory.CreateDirectory(tempDir);
+
+            var fileName = Path.GetFileName(CurrentEntry.Entry.Path);
+            var destination = Path.Combine(tempDir, $"{Guid.NewGuid():N}_{fileName}");
+
+            await _reader.ExtractToFileAsync(CurrentEntry.Entry, destination, ct: ct).ConfigureAwait(true);
+
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = destination,
+                UseShellExecute = true,
+            });
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            _typeLabelKey = "Preview.Type.Error";
+            PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+            PreviewTypeEncoding = "";
+            State = PreviewState.Error;
+            StatusMessage = string.Format(LocalizationManager.Current["Preview.Error"], ex.Message);
+        }
+    }
+
+    private bool CanExtractAndOpen() =>
+        CurrentEntry is not null && State is not PreviewState.Empty and not PreviewState.Loading;
+
     public void Dispose()
     {
         LocalizationManager.Current.LanguageChanged -= OnLanguageChanged;
         _loadCts?.Cancel();
         _loadCts?.Dispose();
+        ClearPreviewBitmap();
     }
 }

@@ -30,18 +30,6 @@ internal static class ContentClassifier
     };
 
     /// <summary>
-    /// Well-known filenames (case-insensitive) that have no conventional extension
-    /// but are plainly code or configuration files.
-    /// </summary>
-    private static readonly HashSet<string> CodeFilenames = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".gitignore", ".dockerignore", ".gitattributes", ".editorconfig",
-        ".npmrc", ".yarnrc", ".nvmrc",
-        "Makefile", "Dockerfile", "Containerfile",
-        ".htaccess",
-    };
-
-    /// <summary>
     /// Classifies <paramref name="bytes"/> as text or binary.
     /// Exact port of Rust <c>classify_bytes</c> from <c>src/tui/preview.rs</c>.
     /// </summary>
@@ -90,10 +78,10 @@ internal static class ContentClassifier
 
     /// <summary>
     /// Classifies <paramref name="bytes"/> and routes to the correct <see cref="PreviewState"/>
-    /// based on content kind, file extension, and file name.
+    /// based on content kind and file extension.
     /// </summary>
     public static PreviewState ClassifyForPreview(
-        ReadOnlySpan<byte> bytes, string extension, string fileName, int maxBytes)
+        ReadOnlySpan<byte> bytes, string extension, int maxBytes)
     {
         var result = ClassifyBytes(bytes, maxBytes);
 
@@ -103,47 +91,9 @@ internal static class ContentClassifier
         var ext = extension.ToLowerInvariant();
         if (ext == ".md") return PreviewState.Markdown;
         if (CodeExtensions.Contains(ext)) return PreviewState.Code;
-        if (CodeFilenames.Contains(fileName)) return PreviewState.Code;
-
-        // XML-like heuristic: classify as Code if the content starts with a tag.
-        if (LooksLikeXml(bytes)) return PreviewState.Code;
 
         return PreviewState.Text;
     }
-
-    /// <summary>
-    /// Returns <see langword="true"/> when <paramref name="bytes"/> appear to start with
-    /// an XML/HTML tag construct (<c>&lt;?</c>, <c>&lt;!</c>, or <c>&lt;Letter</c>),
-    /// after skipping optional UTF-8 BOM and leading whitespace.
-    /// </summary>
-    private static bool LooksLikeXml(ReadOnlySpan<byte> bytes)
-    {
-        var data = bytes;
-
-        // Skip UTF-8 BOM (EF BB BF).
-        if (data.Length >= 3 && data[0] == 0xEF && data[1] == 0xBB && data[2] == 0xBF)
-            data = data[3..];
-
-        // Skip leading whitespace.
-        int i = 0;
-        while (i < data.Length && IsAsciiWhitespace(data[i]))
-            i++;
-
-        if (i >= data.Length || data[i] != '<')
-            return false;
-
-        i++;
-        if (i >= data.Length)
-            return false;
-
-        return IsXmlTagStart(data[i]);
-    }
-
-    private static bool IsAsciiWhitespace(byte b) =>
-        b is (byte)' ' or (byte)'\t' or (byte)'\r' or (byte)'\n';
-
-    private static bool IsXmlTagStart(byte b) =>
-        char.IsAsciiLetter((char)b) || b == '!' || b == '?';
 
     /// <summary>
     /// Decodes <paramref name="bytes"/> using the encoding name returned by
