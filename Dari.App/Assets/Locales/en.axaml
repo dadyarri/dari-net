@@ -131,6 +131,7 @@
     <x:String x:Key="Status.Ready">Ready</x:String>
     <x:String x:Key="Status.FailedToOpen">Failed to open archive: {0}</x:String>
     <x:String x:Key="Status.Opened">Opened {0} entries.</x:String>
+    <x:String x:Key="Status.Opened.Label">Opened: </x:String>
     <x:String x:Key="Status.Cancelling">Cancelling…</x:String>
     <x:String x:Key="Status.ExtractionCancelled">Extraction cancelled.</x:String>
     <x:String x:Key="Status.UnexpectedError">Unexpected error: {0}</x:String>
@@ -175,6 +176,13 @@
     <x:String x:Key="Preview.Binary">Binary file ({0})</x:String>
     <x:String x:Key="Preview.Encrypted">File is encrypted</x:String>
     <x:String x:Key="Preview.Error">Error: {0}</x:String>
-    <x:String x:Key="Preview.Truncated">Showing first {0} MB</x:String>
+    <x:String x:Key="Preview.Truncated">{0} MB</x:String>
+    <x:String x:Key="Preview.Truncated.Label">Showing first</x:String>
+    <x:String x:Key="Preview.Type.Text">Text</x:String>
+    <x:String x:Key="Preview.Type.Code">Code</x:String>
+    <x:String x:Key="Preview.Type.Markdown">Markdown</x:String>
+    <x:String x:Key="Preview.Type.Binary">Binary</x:String>
+    <x:String x:Key="Preview.Type.Encrypted">Encrypted</x:String>
+    <x:String x:Key="Preview.Type.Error">Error</x:String>
 
 </ResourceDictionary>

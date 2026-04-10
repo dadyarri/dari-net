@@ -131,6 +131,7 @@
     <x:String x:Key="Status.Ready">Готово</x:String>
     <x:String x:Key="Status.FailedToOpen">Не удалось открыть архив: {0}</x:String>
     <x:String x:Key="Status.Opened">Открыто записей: {0}.</x:String>
+    <x:String x:Key="Status.Opened.Label">Открыто записей: </x:String>
     <x:String x:Key="Status.Cancelling">Отмена…</x:String>
     <x:String x:Key="Status.ExtractionCancelled">Извлечение отменено.</x:String>
     <x:String x:Key="Status.UnexpectedError">Непредвиденная ошибка: {0}</x:String>
@@ -175,6 +176,13 @@
     <x:String x:Key="Preview.Binary">Бинарный файл ({0})</x:String>
     <x:String x:Key="Preview.Encrypted">Файл зашифрован</x:String>
     <x:String x:Key="Preview.Error">Ошибка: {0}</x:String>
-    <x:String x:Key="Preview.Truncated">Показаны первые {0} МБ</x:String>
+    <x:String x:Key="Preview.Truncated">{0} МБ</x:String>
+    <x:String x:Key="Preview.Truncated.Label">Показаны первые</x:String>
+    <x:String x:Key="Preview.Type.Text">Текст</x:String>
+    <x:String x:Key="Preview.Type.Code">Код</x:String>
+    <x:String x:Key="Preview.Type.Markdown">Markdown</x:String>
+    <x:String x:Key="Preview.Type.Binary">Бинарный</x:String>
+    <x:String x:Key="Preview.Type.Encrypted">Зашифровано</x:String>
+    <x:String x:Key="Preview.Type.Error">Ошибка</x:String>
 
 </ResourceDictionary>

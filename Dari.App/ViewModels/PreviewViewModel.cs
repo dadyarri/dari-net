@@ -22,12 +22,30 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     [ObservableProperty]
     private string _previewText = "";
 
+    // Status bar: translated type word (e.g. "Text") — updates on language change.
+    [ObservableProperty]
+    private string _previewTypeName = "";
+
+    // Status bar: optional value appended after the type name (e.g. " · UTF-8") — empty for non-text.
+    [ObservableProperty]
+    private string _previewTypeEncoding = "";
+
+    // Status bar: value shown next to the truncation label (e.g. "10 MB") — updates on language change.
+    [ObservableProperty]
+    private string _truncationDisplay = "";
+
+    // Intermediate state for re-translation on language switch.
+    private string _typeLabelKey = "";
+    private bool _isTruncated;
+    private int _truncationMb;
+
     // Computed visibility helpers for compiled bindings in AXAML.
     public bool IsEmptyVisible => State == PreviewState.Empty;
     public bool IsLoadingVisible => State == PreviewState.Loading;
-    public bool IsTextVisible => State == PreviewState.Text;
+    public bool IsTextVisible => State is PreviewState.Text or PreviewState.Code or PreviewState.Markdown;
     public bool IsStatusVisible => State is PreviewState.Binary or PreviewState.Error or PreviewState.Encrypted;
-    public bool IsBottomStatusVisible => State != PreviewState.Empty;
+    public bool IsBottomStatusVisible => State is not (PreviewState.Empty or PreviewState.Loading);
+    public bool IsTruncationVisible => IsTextVisible && _isTruncated;
 
     partial void OnStateChanged(PreviewState value)
     {
@@ -36,6 +54,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsTextVisible));
         OnPropertyChanged(nameof(IsStatusVisible));
         OnPropertyChanged(nameof(IsBottomStatusVisible));
+        OnPropertyChanged(nameof(IsTruncationVisible));
     }
 
     public int MaxPreviewMegaBytes { get; set; }
@@ -44,6 +63,15 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     {
         _reader = reader;
         MaxPreviewMegaBytes = maxPreviewMegaBytes;
+        LocalizationManager.Current.LanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged(object? sender, EventArgs e)
+    {
+        if (_typeLabelKey != "")
+            PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+        if (_isTruncated)
+            TruncationDisplay = string.Format(LocalizationManager.Current["Preview.Truncated"], _truncationMb);
     }
 
     public void LoadAsync(ArchiveEntryViewModel? entry)
@@ -61,6 +89,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         {
             State = PreviewState.Empty;
             StatusMessage = "";
+            ResetStatusBarFields();
             return;
         }
 
@@ -69,12 +98,24 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             await Task.Delay(250, ct).ConfigureAwait(true);
             State = PreviewState.Loading;
             StatusMessage = "";
+            ResetStatusBarFields();
             await LoadContentAsync(entry, ct).ConfigureAwait(true);
         }
         catch (OperationCanceledException)
         {
             // Debounce cancelled — a newer load is on its way.
         }
+    }
+
+    private void ResetStatusBarFields()
+    {
+        _typeLabelKey = "";
+        _isTruncated = false;
+        _truncationMb = 0;
+        PreviewTypeName = "";
+        PreviewTypeEncoding = "";
+        TruncationDisplay = "";
+        OnPropertyChanged(nameof(IsTruncationVisible));
     }
 
     private async Task LoadContentAsync(ArchiveEntryViewModel entry, CancellationToken ct)
@@ -93,6 +134,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
             if (classifyResult.Kind == ContentKind.Binary)
             {
+                _typeLabelKey = "Preview.Type.Binary";
+                PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+                PreviewTypeEncoding = "";
                 State = PreviewState.Binary;
                 StatusMessage = string.Format(
                     LocalizationManager.Current["Preview.Binary"],
@@ -100,22 +144,40 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 return;
             }
 
-            // Text: decode and display. Code/Markdown routing added in Steps 5/6.
+            // Route to Text / Code / Markdown based on extension.
+            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, entry.Name, maxBytes);
+            _typeLabelKey = detectedState switch
+            {
+                PreviewState.Code => "Preview.Type.Code",
+                PreviewState.Markdown => "Preview.Type.Markdown",
+                _ => "Preview.Type.Text",
+            };
             PreviewText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
-            State = PreviewState.Text;
+            PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+            PreviewTypeEncoding = $" · {classifyResult.Encoding}";
+            State = detectedState;
 
-            var truncated = entry.Entry.OriginalSize > (ulong)maxBytes;
-            StatusMessage = truncated
-                ? string.Format(LocalizationManager.Current["Preview.Truncated"], MaxPreviewMegaBytes)
-                : "";
+            _isTruncated = entry.Entry.OriginalSize > (ulong)maxBytes;
+            if (_isTruncated)
+            {
+                _truncationMb = MaxPreviewMegaBytes;
+                TruncationDisplay = string.Format(LocalizationManager.Current["Preview.Truncated"], _truncationMb);
+            }
+            OnPropertyChanged(nameof(IsTruncationVisible));
         }
         catch (InvalidOperationException)
         {
+            _typeLabelKey = "Preview.Type.Encrypted";
+            PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+            PreviewTypeEncoding = "";
             State = PreviewState.Encrypted;
             StatusMessage = LocalizationManager.Current["Preview.Encrypted"];
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            _typeLabelKey = "Preview.Type.Error";
+            PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
+            PreviewTypeEncoding = "";
             State = PreviewState.Error;
             StatusMessage = string.Format(
                 LocalizationManager.Current["Preview.Error"], ex.Message);
@@ -124,6 +186,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        LocalizationManager.Current.LanguageChanged -= OnLanguageChanged;
         _loadCts?.Cancel();
         _loadCts?.Dispose();
     }

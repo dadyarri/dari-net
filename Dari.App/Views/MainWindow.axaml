@@ -73,10 +73,13 @@
                        IsVisible="{Binding Browser, Converter={x:Static ObjectConverters.IsNull}}" />
 
             <!-- Archive browser (visible when an archive is open) -->
-            <ContentControl Content="{Binding Browser}">
+            <ContentControl Content="{Binding Browser}"
+                            HorizontalContentAlignment="Stretch"
+                            VerticalContentAlignment="Stretch">
                 <ContentControl.DataTemplates>
                     <DataTemplate DataType="{x:Type vm:ArchiveBrowserViewModel}">
-                        <views:ArchiveBrowserView />
+                        <views:ArchiveBrowserView HorizontalAlignment="Stretch"
+                                                  VerticalAlignment="Stretch" />
                     </DataTemplate>
                 </ContentControl.DataTemplates>
             </ContentControl>
@@ -87,9 +90,43 @@
         <Border Grid.Row="2"
                 BorderThickness="0,1,0,0"
                 Padding="8,4">
-            <TextBlock Text="{Binding StatusText}"
-                       FontSize="12"
-                       Opacity="0.7" />
+            <DockPanel>
+
+                <!-- Right side: preview pane status (type label • truncation notice) -->
+                <StackPanel DockPanel.Dock="Right"
+                            Orientation="Horizontal"
+                            IsVisible="{Binding Browser.Preview.IsBottomStatusVisible, FallbackValue=False}">
+                    <views:StatusBarWidget Label="{Binding Browser.Preview.PreviewTypeName}"
+                                          Value="{Binding Browser.Preview.PreviewTypeEncoding}" />
+                    <views:StatusBarWidget IsVisible="{Binding Browser.Preview.IsTruncationVisible, FallbackValue=False}"
+                                          ShowBulletBefore="True"
+                                          Label="{DynamicResource Preview.Truncated.Label}"
+                                          Value="{Binding Browser.Preview.TruncationDisplay}" />
+                </StackPanel>
+
+                <!-- Left side: archive status text • total size • compressed size -->
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- No archive open: plain status (Ready / Error / Done) -->
+                    <TextBlock Text="{Binding StatusText}"
+                               IsVisible="{Binding Browser, Converter={x:Static ObjectConverters.IsNull}}"
+                               FontSize="11"
+                               Opacity="0.7"
+                               VerticalAlignment="Center" />
+                    <!-- Archive open: all widgets via StatusBarWidget -->
+                    <StackPanel Orientation="Horizontal"
+                                IsVisible="{Binding Browser, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <views:StatusBarWidget Label="{DynamicResource Status.Opened.Label}"
+                                              Value="{Binding Browser.FileCount}" />
+                        <views:StatusBarWidget ShowBulletBefore="True"
+                                              Label="{DynamicResource Archive.TotalSize}"
+                                              Value="{Binding Browser.TotalSizeDisplay}" />
+                        <views:StatusBarWidget ShowBulletBefore="True"
+                                              Label="{DynamicResource Archive.Compressed}"
+                                              Value="{Binding Browser.TotalCompressedSizeDisplay}" />
+                    </StackPanel>
+                </StackPanel>
+
+            </DockPanel>
         </Border>
 
     </Grid>
