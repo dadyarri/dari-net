@@ -131,6 +131,7 @@
     <x:String x:Key="Status.Ready">Ready</x:String>
     <x:String x:Key="Status.FailedToOpen">Failed to open archive: {0}</x:String>
     <x:String x:Key="Status.Opened">Opened {0} entries.</x:String>
+    <x:String x:Key="Status.Opened.Label">Opened: </x:String>
     <x:String x:Key="Status.Cancelling">Cancelling…</x:String>
     <x:String x:Key="Status.ExtractionCancelled">Extraction cancelled.</x:String>
     <x:String x:Key="Status.UnexpectedError">Unexpected error: {0}</x:String>
