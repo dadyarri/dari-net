@@ -43,16 +43,23 @@ public sealed partial class SettingsViewModel : ObservableObject
     [ObservableProperty]
     private double _previewFontSize;
 
+    [ObservableProperty]
+    private string _defaultExtractionDirectory;
+
     public IReadOnlyList<PreviewFontItem> AvailablePreviewFonts =>
         ShowAllPreviewFonts ? _allPreviewFonts : _monospacePreviewFonts;
 
     /// <summary>Raised when the dialog should be closed.</summary>
     public event Action? Closed;
 
-    public SettingsViewModel(IConfigService configService, ILocalizationManager localization)
+    public SettingsViewModel(
+        IConfigService configService,
+        ILocalizationManager localization,
+        IDialogService? dialogService = null)
     {
         _configService = configService;
         _localization = localization;
+        _dialogService = dialogService;
 
         var config = configService.Load();
 
@@ -71,6 +78,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             AvailableThemes[0]);
 
         _previewMaxMb = Math.Clamp(config.PreviewMaxMegaBytes, 1, 512);
+        _defaultExtractionDirectory = config.DefaultExtractionDirectory;
 
         var fontItems = BuildPreviewFonts();
         _allPreviewFonts = [new PreviewFontItem("Monospace", true), .. fontItems];
@@ -94,8 +102,32 @@ public sealed partial class SettingsViewModel : ObservableObject
             : (config.PreviewMonospaceFontSize > 0 ? config.PreviewMonospaceFontSize : 12);
     }
 
+    private readonly IDialogService? _dialogService;
+
+    /// <summary>Persists settings and closes the dialog.</summary>
     [RelayCommand]
-    private void Save()
+    private void Ok()
+    {
+        ApplyAndSave();
+        Closed?.Invoke();
+    }
+
+    /// <summary>Persists settings without closing the dialog.</summary>
+    [RelayCommand]
+    private void Apply() => ApplyAndSave();
+
+    [RelayCommand]
+    private void Cancel() => Closed?.Invoke();
+
+    [RelayCommand]
+    private async Task BrowseExtractionDirectoryAsync()
+    {
+        if (_dialogService is null) return;
+        var folder = await _dialogService.PickFolderAsync().ConfigureAwait(true);
+        if (folder is not null) DefaultExtractionDirectory = folder;
+    }
+
+    private void ApplyAndSave()
     {
         _localization.SetLanguage(SelectedLanguage.Code);
 
@@ -105,15 +137,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         config.PreviewMaxMegaBytes = Math.Clamp(PreviewMaxMb, 1, 512);
         config.PreviewMonospaceFontFamily = SelectedPreviewFont.FamilyName;
         config.PreviewMonospaceFontSize = Math.Clamp(PreviewFontSize, 8, 48);
+        config.DefaultExtractionDirectory = DefaultExtractionDirectory;
         _configService.Save(config);
 
         ApplyTheme(SelectedTheme.Code);
-
-        Closed?.Invoke();
     }
-
-    [RelayCommand]
-    private void Cancel() => Closed?.Invoke();
 
     partial void OnShowAllPreviewFontsChanged(bool value)
     {

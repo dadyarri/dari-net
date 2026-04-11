@@ -34,6 +34,19 @@
                 <MenuItem Header="{DynamicResource Menu.File.Open}"
                           InputGesture="Ctrl+O"
                           Command="{Binding OpenArchiveCommand}" />
+                <MenuItem Header="{DynamicResource Menu.File.Recent}"
+                          ItemsSource="{Binding RecentFiles}"
+                          IsVisible="{Binding RecentFiles.Count}">
+                    <MenuItem.ItemContainerTheme>
+                        <ControlTheme TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}" x:DataType="vm:RecentFileItem">
+                            <Setter Property="Header" Value="{Binding DisplayName}" />
+                            <Setter Property="ToolTip.Tip" Value="{Binding Path}" />
+                            <Setter Property="Command"
+                                    Value="{Binding $parent[Window].((vm:MainWindowViewModel)DataContext).OpenRecentCommand}" />
+                            <Setter Property="CommandParameter" Value="{Binding}" />
+                        </ControlTheme>
+                    </MenuItem.ItemContainerTheme>
+                </MenuItem>
                 <MenuItem Header="{DynamicResource Menu.File.Close}"
                           InputGesture="Ctrl+W"
                           Command="{Binding CloseArchiveCommand}" />

@@ -1,0 +1,67 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Dari.App.ViewModels"
+        x:Class="Dari.App.Views.AboutView"
+        x:DataType="vm:AboutViewModel"
+        Title="{DynamicResource Menu.Help.About}"
+        Width="420"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False">
+
+    <StackPanel Margin="24" Spacing="12">
+
+        <!-- App icon + name -->
+        <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+            <Image Source="/Assets/dari.png" Width="64" Height="64" />
+            <StackPanel VerticalAlignment="Center">
+                <TextBlock Text="{Binding AppName}" FontSize="24" FontWeight="Bold" />
+                <TextBlock Text="{Binding Version}" FontSize="14" Opacity="0.7" />
+            </StackPanel>
+        </StackPanel>
+
+        <Separator />
+
+        <!-- Description -->
+        <TextBlock Text="{Binding Description}"
+                   TextWrapping="Wrap"
+                   HorizontalAlignment="Center" />
+
+        <!-- Details grid -->
+        <Grid ColumnDefinitions="Auto,8,*" RowDefinitions="Auto,Auto,Auto,Auto" Margin="0,4,0,0">
+
+            <TextBlock Grid.Row="0" Grid.Column="0"
+                       Text="{DynamicResource About.Copyright}" FontWeight="SemiBold" />
+            <TextBlock Grid.Row="0" Grid.Column="2"
+                       Text="{Binding Copyright}" />
+
+            <TextBlock Grid.Row="1" Grid.Column="0"
+                       Text="{DynamicResource About.License}" FontWeight="SemiBold" />
+            <TextBlock Grid.Row="1" Grid.Column="2"
+                       Text="{Binding License}" />
+
+            <TextBlock Grid.Row="2" Grid.Column="0"
+                       Text="{DynamicResource About.Runtime}" FontWeight="SemiBold" />
+            <TextBlock Grid.Row="2" Grid.Column="2"
+                       Text="{Binding Runtime}" />
+
+            <TextBlock Grid.Row="3" Grid.Column="0"
+                       Text="{DynamicResource About.OS}" FontWeight="SemiBold" />
+            <TextBlock Grid.Row="3" Grid.Column="2"
+                       Text="{Binding OperatingSystem}" TextTrimming="CharacterEllipsis" />
+        </Grid>
+
+        <!-- Project URL -->
+        <TextBlock HorizontalAlignment="Center" Opacity="0.7">
+            <Run Text="{Binding ProjectUrl}" />
+        </TextBlock>
+
+        <!-- Close button -->
+        <Button Content="{DynamicResource Button.Close}"
+                HorizontalAlignment="Center"
+                Classes="accent"
+                Command="{Binding CloseCommand}" />
+
+    </StackPanel>
+</Window>

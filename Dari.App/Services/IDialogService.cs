@@ -76,4 +76,7 @@ public interface IDialogService
 
     /// <summary>Shows the <see cref="AppendViewModel"/> in a modal append-progress dialog.</summary>
     ValueTask ShowAppendDialogAsync(AppendViewModel vm);
+
+    /// <summary>Shows the About dialog.</summary>
+    ValueTask ShowAboutAsync(AboutViewModel vm);
 }

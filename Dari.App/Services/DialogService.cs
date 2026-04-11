@@ -177,7 +177,15 @@ public sealed class DialogService : IDialogService
     public async ValueTask ShowSettingsAsync(SettingsViewModel vm)
     {
         var dialog = new SettingsView { DataContext = vm };
-        await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        vm.Closed += dialog.Close;
+        try
+        {
+            await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        }
+        finally
+        {
+            vm.Closed -= dialog.Close;
+        }
     }
 
     /// <inheritdoc/>
@@ -211,6 +219,21 @@ public sealed class DialogService : IDialogService
     public async ValueTask ShowAppendDialogAsync(AppendViewModel vm)
     {
         var dialog = new AppendView { DataContext = vm };
+        vm.Closed += dialog.Close;
+        try
+        {
+            await dialog.ShowDialog(_owner).ConfigureAwait(true);
+        }
+        finally
+        {
+            vm.Closed -= dialog.Close;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async ValueTask ShowAboutAsync(AboutViewModel vm)
+    {
+        var dialog = new AboutView { DataContext = vm };
         vm.Closed += dialog.Close;
         try
         {

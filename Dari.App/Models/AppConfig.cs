@@ -32,4 +32,10 @@ public sealed class AppConfig
     /// Defaults to <c>12</c>.
     /// </summary>
     public double PreviewMonospaceFontSize { get; set; } = 12;
+
+    /// <summary>
+    /// Default directory for archive extraction.
+    /// When empty, the user is always prompted to pick a folder.
+    /// </summary>
+    public string DefaultExtractionDirectory { get; set; } = "";
 }

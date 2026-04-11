@@ -89,6 +89,20 @@
                                HorizontalAlignment="Stretch" />
             </StackPanel>
 
+            <!-- Default extraction directory -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.DefaultExtractionDir}" />
+                <Grid ColumnDefinitions="*,Auto">
+                    <TextBox Grid.Column="0"
+                             Text="{Binding DefaultExtractionDirectory}"
+                             Watermark="{DynamicResource Settings.DefaultExtractionDir.Watermark}" />
+                    <Button Grid.Column="1"
+                            Content="{DynamicResource Button.Browse}"
+                            Command="{Binding BrowseExtractionDirectoryCommand}"
+                            Margin="4,0,0,0" />
+                </Grid>
+            </StackPanel>
+
         </StackPanel>
 
         <StackPanel Grid.Row="1"
@@ -98,9 +112,11 @@
                     Margin="0,16,0,0">
             <Button Content="{DynamicResource Button.Cancel}"
                     Command="{Binding CancelCommand}" />
-            <Button Content="{DynamicResource Button.Save}"
+            <Button Content="{DynamicResource Button.Apply}"
+                    Command="{Binding ApplyCommand}" />
+            <Button Content="{DynamicResource Button.OK}"
                     Classes="accent"
-                    Command="{Binding SaveCommand}" />
+                    Command="{Binding OkCommand}" />
         </StackPanel>
 
     </Grid>

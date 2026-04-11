@@ -30,10 +30,12 @@ public partial class App : Application
         {
             var mainWindow = new MainWindow();
             var dialogService = new DialogService(mainWindow);
+            var recentFiles = new RecentFilesService();
             mainWindow.DataContext = new MainWindowViewModel(
                 dialogService,
                 configService,
-                LocalizationManager.Current);
+                LocalizationManager.Current,
+                recentFiles);
             desktop.MainWindow = mainWindow;
         }
 

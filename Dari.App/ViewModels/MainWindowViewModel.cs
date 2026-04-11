@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -9,11 +10,15 @@ using Dari.Archiver.Crypto;
 
 namespace Dari.App.ViewModels;
 
+/// <summary>Represents a single entry in the recent-files menu.</summary>
+public sealed record RecentFileItem(string Path, string DisplayName);
+
 public sealed partial class MainWindowViewModel : ObservableObject
 {
     private readonly IDialogService _dialogService;
     private readonly IConfigService _configService;
     private readonly ILocalizationManager _localization;
+    private readonly IRecentFilesService _recentFiles;
 
     /// <summary>Path of the currently open archive; null when no archive is open.</summary>
     private string? _currentArchivePath;
@@ -27,15 +32,21 @@ public sealed partial class MainWindowViewModel : ObservableObject
     [ObservableProperty]
     private ArchiveBrowserViewModel? _browser;
 
+    /// <summary>Recent files shown in the File → Recent submenu.</summary>
+    public ObservableCollection<RecentFileItem> RecentFiles { get; } = [];
+
     public MainWindowViewModel(
         IDialogService dialogService,
         IConfigService configService,
-        ILocalizationManager localization)
+        ILocalizationManager localization,
+        IRecentFilesService recentFiles)
     {
         _dialogService = dialogService;
         _configService = configService;
         _localization = localization;
+        _recentFiles = recentFiles;
         StatusText = localization["Status.Ready"];
+        RefreshRecentFiles();
     }
 
     [RelayCommand]
@@ -87,6 +98,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
+        _recentFiles.Add(path);
+        RefreshRecentFiles();
     }
 
     [RelayCommand]
@@ -98,15 +111,16 @@ public sealed partial class MainWindowViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void About()
+    private async Task AboutAsync()
     {
-        // Phase G: show About dialog
+        var vm = new AboutViewModel();
+        await _dialogService.ShowAboutAsync(vm).ConfigureAwait(true);
     }
 
     [RelayCommand]
     private async Task SettingsAsync()
     {
-        var vm = new SettingsViewModel(_configService, _localization);
+        var vm = new SettingsViewModel(_configService, _localization, _dialogService);
         await _dialogService.ShowSettingsAsync(vm).ConfigureAwait(true);
 
         // Sync preview cap in case the user changed it.
@@ -192,6 +206,8 @@ public sealed partial class MainWindowViewModel : ObservableObject
         _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
+        _recentFiles.Add(path);
+        RefreshRecentFiles();
     }
 
     /// <summary>
@@ -304,5 +320,49 @@ public sealed partial class MainWindowViewModel : ObservableObject
     public async ValueTask ShutdownAsync()
     {
         await CloseCurrentBrowserAsync().ConfigureAwait(false);
+    }
+
+    // -----------------------------------------------------------------------
+    // Recent files
+    // -----------------------------------------------------------------------
+
+    [RelayCommand]
+    private async Task OpenRecentAsync(RecentFileItem? item)
+    {
+        if (item is null) return;
+
+        if (!File.Exists(item.Path))
+        {
+            _recentFiles.Remove(item.Path);
+            RefreshRecentFiles();
+            await _dialogService.ShowMessageAsync(
+                _localization["Recent.NotFound.Title"],
+                _localization.Format("Recent.NotFound.Message", item.Path)).ConfigureAwait(true);
+            return;
+        }
+
+        await OpenArchiveFromPathAsync(item.Path).ConfigureAwait(true);
+    }
+
+    [RelayCommand]
+    private void RemoveRecent(RecentFileItem? item)
+    {
+        if (item is null) return;
+        _recentFiles.Remove(item.Path);
+        RefreshRecentFiles();
+    }
+
+    [RelayCommand]
+    private void ClearRecent()
+    {
+        _recentFiles.Clear();
+        RefreshRecentFiles();
+    }
+
+    private void RefreshRecentFiles()
+    {
+        RecentFiles.Clear();
+        foreach (var path in _recentFiles.Load())
+            RecentFiles.Add(new RecentFileItem(path, System.IO.Path.GetFileName(path)));
     }
 }
