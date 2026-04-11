@@ -103,7 +103,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     public int MaxPreviewMegaBytes { get; set; }
 
-    public string ImageScaleDisplay => $"{ImageScale:0.##}x";
+    public string ImageScaleDisplay => $"{ImageScale * 100:0}%";
 
     partial void OnImageScaleChanged(double value) => OnPropertyChanged(nameof(ImageScaleDisplay));
 
@@ -253,14 +253,21 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             }
 
             // Route to Text / Code / Markdown based on extension.
-            var detectedState = ContentClassifier.ClassifyForPreview(bytes.Span, entry.Extension, maxBytes);
+            var detectedState = ContentClassifier.ClassifyForPreview(
+                bytes.Span,
+                entry.Extension,
+                Path.GetFileName(entry.Entry.Path),
+                maxBytes);
             _typeLabelKey = detectedState switch
             {
                 PreviewState.Code => "Preview.Type.Code",
                 PreviewState.Markdown => "Preview.Type.Markdown",
                 _ => "Preview.Type.Text",
             };
-            PreviewText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
+            var decodedText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
+            PreviewText = detectedState == PreviewState.Markdown
+                ? StripMarkdownFrontMatter(decodedText)
+                : decodedText;
             TextMateScope = detectedState == PreviewState.Code
                 ? ExtensionLanguageMap.GetScopeByExtension(ext)
                 : null;
@@ -355,6 +362,22 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private void ResetImageZoom() => ImageScale = 1;
 
     private bool CanAdjustImageZoom() => State == PreviewState.Image && PreviewBitmap is not null;
+
+    private static string StripMarkdownFrontMatter(string text)
+    {
+        if (!text.StartsWith("---\n", StringComparison.Ordinal) &&
+            !text.StartsWith("---\r\n", StringComparison.Ordinal))
+            return text;
+
+        var newline = text.StartsWith("---\r\n", StringComparison.Ordinal) ? "\r\n" : "\n";
+        var start = 3 + newline.Length;
+        var endMarker = $"{newline}---{newline}";
+        var end = text.IndexOf(endMarker, start, StringComparison.Ordinal);
+        if (end < 0)
+            return text;
+
+        return text[(end + endMarker.Length)..];
+    }
 
     private static string SanitizeFileName(string fileName)
     {

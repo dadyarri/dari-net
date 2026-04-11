@@ -81,7 +81,7 @@ public sealed class ContentClassifierTests
     {
         ReadOnlySpan<byte> bytes = "hello"u8.ToArray();
 
-        var state = ContentClassifier.ClassifyForPreview(bytes, extension, 1024);
+        var state = ContentClassifier.ClassifyForPreview(bytes, extension, "file" + extension, 1024);
 
         Assert.Equal(expected, state);
     }
@@ -89,7 +89,7 @@ public sealed class ContentClassifierTests
     [Fact]
     public void ClassifyForPreview_BinaryContent_ReturnsBinary()
     {
-        var state = ContentClassifier.ClassifyForPreview([0x00, 0x01], ".md", 1024);
+        var state = ContentClassifier.ClassifyForPreview([0x00, 0x01], ".md", "readme.md", 1024);
 
         Assert.Equal(PreviewState.Binary, state);
     }

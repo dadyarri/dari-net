@@ -8,7 +8,7 @@
              HorizontalAlignment="Stretch"
              VerticalAlignment="Stretch">
 
-    <Grid RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*">
 
         <StackPanel Grid.Row="0"
                     Orientation="Horizontal"
@@ -98,36 +98,17 @@
             <ScrollViewer IsVisible="{Binding IsImageVisible}"
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto">
-                <Image Source="{Binding PreviewBitmap}"
-                       Stretch="None"
-                       RenderTransformOrigin="0,0">
-                    <Image.RenderTransform>
+                <LayoutTransformControl>
+                    <LayoutTransformControl.LayoutTransform>
                         <ScaleTransform ScaleX="{Binding ImageScale}"
                                         ScaleY="{Binding ImageScale}" />
-                    </Image.RenderTransform>
-                </Image>
+                    </LayoutTransformControl.LayoutTransform>
+                    <Image Source="{Binding PreviewBitmap}"
+                           Stretch="None" />
+                </LayoutTransformControl>
             </ScrollViewer>
 
         </Panel>
-
-        <Grid Grid.Row="2"
-              IsVisible="{Binding IsBottomStatusVisible}"
-              ColumnDefinitions="Auto,Auto,Auto,*"
-              Margin="8,4">
-            <TextBlock Grid.Column="0"
-                       Text="{Binding PreviewTypeName}" />
-            <TextBlock Grid.Column="1"
-                       Text="{Binding PreviewTypeEncoding}" />
-
-            <StackPanel Grid.Column="2"
-                        IsVisible="{Binding IsTruncationVisible}"
-                        Orientation="Horizontal"
-                        Margin="10,0,0,0"
-                        Spacing="4">
-                <TextBlock Text="{DynamicResource Preview.Truncated.Label}" Opacity="0.75" />
-                <TextBlock Text="{Binding TruncationDisplay}" Opacity="0.75" />
-            </StackPanel>
-        </Grid>
 
     </Grid>
 
