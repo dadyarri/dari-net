@@ -49,8 +49,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(ResetImageZoomCommand))]
     private Bitmap? _previewBitmap;
 
-    [ObservableProperty]
-    private string? _codeFileExtension;
 
     [ObservableProperty]
     private string _monospaceFontFamily = "Monospace";
@@ -86,7 +84,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     public bool IsEmptyVisible => State == PreviewState.Empty;
     public bool IsLoadingVisible => State == PreviewState.Loading;
     public bool IsTextVisible => State is PreviewState.Text or PreviewState.Code;
-    public bool IsCodeVisible => State == PreviewState.Code;
     public bool IsMarkdownVisible => State == PreviewState.Markdown;
     public bool IsImageVisible => State == PreviewState.Image;
     public bool IsStatusVisible => State is PreviewState.Binary or PreviewState.Error or PreviewState.Encrypted;
@@ -98,7 +95,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsEmptyVisible));
         OnPropertyChanged(nameof(IsLoadingVisible));
         OnPropertyChanged(nameof(IsTextVisible));
-        OnPropertyChanged(nameof(IsCodeVisible));
         OnPropertyChanged(nameof(IsMarkdownVisible));
         OnPropertyChanged(nameof(IsImageVisible));
         OnPropertyChanged(nameof(IsStatusVisible));
@@ -152,7 +148,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             State = PreviewState.Empty;
             StatusMessage = "";
             PreviewText = "";
-            CodeFileExtension = null;
             ResetStatusBarFields();
             ClearPreviewBitmap();
             ImageScale = 1;
@@ -165,7 +160,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             State = PreviewState.Loading;
             StatusMessage = "";
             PreviewText = "";
-            CodeFileExtension = null;
             ResetStatusBarFields();
             await LoadContentAsync(entry, ct).ConfigureAwait(true);
         }
@@ -215,7 +209,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                     using var ms = new MemoryStream(bytes.ToArray());
                     PreviewBitmap = new Bitmap(ms);
                     old?.Dispose();
-                    CodeFileExtension = null;
                     PreviewText = "";
                     _typeLabelKey = "Preview.Type.Image";
                     PreviewTypeEncoding = "";
@@ -229,7 +222,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 catch (Exception ex)
                 {
                     ClearPreviewBitmap();
-                    CodeFileExtension = null;
                     _typeLabelKey = "Preview.Type.Error";
                     PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
                     PreviewTypeEncoding = "";
@@ -244,7 +236,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
             if (classifyResult.Kind == ContentKind.Binary)
             {
-                CodeFileExtension = null;
                 PreviewText = "";
                 _typeLabelKey = "Preview.Type.Binary";
                 PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
@@ -275,7 +266,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             PreviewText = detectedState == PreviewState.Markdown
                 ? StripMarkdownFrontMatter(decodedText)
                 : decodedText;
-            CodeFileExtension = detectedState == PreviewState.Code ? ext : null;
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = $" · {classifyResult.Encoding}";
             State = detectedState;
@@ -291,7 +281,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         catch (InvalidOperationException)
         {
             ClearPreviewBitmap();
-            CodeFileExtension = null;
             PreviewText = "";
             _typeLabelKey = "Preview.Type.Encrypted";
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
@@ -302,7 +291,6 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             ClearPreviewBitmap();
-            CodeFileExtension = null;
             PreviewText = "";
             _typeLabelKey = "Preview.Type.Error";
             PreviewTypeEncoding = "";
