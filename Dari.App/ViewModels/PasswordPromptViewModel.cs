@@ -22,6 +22,12 @@ public sealed partial class PasswordPromptViewModel : ObservableObject
     /// <summary>The validated <see cref="DariPassphrase"/>; non-null only when <see cref="IsConfirmed"/> is <see langword="true"/>.</summary>
     public DariPassphrase? VerifiedPassphrase { get; private set; }
 
+    /// <summary>
+    /// When <see langword="false"/> (ChaCha20-Poly1305 not supported on this OS), the passphrase
+    /// box and OK button should be disabled and an explanatory message should be shown.
+    /// </summary>
+    public bool IsEncryptionSupported => CryptoCapabilities.IsEncryptionSupported;
+
     /// <summary>Raised when the user presses OK and the passphrase passes validation.</summary>
     public event Action? Confirmed;
 
@@ -52,6 +58,13 @@ public sealed partial class PasswordPromptViewModel : ObservableObject
             {
                 ok = await _validator(pass).ConfigureAwait(true);
             }
+            catch (PlatformNotSupportedException ex)
+            {
+                FileLogger.Log(ex, "PasswordPromptViewModel.Confirm");
+                pass.Dispose();
+                ErrorMessage = LocalizationManager.Current["Password.EncryptionUnsupported"];
+                return;
+            }
             catch (Exception ex)
             {
                 FileLogger.Log(ex, "PasswordPromptViewModel.Confirm");
@@ -75,3 +88,4 @@ public sealed partial class PasswordPromptViewModel : ObservableObject
     [RelayCommand]
     private void Cancel() => Cancelled?.Invoke();
 }
+
