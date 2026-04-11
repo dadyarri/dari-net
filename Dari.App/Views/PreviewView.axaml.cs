@@ -1,11 +1,7 @@
 using System.ComponentModel;
-using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
-using Avalonia.Styling;
-using AvaloniaEdit.TextMate;
 using Dari.App.ViewModels;
-using TextMateSharp.Grammars;
 
 namespace Dari.App.Views;
 
@@ -13,8 +9,6 @@ public partial class PreviewView : UserControl
 {
     private PreviewViewModel? _vm;
     private ScrollViewer? _scrollViewer;
-    private RegistryOptions? _registryOptions;
-    private TextMate.Installation? _textMate;
 
     public PreviewView()
     {
@@ -32,8 +26,6 @@ public partial class PreviewView : UserControl
     {
         base.OnDetachedFromLogicalTree(e);
         UnsubscribeVm();
-        _textMate?.Dispose();
-        _textMate = null;
         DataContextChanged -= OnDataContextChanged;
     }
 
@@ -45,7 +37,6 @@ public partial class PreviewView : UserControl
             return;
 
         _vm.PropertyChanged += OnVmPropertyChanged;
-        UpdateCodeEditor(_vm);
     }
 
     private void UnsubscribeVm()
@@ -57,61 +48,15 @@ public partial class PreviewView : UserControl
         _vm = null;
     }
 
-    private void EnsureTextMate()
-    {
-        if (_textMate is not null)
-            return;
-
-        var theme = Application.Current?.ActualThemeVariant == ThemeVariant.Dark
-            ? ThemeName.DarkPlus
-            : ThemeName.LightPlus;
-
-        _registryOptions ??= new RegistryOptions(theme);
-        _textMate = CodeEditor.InstallTextMate(_registryOptions);
-    }
-
     private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (_vm is null)
             return;
 
-        if (e.PropertyName == nameof(PreviewViewModel.State))
+        if (e.PropertyName == nameof(PreviewViewModel.State) &&
+            _vm.State is PreviewState.Text or PreviewState.Code)
         {
-            if (_vm.State == PreviewState.Text)
-                _scrollViewer?.ScrollToHome();
-            if (_vm.State == PreviewState.Code)
-                UpdateCodeEditor(_vm);
-            return;
+            _scrollViewer?.ScrollToHome();
         }
-
-        if (e.PropertyName is nameof(PreviewViewModel.PreviewText) or nameof(PreviewViewModel.CodeFileExtension))
-            UpdateCodeEditor(_vm);
-    }
-
-    private void UpdateCodeEditor(PreviewViewModel vm)
-    {
-        if (vm.State != PreviewState.Code)
-            return;
-
-        try
-        {
-            EnsureTextMate();
-            if (vm.CodeFileExtension is { } ext && _registryOptions is { } reg)
-            {
-                var lang = reg.GetLanguageByExtension(ext);
-                if (lang is not null)
-                    _textMate?.SetGrammar(reg.GetScopeByLanguageId(lang.Id));
-            }
-        }
-        catch (Exception)
-        {
-            // Syntax highlighting failed; dispose cleanly so next load starts fresh.
-            _textMate?.Dispose();
-            _textMate = null;
-        }
-
-        // Modify the existing document in-place so TextMate's attachment is preserved.
-        CodeEditor.Document.Text = vm.PreviewText ?? "";
-        CodeEditor.ScrollToLine(1);
     }
 }

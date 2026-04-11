@@ -1,7 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Dari.App.ViewModels"
-             xmlns:aedit="clr-namespace:AvaloniaEdit;assembly=AvaloniaEdit"
              xmlns:mda="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              x:Class="Dari.App.Views.PreviewView"
              x:DataType="vm:PreviewViewModel"
@@ -80,15 +79,6 @@
                            TextWrapping="NoWrap"
                            Margin="8" />
             </ScrollViewer>
-
-            <!-- Code -->
-            <aedit:TextEditor x:Name="CodeEditor"
-                              IsVisible="{Binding IsCodeVisible}"
-                              IsReadOnly="True"
-                              ShowLineNumbers="True"
-                              FontFamily="{Binding MonospaceFontFamily}"
-                              FontSize="{Binding MonospaceFontSize}"
-                              WordWrap="False" />
 
             <!-- Markdown -->
             <mda:MarkdownScrollViewer x:CompileBindings="False"

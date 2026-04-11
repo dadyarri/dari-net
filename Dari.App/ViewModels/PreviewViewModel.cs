@@ -85,7 +85,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     // Computed visibility helpers for compiled bindings in AXAML.
     public bool IsEmptyVisible => State == PreviewState.Empty;
     public bool IsLoadingVisible => State == PreviewState.Loading;
-    public bool IsTextVisible => State == PreviewState.Text;
+    public bool IsTextVisible => State is PreviewState.Text or PreviewState.Code;
     public bool IsCodeVisible => State == PreviewState.Code;
     public bool IsMarkdownVisible => State == PreviewState.Markdown;
     public bool IsImageVisible => State == PreviewState.Image;
