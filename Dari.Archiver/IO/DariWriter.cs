@@ -203,13 +203,32 @@ public sealed class DariWriter : IAsyncDisposable, IDisposable
         // 2. Deduplication check: if we have seen this content before, emit a linked entry.
         if (_enableDeduplication && _dedup.TryGetExisting(checksum, out ulong existingOffset, out CompressionMethod primaryMethod))
         {
+            IndexFlags linkedFlags = IndexFlags.LinkedData;
+            ExtraField linkedExtra = extra;
+
+            if (_passphrase is not null)
+            {
+                // The linked entry shares the primary's encrypted data block. Propagate the
+                // EncryptedData flag and the nonce (derived from the shared checksum, identical
+                // to the nonce that was used when the primary was written).
+                Span<byte> checksumBytes = stackalloc byte[DariConstants.ChecksumSize];
+                checksum.CopyTo(checksumBytes);
+                Span<byte> nonce = stackalloc byte[DariConstants.NonceSize];
+                DariEncryption.DeriveNonce(checksumBytes, nonce);
+
+                linkedFlags |= IndexFlags.EncryptedData;
+                linkedExtra = linkedExtra
+                    .With(WellKnownExtraKeys.EncryptionAlgorithm, "chacha20poly1305")
+                    .With(WellKnownExtraKeys.EncryptionNonce, Convert.ToHexStringLower(nonce));
+            }
+
             var linkedEntry = BuildEntry(
-                archivePath, extra, checksum, metadata,
+                archivePath, linkedExtra, checksum, metadata,
                 dataOffset: existingOffset,
                 method: primaryMethod,
                 originalSize: (ulong)rawBytes.Length,
                 compressedSize: 0,
-                flags: IndexFlags.LinkedData);
+                flags: linkedFlags);
             _entries.Add(linkedEntry);
             return;
         }

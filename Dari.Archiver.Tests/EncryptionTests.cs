@@ -289,6 +289,56 @@ public sealed class EncryptionTests
     }
 
     [Fact]
+    public async Task EncryptedArchive_LinkedEntry_SetsEncryptedFlag()
+    {
+        using var passphrase = new DariPassphrase("link-test");
+        byte[] content = "duplicate content"u8.ToArray();
+        var meta = new FileMetadata(DateTimeOffset.UtcNow, 0, 0, 33188);
+
+        var ms = new MemoryStream();
+        await using (var writer = await ArchiveWriter.CreateAsync(ms, leaveOpen: true, passphrase: passphrase))
+        {
+            await writer.AddAsync("a.txt", new ReadOnlyMemory<byte>(content), meta);
+            // Identical content → deduplication → linked entry
+            await writer.AddAsync("b.txt", new ReadOnlyMemory<byte>(content), meta);
+        }
+
+        ms.Position = 0;
+        using var reader = await ArchiveReader.OpenAsync(ms, leaveOpen: true);
+        Assert.Equal(2, reader.Entries.Count);
+        Assert.True(reader.Entries[0].IsEncrypted, "primary must be encrypted");
+        Assert.True(reader.Entries[1].IsLinked, "second entry must be linked");
+        Assert.True(reader.Entries[1].IsEncrypted, "linked entry must also carry EncryptedData flag");
+    }
+
+    [Fact]
+    public async Task EncryptedArchive_LinkedEntry_DecryptsCorrectly()
+    {
+        using var passphrase = new DariPassphrase("link-decrypt-test");
+        byte[] content = System.Text.Encoding.UTF8.GetBytes("shared content for dedup test");
+        var meta = new FileMetadata(DateTimeOffset.UtcNow, 0, 0, 33188);
+
+        var ms = new MemoryStream();
+        await using (var writer = await ArchiveWriter.CreateAsync(ms, leaveOpen: true, passphrase: passphrase))
+        {
+            await writer.AddAsync("original.txt", new ReadOnlyMemory<byte>(content), meta);
+            // Same bytes → linked entry
+            await writer.AddAsync("duplicate.txt", new ReadOnlyMemory<byte>(content), meta);
+        }
+
+        ms.Position = 0;
+        using var reader = await ArchiveReader.OpenAsync(ms, leaveOpen: true, passphrase: passphrase);
+
+        var out1 = new MemoryStream();
+        await reader.ExtractAsync(reader.Entries[0], out1);
+        Assert.Equal(content, out1.ToArray());
+
+        var out2 = new MemoryStream();
+        await reader.ExtractAsync(reader.Entries[1], out2);
+        Assert.Equal(content, out2.ToArray());
+    }
+
+    [Fact]
     public void DariPassphrase_DisposeClearsMemory()
     {
         var pass = new DariPassphrase("zeroize-me");

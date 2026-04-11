@@ -183,6 +183,15 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
         if (entry.IsEncrypted && _passphrase is null)
             throw new InvalidOperationException("Entry is encrypted");
 
+        // Backward compat: legacy linked entries in encrypted archives lack the EncryptedData
+        // flag. If the primary is encrypted and no passphrase is available, refuse early.
+        if (entry.IsLinked && !entry.IsEncrypted && _passphrase is null)
+        {
+            var primary = _inner.Entries.FirstOrDefault(e => !e.IsLinked && e.Offset == entry.Offset);
+            if (primary?.IsEncrypted == true)
+                throw new InvalidOperationException("Entry is encrypted");
+        }
+
         var rawBlock = await _inner.ReadRawBlockAsync(entry, ct).ConfigureAwait(false);
         var decompressed = await DecompressAsync(entry, rawBlock, ct).ConfigureAwait(false);
         return decompressed.Length <= maxBytes ? decompressed : decompressed[..maxBytes];
@@ -246,6 +255,15 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
                     $"Entry '{entry.Path}' is encrypted but no passphrase was provided.");
 
             block = DecryptBlock(entry, block);
+        }
+        else if (entry.IsLinked && _passphrase is not null)
+        {
+            // Backward compatibility: archives written before the linked-entry encryption fix
+            // may have linked entries without the EncryptedData flag even when their primary
+            // entry is encrypted. Detect this by finding the primary at the same offset.
+            var primary = _inner.Entries.FirstOrDefault(e => !e.IsLinked && e.Offset == entry.Offset);
+            if (primary?.IsEncrypted == true)
+                block = DecryptBlock(primary, block);
         }
 
         if (entry.Compression == CompressionMethod.None)
