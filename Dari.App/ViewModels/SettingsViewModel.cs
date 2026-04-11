@@ -82,9 +82,15 @@ public sealed partial class SettingsViewModel : ObservableObject
         _selectedPreviewFont = _allPreviewFonts.FirstOrDefault(
             f => string.Equals(f.FamilyName, configuredFont, StringComparison.OrdinalIgnoreCase),
             _allPreviewFonts[0]);
+        var fallbackToDefaultMonospace = false;
         if (!_monospacePreviewFonts.Contains(_selectedPreviewFont))
+        {
             _selectedPreviewFont = _monospacePreviewFonts[0];
-        _previewFontSize = config.PreviewMonospaceFontSize > 0 ? config.PreviewMonospaceFontSize : 12;
+            fallbackToDefaultMonospace = true;
+        }
+        _previewFontSize = fallbackToDefaultMonospace
+            ? 12
+            : (config.PreviewMonospaceFontSize > 0 ? config.PreviewMonospaceFontSize : 12);
     }
 
     [RelayCommand]
@@ -133,13 +139,13 @@ public sealed partial class SettingsViewModel : ObservableObject
     private static bool IsMonospace(string familyName)
     {
         var n = familyName.ToLowerInvariant();
-        return n.Contains("mono", StringComparison.Ordinal) ||
-               n.Contains("code", StringComparison.Ordinal) ||
-               n.Contains("console", StringComparison.Ordinal) ||
-               n.Contains("courier", StringComparison.Ordinal) ||
-               n.Contains("fixed", StringComparison.Ordinal) ||
-               n.Contains("typewriter", StringComparison.Ordinal) ||
-               n.Contains("terminal", StringComparison.Ordinal);
+        return n.Contains("mono") ||
+               n.Contains("code") ||
+               n.Contains("console") ||
+               n.Contains("courier") ||
+               n.Contains("fixed") ||
+               n.Contains("typewriter") ||
+               n.Contains("terminal");
     }
 
     internal static void ApplyTheme(string themeCode)

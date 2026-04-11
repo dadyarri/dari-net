@@ -15,6 +15,9 @@ public enum PreviewState { Empty, Loading, Text, Code, Image, Markdown, Binary, 
 public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 {
     private const string PreviewTempDirectoryName = "dari-preview";
+    private const double ImageZoomStep = 0.1;
+    private const double ImageZoomMin = 0.1;
+    private const double ImageZoomMax = 4;
 
     private static readonly FrozenSet<string> ImageExtensions =
         FrozenSet.ToFrozenSet([".png", ".jpg", ".jpeg", ".bmp", ".gif", ".webp"]);
@@ -337,15 +340,15 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanAdjustImageZoom))]
     private void ZoomInImage()
     {
-        var next = ImageScale + 0.1;
-        ImageScale = next > 4 ? 4 : next;
+        var next = ImageScale + ImageZoomStep;
+        ImageScale = next > ImageZoomMax ? ImageZoomMax : next;
     }
 
     [RelayCommand(CanExecute = nameof(CanAdjustImageZoom))]
     private void ZoomOutImage()
     {
-        var next = ImageScale - 0.1;
-        ImageScale = next < 0.1 ? 0.1 : next;
+        var next = ImageScale - ImageZoomStep;
+        ImageScale = next < ImageZoomMin ? ImageZoomMin : next;
     }
 
     [RelayCommand(CanExecute = nameof(CanAdjustImageZoom))]
