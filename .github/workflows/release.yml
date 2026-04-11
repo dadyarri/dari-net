@@ -95,10 +95,8 @@ jobs:
       - name: Build MSI installer (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
-        env:
-          WIX_ACCEPTED_EULA_VERSION: "1"
         run: |
-          wix build installer/windows/Product.wxs `
+          wix build -acceptEula wix7 installer/windows/Product.wxs `
             -d "PublishDir=publish/${{ matrix.artifact }}" `
             -o dari-win-x64-installer.msi
 
