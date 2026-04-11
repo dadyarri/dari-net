@@ -39,8 +39,8 @@ jobs:
         id: version
         shell: bash
         run: |
-          BASE_VERSION=$(grep -oP '(?<=<Version>)[^<]+' Dari.App/Dari.App.csproj)
-          FORMAT_VERSION=$(grep -oP '(?<=FormatVersion = )\d+' Dari.Archiver/Format/DariConstants.cs)
+          BASE_VERSION=$(grep -o '<Version>[^<]*</Version>' Dari.App/Dari.App.csproj | sed 's/<[^>]*>//g')
+          FORMAT_VERSION=$(grep -o 'FormatVersion = [0-9]*' Dari.Archiver/Format/DariConstants.cs | sed 's/FormatVersion = //')
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # Release tag: strip the leading "v"
             VERSION="${GITHUB_REF#refs/tags/v}"
@@ -125,7 +125,7 @@ jobs:
         id: version
         shell: bash
         run: |
-          BASE_VERSION=$(grep -oP '(?<=<Version>)[^<]+' Dari.App/Dari.App.csproj)
+          BASE_VERSION=$(grep -o '<Version>[^<]*</Version>' Dari.App/Dari.App.csproj | sed 's/<[^>]*>//g')
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
