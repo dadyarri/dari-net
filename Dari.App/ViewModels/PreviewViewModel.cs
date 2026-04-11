@@ -16,6 +16,8 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 {
     private const string PreviewTempDirectoryName = "dari-preview";
     private const string MarkdownFrontMatterDelimiter = "---";
+    private static readonly string MarkdownFrontMatterStartLf = $"{MarkdownFrontMatterDelimiter}\n";
+    private static readonly string MarkdownFrontMatterStartCrLf = $"{MarkdownFrontMatterDelimiter}\r\n";
     private const double ImageZoomStep = 0.1;
     private const double ImageZoomMin = 0.1;
     private const double ImageZoomMax = 4;
@@ -366,11 +368,11 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     private static string StripMarkdownFrontMatter(string text)
     {
-        if (!text.StartsWith($"{MarkdownFrontMatterDelimiter}\n", StringComparison.Ordinal) &&
-            !text.StartsWith($"{MarkdownFrontMatterDelimiter}\r\n", StringComparison.Ordinal))
+        if (!text.StartsWith(MarkdownFrontMatterStartLf, StringComparison.Ordinal) &&
+            !text.StartsWith(MarkdownFrontMatterStartCrLf, StringComparison.Ordinal))
             return text;
 
-        var newline = text.StartsWith($"{MarkdownFrontMatterDelimiter}\r\n", StringComparison.Ordinal)
+        var newline = text.StartsWith(MarkdownFrontMatterStartCrLf, StringComparison.Ordinal)
             ? "\r\n"
             : "\n";
         var start = MarkdownFrontMatterDelimiter.Length + newline.Length;
