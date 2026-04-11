@@ -3,6 +3,7 @@ using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Dari.App.Models;
 using Dari.App.Services;
 using Dari.App.ViewModels;
@@ -20,6 +21,13 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // The Avalonia UIThread dispatcher is now running — safe to subscribe here on all platforms.
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            FileLogger.Log(e.Exception, "Dispatcher.UIThread.UnhandledException");
+            // Do not set e.Handled = true — let Avalonia show its error dialog / crash normally.
+        };
+
         var configService = new ConfigService();
         var config = LoadOrInitConfig(configService);
 

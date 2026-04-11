@@ -1,5 +1,4 @@
 using Avalonia;
-using Avalonia.Threading;
 using Dari.App.Services;
 using System;
 
@@ -19,13 +18,7 @@ internal sealed class Program
 
         try
         {
-            var builder = BuildAvaloniaApp();
-
-            // Avalonia UI-thread unhandled exceptions are available once the UIThread dispatcher
-            // is running, which happens inside StartWithClassicDesktopLifetime below.
-            Dispatcher.UIThread.UnhandledException += OnUiThreadUnhandledException;
-
-            builder.StartWithClassicDesktopLifetime(args);
+            BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
         }
         catch (Exception ex)
         {
@@ -44,12 +37,6 @@ internal sealed class Program
     {
         FileLogger.Log(e.Exception, "TaskScheduler.UnobservedTaskException");
         e.SetObserved();
-    }
-
-    private static void OnUiThreadUnhandledException(object? sender, DispatcherUnhandledExceptionEventArgs e)
-    {
-        FileLogger.Log(e.Exception, "Dispatcher.UIThread.UnhandledException");
-        // Do not set e.Handled = true — let Avalonia show its error dialog / crash normally.
     }
 
     public static AppBuilder BuildAvaloniaApp() =>
