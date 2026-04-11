@@ -5,7 +5,7 @@
         x:Class="Dari.App.Views.SettingsView"
         x:DataType="vm:SettingsViewModel"
         Title="{DynamicResource Settings.Title}"
-        Width="320"
+        Width="460"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         CanResize="False"
@@ -50,6 +50,42 @@
                                Minimum="1"
                                Maximum="512"
                                FormatString="0 MB"
+                               HorizontalAlignment="Stretch" />
+            </StackPanel>
+
+            <!-- Preview font family -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.PreviewFontFamily}" />
+                <CheckBox Content="{DynamicResource Settings.PreviewFontShowAll}"
+                          IsChecked="{Binding ShowAllPreviewFonts}" />
+                <ComboBox ItemsSource="{Binding AvailablePreviewFonts}"
+                          SelectedItem="{Binding SelectedPreviewFont}"
+                          HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:PreviewFontItem}">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding FamilyName}"
+                                           FontFamily="{Binding FontFamily}"
+                                           TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding PreviewSample}"
+                                           FontFamily="{Binding FontFamily}"
+                                           TextAlignment="Right"
+                                           Margin="8,0,0,0" />
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <!-- Preview font size -->
+            <StackPanel Spacing="4">
+                <TextBlock Text="{DynamicResource Settings.PreviewFontSize}" />
+                <NumericUpDown Value="{Binding PreviewFontSize}"
+                               Minimum="8"
+                               Maximum="48"
+                               FormatString="0"
                                HorizontalAlignment="Stretch" />
             </StackPanel>
 

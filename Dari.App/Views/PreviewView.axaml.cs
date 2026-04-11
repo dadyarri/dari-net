@@ -25,28 +25,38 @@ public partial class PreviewView : UserControl
     protected override void OnDetachedFromLogicalTree(LogicalTreeAttachmentEventArgs e)
     {
         base.OnDetachedFromLogicalTree(e);
-        if (_vm is not null)
-        {
-            _vm.PropertyChanged -= OnVmPropertyChanged;
-            _vm = null;
-        }
+        UnsubscribeVm();
         DataContextChanged -= OnDataContextChanged;
     }
 
     private void OnDataContextChanged(object? sender, EventArgs e)
     {
-        if (_vm is not null)
-            _vm.PropertyChanged -= OnVmPropertyChanged;
+        UnsubscribeVm();
         _vm = DataContext as PreviewViewModel;
-        if (_vm is not null)
-            _vm.PropertyChanged += OnVmPropertyChanged;
+        if (_vm is null)
+            return;
+
+        _vm.PropertyChanged += OnVmPropertyChanged;
+    }
+
+    private void UnsubscribeVm()
+    {
+        if (_vm is null)
+            return;
+
+        _vm.PropertyChanged -= OnVmPropertyChanged;
+        _vm = null;
     }
 
     private void OnVmPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(PreviewViewModel.State))
+        if (_vm is null)
             return;
-        if (_vm?.State is PreviewState.Text or PreviewState.Code or PreviewState.Markdown)
+
+        if (e.PropertyName == nameof(PreviewViewModel.State) &&
+            _vm.State is PreviewState.Text or PreviewState.Code)
+        {
             _scrollViewer?.ScrollToHome();
+        }
     }
 }

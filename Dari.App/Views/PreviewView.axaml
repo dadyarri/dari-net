@@ -1,54 +1,106 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:vm="using:Dari.App.ViewModels"
+             xmlns:mda="clr-namespace:Markdown.Avalonia;assembly=Markdown.Avalonia"
              x:Class="Dari.App.Views.PreviewView"
              x:DataType="vm:PreviewViewModel"
              HorizontalAlignment="Stretch"
              VerticalAlignment="Stretch">
 
-    <Panel>
+    <Grid RowDefinitions="Auto,*">
 
-        <!-- Empty: no entry selected -->
-        <TextBlock IsVisible="{Binding IsEmptyVisible}"
-                   Text="{DynamicResource Preview.Empty}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   Opacity="0.45"
-                   TextAlignment="Center"
-                   Margin="16" />
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="4"
+                    Spacing="6">
+            <StackPanel IsVisible="{Binding IsImageVisible}"
+                        Orientation="Horizontal"
+                        Spacing="4">
+                <Button Content="−"
+                        Command="{Binding ZoomOutImageCommand}"
+                        ToolTip.Tip="{DynamicResource Tooltip.ImageZoomOut}" />
+                <TextBlock Text="{Binding ImageScaleDisplay}"
+                           VerticalAlignment="Center"
+                           MinWidth="42"
+                           TextAlignment="Center" />
+                <Button Content="+"
+                        Command="{Binding ZoomInImageCommand}"
+                        ToolTip.Tip="{DynamicResource Tooltip.ImageZoomIn}" />
+                <Button Content="{DynamicResource Button.ImageZoomReset}"
+                        Command="{Binding ResetImageZoomCommand}"
+                        ToolTip.Tip="{DynamicResource Tooltip.ImageZoomReset}" />
+            </StackPanel>
 
-        <!-- Loading: debounce passed, fetching bytes -->
-        <StackPanel IsVisible="{Binding IsLoadingVisible}"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center"
-                    Spacing="10">
-            <ProgressBar IsIndeterminate="True" Width="120" />
-            <TextBlock Text="{DynamicResource Preview.Loading}"
-                       HorizontalAlignment="Center"
-                       Opacity="0.6" />
+            <Button Content="{DynamicResource Button.ExtractAndOpen}"
+                    ToolTip.Tip="{DynamicResource Tooltip.ExtractAndOpen}"
+                    Command="{Binding ExtractAndOpenCommand}" />
         </StackPanel>
 
-        <!-- Binary / Encrypted / Error: show StatusMessage centred -->
-        <TextBlock IsVisible="{Binding IsStatusVisible}"
-                   Text="{Binding StatusMessage}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center"
-                   TextAlignment="Center"
-                   TextWrapping="Wrap"
-                   Margin="16" />
+        <Panel Grid.Row="1">
 
-        <!-- Text / Code / Markdown -->
-        <ScrollViewer x:Name="TextScrollViewer"
-                      IsVisible="{Binding IsTextVisible}"
-                      HorizontalScrollBarVisibility="Auto"
-                      VerticalScrollBarVisibility="Auto">
-            <TextBlock FontFamily="Courier New, Cascadia Code, Consolas, monospace"
-                       FontSize="12"
-                       Text="{Binding PreviewText}"
-                       TextWrapping="NoWrap"
-                       Margin="8" />
-        </ScrollViewer>
+            <!-- Empty: no entry selected -->
+            <TextBlock IsVisible="{Binding IsEmptyVisible}"
+                       Text="{DynamicResource Preview.Empty}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       Opacity="0.45"
+                       TextAlignment="Center"
+                       Margin="16" />
 
-    </Panel>
+            <!-- Loading: debounce passed, fetching bytes -->
+            <StackPanel IsVisible="{Binding IsLoadingVisible}"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Spacing="10">
+                <ProgressBar IsIndeterminate="True" Width="120" />
+                <TextBlock Text="{DynamicResource Preview.Loading}"
+                           HorizontalAlignment="Center"
+                           Opacity="0.6" />
+            </StackPanel>
+
+            <!-- Binary / Encrypted / Error: show StatusMessage centred -->
+            <TextBlock IsVisible="{Binding IsStatusVisible}"
+                       Text="{Binding StatusMessage}"
+                       HorizontalAlignment="Center"
+                       VerticalAlignment="Center"
+                       TextAlignment="Center"
+                       TextWrapping="Wrap"
+                       Margin="16" />
+
+            <!-- Text -->
+            <ScrollViewer x:Name="TextScrollViewer"
+                          IsVisible="{Binding IsTextVisible}"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <SelectableTextBlock FontFamily="{Binding MonospaceFontFamily}"
+                                    FontSize="{Binding MonospaceFontSize}"
+                                    Text="{Binding PreviewText}"
+                                    TextWrapping="NoWrap"
+                                    Margin="8" />
+            </ScrollViewer>
+
+            <!-- Markdown -->
+            <mda:MarkdownScrollViewer x:CompileBindings="False"
+                                      IsVisible="{Binding IsMarkdownVisible}"
+                                      Markdown="{Binding PreviewText}" />
+
+            <!-- Image -->
+            <ScrollViewer IsVisible="{Binding IsImageVisible}"
+                          HorizontalScrollBarVisibility="Auto"
+                          VerticalScrollBarVisibility="Auto">
+                <LayoutTransformControl>
+                    <LayoutTransformControl.LayoutTransform>
+                        <ScaleTransform ScaleX="{Binding ImageScale}"
+                                        ScaleY="{Binding ImageScale}" />
+                    </LayoutTransformControl.LayoutTransform>
+                    <Image Source="{Binding PreviewBitmap}"
+                           Stretch="None" />
+                </LayoutTransformControl>
+            </ScrollViewer>
+
+        </Panel>
+
+    </Grid>
 
 </UserControl>

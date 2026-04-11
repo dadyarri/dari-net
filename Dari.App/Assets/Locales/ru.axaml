@@ -29,6 +29,8 @@
     <x:String x:Key="Button.ExtractSelected">Извлечь выбранное…</x:String>
     <x:String x:Key="Button.Extract">Извлечь</x:String>
     <x:String x:Key="Button.ExtractAll">Извлечь всё</x:String>
+    <x:String x:Key="Button.ExtractAndOpen">Извлечь и открыть</x:String>
+    <x:String x:Key="Button.ImageZoomReset">Сброс</x:String>
     <x:String x:Key="Button.Skip">Пропустить</x:String>
     <x:String x:Key="Button.Rename">Переименовать</x:String>
     <x:String x:Key="Button.Overwrite">Перезаписать</x:String>
@@ -47,6 +49,10 @@
     <x:String x:Key="Tooltip.ToggleView">Переключить плоский/древовидный вид</x:String>
     <x:String x:Key="Tooltip.ExtractSelected">Открыть параметры извлечения для отмеченных файлов</x:String>
     <x:String x:Key="Tooltip.ExtractAll">Извлечь все файлы в папку</x:String>
+    <x:String x:Key="Tooltip.ExtractAndOpen">Извлечь во временную папку и открыть приложением по умолчанию</x:String>
+    <x:String x:Key="Tooltip.ImageZoomIn">Увеличить</x:String>
+    <x:String x:Key="Tooltip.ImageZoomOut">Уменьшить</x:String>
+    <x:String x:Key="Tooltip.ImageZoomReset">Сбросить масштаб</x:String>
 
     <!-- Заголовки столбцов DataGrid -->
     <x:String x:Key="Column.Select">✓</x:String>
@@ -122,6 +128,9 @@
     <x:String x:Key="Settings.Language">Язык:</x:String>
     <x:String x:Key="Settings.Theme">Тема:</x:String>
     <x:String x:Key="Settings.PreviewMaxBytes">Лимит размера просмотра:</x:String>
+    <x:String x:Key="Settings.PreviewFontFamily">Моноширинный шрифт просмотра:</x:String>
+    <x:String x:Key="Settings.PreviewFontShowAll">Показывать все шрифты</x:String>
+    <x:String x:Key="Settings.PreviewFontSize">Размер шрифта просмотра:</x:String>
 
     <!-- Theme options -->
     <x:String x:Key="Theme.System">Системная (следовать ОС)</x:String>
@@ -174,13 +183,18 @@
     <x:String x:Key="Preview.Empty">Выберите файл для просмотра</x:String>
     <x:String x:Key="Preview.Loading">Загрузка…</x:String>
     <x:String x:Key="Preview.Binary">Бинарный файл ({0})</x:String>
+    <x:String x:Key="Preview.Image">Изображение</x:String>
+    <x:String x:Key="Preview.Code">Код</x:String>
+    <x:String x:Key="Preview.Markdown">Markdown</x:String>
     <x:String x:Key="Preview.Encrypted">Файл зашифрован</x:String>
     <x:String x:Key="Preview.Error">Ошибка: {0}</x:String>
+    <x:String x:Key="Preview.ImageDecodeFailed">Не удалось декодировать изображение: {0}</x:String>
     <x:String x:Key="Preview.Truncated">{0} МБ</x:String>
     <x:String x:Key="Preview.Truncated.Label">Показаны первые</x:String>
     <x:String x:Key="Preview.Type.Text">Текст</x:String>
     <x:String x:Key="Preview.Type.Code">Код</x:String>
     <x:String x:Key="Preview.Type.Markdown">Markdown</x:String>
+    <x:String x:Key="Preview.Type.Image">Изображение</x:String>
     <x:String x:Key="Preview.Type.Binary">Бинарный</x:String>
     <x:String x:Key="Preview.Type.Encrypted">Зашифровано</x:String>
     <x:String x:Key="Preview.Type.Error">Ошибка</x:String>

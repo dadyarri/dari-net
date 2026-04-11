@@ -20,4 +20,16 @@ public sealed class AppConfig
     /// Defaults to <c>10</c> MB.
     /// </summary>
     public int PreviewMaxMegaBytes { get; set; } = 10;
+
+    /// <summary>
+    /// Font family used for text/code preview.
+    /// Defaults to generic monospace system font.
+    /// </summary>
+    public string PreviewMonospaceFontFamily { get; set; } = "Monospace";
+
+    /// <summary>
+    /// Font size used for text/code preview.
+    /// Defaults to <c>12</c>.
+    /// </summary>
+    public double PreviewMonospaceFontSize { get; set; } = 12;
 }

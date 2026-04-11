@@ -1,4 +1,5 @@
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dari.App.Services;
@@ -75,8 +76,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             reader = await ArchiveReader.OpenAsync(path, passphrase: passphrase).ConfigureAwait(true);
         }
 
-        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService,
-            _configService.Load().PreviewMaxMegaBytes);
+        var config = _configService.Load();
+        Browser = new ArchiveBrowserViewModel(
+            reader,
+            passphrase,
+            _dialogService,
+            config.PreviewMaxMegaBytes,
+            config.PreviewMonospaceFontFamily,
+            config.PreviewMonospaceFontSize);
         _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
@@ -104,7 +111,15 @@ public sealed partial class MainWindowViewModel : ObservableObject
 
         // Sync preview cap in case the user changed it.
         if (Browser is { } browser)
-            browser.Preview.MaxPreviewMegaBytes = _configService.Load().PreviewMaxMegaBytes;
+        {
+            var config = _configService.Load();
+            browser.Preview.MaxPreviewMegaBytes = config.PreviewMaxMegaBytes;
+            browser.Preview.MonospaceFontFamily = new FontFamily(
+                string.IsNullOrWhiteSpace(config.PreviewMonospaceFontFamily)
+                    ? "Monospace"
+                    : config.PreviewMonospaceFontFamily);
+            browser.Preview.MonospaceFontSize = config.PreviewMonospaceFontSize;
+        }
     }
 
     [RelayCommand]
@@ -166,8 +181,14 @@ public sealed partial class MainWindowViewModel : ObservableObject
             reader = await ArchiveReader.OpenAsync(path, passphrase: passphrase).ConfigureAwait(true);
         }
 
-        Browser = new ArchiveBrowserViewModel(reader, passphrase, _dialogService,
-            _configService.Load().PreviewMaxMegaBytes);
+        var config = _configService.Load();
+        Browser = new ArchiveBrowserViewModel(
+            reader,
+            passphrase,
+            _dialogService,
+            config.PreviewMaxMegaBytes,
+            config.PreviewMonospaceFontFamily,
+            config.PreviewMonospaceFontSize);
         _currentArchivePath = path;
         Title = $"Dari — {System.IO.Path.GetFileName(path)}";
         StatusText = _localization.Format("Status.Opened", reader.Entries.Count);
