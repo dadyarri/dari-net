@@ -257,7 +257,7 @@ Work on this phase step-by-step. After each step you should stop and ask for con
 
 After each step there should be a working implementation of a feature, testable by user in the interface of the app, even if it's not fully complete yet. For example, after step 1, the preview pane should be able to show raw bytes of the selected entry, even if it doesn't have syntax highlighting or image rendering yet.
 
-### Phase G — Platform integration and polish
+### Phase G — Platform integration and polish ✅
 
 **Goal:** Native feel on every platform; final UX refinement.
 
