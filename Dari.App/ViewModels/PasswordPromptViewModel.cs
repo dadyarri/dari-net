@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dari.App.Services;
 using Dari.Archiver.Crypto;
 
 namespace Dari.App.ViewModels;
@@ -51,8 +52,9 @@ public sealed partial class PasswordPromptViewModel : ObservableObject
             {
                 ok = await _validator(pass).ConfigureAwait(true);
             }
-            catch
+            catch (Exception ex)
             {
+                FileLogger.Log(ex, "PasswordPromptViewModel.Confirm");
                 pass.Dispose();
                 throw;
             }

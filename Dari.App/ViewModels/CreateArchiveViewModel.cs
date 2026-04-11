@@ -298,6 +298,7 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
         }
         catch (Exception ex)
         {
+            FileLogger.Log(ex, "CreateArchiveViewModel.StartCreationAsync");
             StatusMessage = LocalizationManager.Current.Format("Status.Error", ex.Message);
         }
         finally

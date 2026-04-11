@@ -62,6 +62,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+            FileLogger.Log(ex, nameof(OpenArchiveAsync));
             StatusText = _localization.Format("Status.FailedToOpen", ex.Message);
             return;
         }
@@ -173,6 +174,7 @@ public sealed partial class MainWindowViewModel : ObservableObject
         }
         catch (Exception ex)
         {
+            FileLogger.Log(ex, nameof(OpenArchiveFromPathAsync));
             StatusText = _localization.Format("Status.FailedToOpen", ex.Message);
             return;
         }
