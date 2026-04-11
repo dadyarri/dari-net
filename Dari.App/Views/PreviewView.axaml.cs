@@ -3,7 +3,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.LogicalTree;
 using Avalonia.Styling;
-using AvaloniaEdit.Document;
 using AvaloniaEdit.TextMate;
 using Dari.App.ViewModels;
 using TextMateSharp.Grammars;
@@ -106,18 +105,13 @@ public partial class PreviewView : UserControl
         }
         catch (Exception)
         {
-            // Syntax highlighting failed; display without highlighting.
+            // Syntax highlighting failed; dispose cleanly so next load starts fresh.
+            _textMate?.Dispose();
             _textMate = null;
         }
 
-        try
-        {
-            CodeEditor.Document = new TextDocument(vm.PreviewText ?? "");
-            CodeEditor.ScrollToLine(1);
-        }
-        catch (Exception)
-        {
-            // Editor failed to accept document; ignore.
-        }
+        // Modify the existing document in-place so TextMate's attachment is preserved.
+        CodeEditor.Document.Text = vm.PreviewText ?? "";
+        CodeEditor.ScrollToLine(1);
     }
 }
