@@ -9,11 +9,7 @@ public static class CryptoCapabilities
 {
     /// <summary>
     /// <see langword="true"/> when the current platform supports ChaCha20-Poly1305 (the
-    /// cipher used for archive encryption).  On Windows, the underlying CNG provider does
-    /// not expose ChaCha20-Poly1305 reliably regardless of OS version, so this always
-    /// returns <see langword="false"/> on Windows.  On Linux and macOS it uses OpenSSL
-    /// and is always available.
+    /// cipher used for archive encryption).
     /// </summary>
-    public static bool IsEncryptionSupported =>
-        !OperatingSystem.IsWindows() && ChaCha20Poly1305.IsSupported;
+    public static bool IsEncryptionSupported => ChaCha20Poly1305.IsSupported;
 }

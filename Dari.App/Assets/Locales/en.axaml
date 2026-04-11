@@ -83,7 +83,7 @@
     <x:String x:Key="Wizard.Step2.CompressionLabel">Compression algorithm:</x:String>
     <x:String x:Key="Wizard.Step2.Deduplication">Enable deduplication (skip identical content blocks)</x:String>
     <x:String x:Key="Wizard.Step2.Encryption">Encrypt the archive with a passphrase</x:String>
-    <x:String x:Key="Wizard.Step2.Encryption.UnsupportedTooltip">Encryption is not supported on Windows. Use Linux or macOS to create encrypted archives.</x:String>
+    <x:String x:Key="Wizard.Step2.Encryption.UnsupportedTooltip">Encryption is not supported on this system.</x:String>
     <x:String x:Key="Wizard.Step3.Title">Step 3 of 3 — Destination</x:String>
     <x:String x:Key="Wizard.Step3.Subtitle">Choose where to save the new .dar archive.</x:String>
     <x:String x:Key="Wizard.Step3.Creating">Creating archive…</x:String>
@@ -112,7 +112,7 @@
     <!-- Password dialog -->
     <x:String x:Key="Password.Title">Enter Passphrase</x:String>
     <x:String x:Key="Password.Prompt">This archive is encrypted. Enter the passphrase to continue.</x:String>
-    <x:String x:Key="Password.EncryptionUnsupported">Encryption is not supported on Windows. This encrypted archive cannot be opened on this platform.</x:String>
+    <x:String x:Key="Password.EncryptionUnsupported">Encryption is not supported on this system. This encrypted archive cannot be opened.</x:String>
 
     <!-- Checksum error dialog -->
     <x:String x:Key="Checksum.Title">Checksum Error</x:String>
