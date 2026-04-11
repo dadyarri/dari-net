@@ -45,4 +45,6 @@ internal sealed class NullDialogService : IDialogService
     public ValueTask<string?> PickAppendFolderAsync() => new((string?)null);
 
     public ValueTask ShowAppendDialogAsync(AppendViewModel vm) => ValueTask.CompletedTask;
+
+    public ValueTask ShowAboutAsync(AboutViewModel vm) => ValueTask.CompletedTask;
 }

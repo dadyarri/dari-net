@@ -10,6 +10,13 @@
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+        <ApplicationIcon>Assets\dari.ico</ApplicationIcon>
+        <Version>1.0.0</Version>
+        <AssemblyVersion>1.0.0.0</AssemblyVersion>
+        <FileVersion>1.0.0.0</FileVersion>
+        <!-- Embed debug symbols in the assembly so stack traces in Logs/errors.log include
+             line numbers even when deployed as a self-contained single-file bundle. -->
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>

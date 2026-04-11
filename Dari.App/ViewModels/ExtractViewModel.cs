@@ -134,6 +134,7 @@ public sealed partial class ExtractViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
+            FileLogger.Log(ex, "ExtractViewModel.StartExtractionAsync");
             StatusMessage = LocalizationManager.Current.Format("Status.UnexpectedError", ex.Message);
         }
         finally

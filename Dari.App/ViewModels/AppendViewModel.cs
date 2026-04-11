@@ -165,6 +165,7 @@ public sealed partial class AppendViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex)
         {
+            FileLogger.Log(ex, "AppendViewModel.StartAppendAsync");
             StatusMessage = LocalizationManager.Current.Format("Status.Error", ex.Message);
         }
         finally

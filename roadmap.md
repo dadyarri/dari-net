@@ -153,137 +153,21 @@ Dari.App/
 
 ---
 
-### Phase A — Project setup ✅
+### Completed app phases ✅
 
-**Goal:** Create the solution skeleton; app launches and runs on all three platforms.
-
-- Add `Dari.App` as an Avalonia Application project to `Dari.slnx`
-- Target `net10.0`, `Nullable enable`, `LangVersion preview`
-- Reference `Avalonia.Themes.Fluent`, `CommunityToolkit.Mvvm`, `Dari.Archiver`
-- Implement `MainWindow` with a basic Fluent theme and empty content area
-- Configure `app.manifest` (Windows), `Info.plist` (macOS), `.desktop` file (Linux)
-- Add application icon in `.ico` / `.icns` / `.png` formats
-- Verify build and launch on Windows, macOS, Linux
+- Phase A — Project setup
+- Phase B — Archive browser
+- Phase C — Extraction
+- Phase D — Archive creation
+- Phase E — Archive appending
+- Phase F — File preview
+- Phase G — Platform integration and polish
 
 ---
 
-### Phase B — Archive browser ✅
+### Phase 1 — v6-readiness refactor
 
-**Goal:** Open a `.dar` file and display its entries.
-
-**Key components:**
-
-- `MainWindowViewModel` — `OpenArchiveCommand`, `CloseArchiveCommand`; opens a system file dialog via `IDialogService`
-- `ArchiveBrowserViewModel` — holds `IReadOnlyList<ArchiveEntryViewModel>`; supports flat list and directory tree modes; sorts by name / size / date / compression ratio
-- `ArchiveBrowserView` — `DataGrid` with columns: name, path, size, compressed size, ratio, algorithm, date, permissions
-- `ArchiveEntryViewModel` — wraps `IndexEntry`; computed properties `CompressionRatio`, `IsEncrypted`, `IsLinked`, icon by extension
-- Archive header metadata: creation date, file count, total / compressed size
-- Search bar with real-time filtering bound to `SearchText`
-- Drag & drop a `.dar` file onto the window to open it
-- If the archive is encrypted, show `PasswordPromptView` before reading entries
-
----
-
-### Phase C — Extraction ✅
-
-**Goal:** Extract selected entries or the entire archive to disk.
-
-**Key components:**
-
-- `ExtractViewModel` — list of selected entries or "all"; destination path; `Progress<double>`; `CancellationTokenSource`
-- Commands on `ArchiveBrowserViewModel`:
-  - `ExtractSelectedCommand` — extract checked entries
-  - `ExtractAllCommand` — extract whole archive
-  - `OpenInExplorerCommand` — reveal destination directory after extraction
-- `ExtractView` — modal dialog with progress bar, file counter, and Cancel button
-- Name conflicts: dialog offering Overwrite / Skip / Rename
-- Checksum errors: separate notification with option to continue despite errors
-- Completion summary notification with count of extracted files
-
----
-
-### Phase D — Archive creation ✅
-
-**Goal:** Create a new `.dar` archive from selected files or a directory.
-
-**Key components:**
-
-- `CreateArchiveViewModel` — three-step wizard:
-  1. **Source** — pick a directory or individual files; preview the file tree respecting `.darignore` / `.gitignore`
-  2. **Options** — compression algorithm (Brotli / Zstd / LZMA / Auto / None); enable deduplication checkbox; encryption (password + confirmation)
-  3. **Destination** — output `.dar` path; Create button
-- Creation progress via `ArchiveWriter.AddDirectoryAsync` + `IProgress<(int done, int total, string currentFile)>`
-- After creation, open the new archive in the browser
-- Drag & drop a folder onto an empty window to start the creation wizard
-
----
-
-### Phase E — Archive appending ✅
-
-**Goal:** Add files to an already-open archive.
-
-**Key components:**
-
-- `AppendFilesCommand` on `MainWindowViewModel`
-- Drag & drop files / folders onto an open `ArchiveBrowserView`
-- File picker dialog for selecting files to add
-- Uses `ArchiveAppender.OpenAsync` under the hood
-- Shows progress and refreshes `ArchiveBrowserViewModel` on success
-- If the archive is encrypted, prompts for the passphrase before appending, that must match passphrase already used in the archive. Show error to user after confirmation in separate popup and ask for passphrase again if not.
-- Success notification with count of added files and deduplicated blocks
-
----
-
-### Phase F — File preview ✅
-
-**Goal:** Add a resizable right-side preview pane to `ArchiveBrowserView` that renders text, syntax-highlighted code, images for selected archive entries — without full extraction — plus an "Extract & Open" action.
-
-**Overall approach:** extend `ArchiveReader` with a capped read helper; build a `PreviewViewModel` state machine with async debounce via `CancellationTokenSource` + `Task.Delay`; add AvaloniaEdit + TextMate for syntax highlighting; wire DataGrid/TreeView selection to a new `SelectedEntry` property; split `ArchiveBrowserView` into a two-column `Grid` with a `GridSplitter`.
-
-**Key components:**
-
-- `PreviewViewModel` — reads the raw block via `ArchiveReader.OpenRawBlockAsync`, decodes on the fly; capped at 1 MB
-- Preview types:
-  - **Text** — UTF-8 / Latin-1 / Windows-1251 for text; display in plain `TextBlock`
-  - **Code** - UTF-8 / Latin-1 / Windows-1251. Should have syntax highlight (support different filetypes of XML, like csproj, slnx, etc...)
-  - **Markdown** — render `.md` files as markdown
-  - **Images** — `Bitmap` via Avalonia (`png`, `jpg`, `bmp`, `gif`, `webp`)
-  - **Other** — message about file is binary
-- Preview pane to the right of the entry list; updates on selection change (250 ms debounce)
-- "Extract & Open" button — extracts to a temp folder and opens with the system default app
-- To detect file type - reimplement `classify_bytes` from /mnt/dev/dari/src/tui/preview.rs
-
-Work on this phase step-by-step. After each step you should stop and ask for confirmation before moving on to the next one. This phase is more complex than the previous ones, so it should be broken down into smaller steps.
-
-After each step there should be a working implementation of a feature, testable by user in the interface of the app, even if it's not fully complete yet. For example, after step 1, the preview pane should be able to show raw bytes of the selected entry, even if it doesn't have syntax highlighting or image rendering yet.
-
-### Phase G — Platform integration and polish
-
-**Goal:** Native feel on every platform; final UX refinement.
-
-**Windows:**
-- Generate `.msi` installer with WiX Toolset (without code signing)
-- Register `.dar` file association on installation
-- Explorer context menu integration: "Open with Dari", "Extract here"
-- Add to installer creating associations with `application/x-dari-archive` MIME type for `.dar` files
-
-**Linux:**
-- Pack AppImage file
-- `.desktop` file with MIME type `application/x-dari-archive`
-- XDG `MimeInfo.cache` updated by installer via `update-mime-database`
-
-**General:**
-- Light / dark theme following the system `ActualThemeVariant`
-- Recent files list in menu (stored in `%APPDATA%` / `~/.config/dari/recent.json`) with check if files are existing and button to remove item from recent
-- Settings: default extraction directory, theme, language, separate buttons `Apply` (save settings without closing the window) and `Ok` (Save settings and close the window)
-- Introduce some tool to publish releases in SemVer notation (i. e. GitVersion?) and github workflow actions to publish releases with binaries for windows and linux on tags push. Prepare to release v1.0.0+5
-- Help -> About Dari should open popup with information of the app (stop here and ask, what information needs to be put there with some examples of what is usually resides there)
-
----
-
-### Phase H - Refactor and preparation to support next version of the archive (with preservation of old logic at the same time)
-
-- Library should support both versions. Currently read the version from the header of the archive (stays the same format) and work as usual for v5, but throw NotImplementedException for v6
+- Library should support both versions. Read version from header (header format stays same) and keep current behavior for v5; throw `NotImplementedException` for v6 for now.
 - App should handle that exception and show message that version 6 is currently unsupported
 - Migrate app to Avalonia 12: https://docs.avaloniaui.net/docs/avalonia12-breaking-changes
 
@@ -305,14 +189,8 @@ After each step there should be a working implementation of a feature, testable 
 ### Implementation order
 
 ```
-Phase A  →  Project setup (skeleton, theme, launch on all platforms)
-Phase B  →  Archive browser (open file, DataGrid, search)
-Phase C  →  Extraction (selected entries and full archive)
-Phase D  →  Archive creation (wizard, progress, ignore-filter preview)
-Phase E  →  Archive appending (ArchiveAppender, drag & drop)
-Phase F  →  File preview (text, images, hex dump)
-Phase G  →  Platform integration (file associations, native menus, notarization)
-Phase H  →  Prepare lib and gui app to support multple archive versions (current is 5, next is 6, currently is in progress)
+Completed: A → B → C → D → E → F → G
+Next: Phase 1 → Prepare library and app for multi-version archives (v5 + upcoming v6)
 ```
 
 Each phase is independently compilable and testable before moving on to the next.

@@ -8,7 +8,7 @@ The repository contains two projects:
 |---|---|---|
 | `Dari.Archiver` | .NET 10 class library | Read/write support for the **Dari v5** binary archive format |
 | `Dari.App` | .NET 10 Avalonia desktop app | Cross-platform GUI for managing `.dar` archives |
-| `Dari.Archiver.Tests` | xUnit test project | 159 tests for `Dari.Archiver` |
+| `Dari.Archiver.Tests` | xUnit test project | 164 tests for `Dari.Archiver` |
 
 ## Build & Test
 ```sh
@@ -95,7 +95,7 @@ Ciphertext layout: `ciphertext || 16-byte-tag`. `DariPassphrase.Dispose()` zeroe
 ## Dari.App — GUI Application
 
 Avalonia 11 desktop application targeting Windows, macOS, and Linux from a single codebase.
-Phases A–D are complete (✅). Phases E–G are planned.
+Phases A–G are complete (✅).
 
 ### Completed Phases
 
@@ -105,15 +105,16 @@ Phases A–D are complete (✅). Phases E–G are planned.
 | B | Archive browser — open `.dar`, DataGrid, search, flat + tree view, sort |
 | C | Extraction — selected entries and full archive, progress dialog, conflict/checksum handling |
 | D | Archive creation — three-step wizard (source → options → destination), progress, gitignore preview |
+| E | Archive appending via `ArchiveAppender` |
+| F | In-pane file preview (text, images, markdown, code syntax highlight) |
+| G | Platform integration — installers, file associations, context menu, release workflow |
 | i18n | Resource-based UI strings; English + Russian; `LocalizationManager`; Settings dialog with language+theme |
 
-### Planned Phases
+### Next Planned Phase
 
 | Phase | Description |
 |---|---|
-| E | Archive appending via `ArchiveAppender` |
-| F | In-pane file preview (text, images, hex dump) |
-| G | Platform integration — file associations, native menus, code signing |
+| 1 | Multi-version support prep — keep v5 behavior, add v6 unsupported handling, migrate to Avalonia 12 |
 
 ### Project Structure
 

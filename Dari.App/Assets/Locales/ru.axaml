@@ -6,6 +6,7 @@
     <x:String x:Key="Menu.File.NewArchive">_Создать архив…</x:String>
     <x:String x:Key="Menu.File.Open">_Открыть…</x:String>
     <x:String x:Key="Menu.File.Close">_Закрыть</x:String>
+    <x:String x:Key="Menu.File.Recent">_Недавние архивы</x:String>
     <x:String x:Key="Menu.File.Exit">В_ыход</x:String>
     <x:String x:Key="Menu.Archive">_Архив</x:String>
     <x:String x:Key="Menu.Archive.ExtractAll">Извлечь _всё…</x:String>
@@ -38,6 +39,7 @@
     <x:String x:Key="Button.Continue">Продолжить</x:String>
     <x:String x:Key="Button.OK">ОК</x:String>
     <x:String x:Key="Button.Save">Сохранить</x:String>
+    <x:String x:Key="Button.Apply">Применить</x:String>
 
     <!-- Панель инструментов / сортировка -->
     <x:String x:Key="Toolbar.Sort">Сортировка:</x:String>
@@ -81,6 +83,7 @@
     <x:String x:Key="Wizard.Step2.CompressionLabel">Алгоритм сжатия:</x:String>
     <x:String x:Key="Wizard.Step2.Deduplication">Включить дедупликацию (пропускать одинаковые блоки)</x:String>
     <x:String x:Key="Wizard.Step2.Encryption">Зашифровать архив с паролем</x:String>
+    <x:String x:Key="Wizard.Step2.Encryption.UnsupportedTooltip">Шифрование не поддерживается на данной системе.</x:String>
     <x:String x:Key="Wizard.Step3.Title">Шаг 3 из 3 — Назначение</x:String>
     <x:String x:Key="Wizard.Step3.Subtitle">Укажите путь для сохранения архива .dar.</x:String>
     <x:String x:Key="Wizard.Step3.Creating">Создание архива…</x:String>
@@ -109,6 +112,7 @@
     <!-- Диалог ввода пароля -->
     <x:String x:Key="Password.Title">Введите пароль</x:String>
     <x:String x:Key="Password.Prompt">Архив зашифрован. Введите пароль для продолжения.</x:String>
+    <x:String x:Key="Password.EncryptionUnsupported">Шифрование не поддерживается на данной системе. Этот зашифрованный архив нельзя открыть.</x:String>
 
     <!-- Диалог ошибки контрольной суммы -->
     <x:String x:Key="Checksum.Title">Ошибка контрольной суммы</x:String>
@@ -131,6 +135,8 @@
     <x:String x:Key="Settings.PreviewFontFamily">Моноширинный шрифт просмотра:</x:String>
     <x:String x:Key="Settings.PreviewFontShowAll">Показывать все шрифты</x:String>
     <x:String x:Key="Settings.PreviewFontSize">Размер шрифта просмотра:</x:String>
+    <x:String x:Key="Settings.DefaultExtractionDir">Папка извлечения по умолчанию:</x:String>
+    <x:String x:Key="Settings.DefaultExtractionDir.Watermark">Не задана (всегда спрашивать)</x:String>
 
     <!-- Theme options -->
     <x:String x:Key="Theme.System">Системная (следовать ОС)</x:String>
@@ -198,5 +204,16 @@
     <x:String x:Key="Preview.Type.Binary">Бинарный</x:String>
     <x:String x:Key="Preview.Type.Encrypted">Зашифровано</x:String>
     <x:String x:Key="Preview.Type.Error">Ошибка</x:String>
+
+    <!-- Диалог «О программе» -->
+    <x:String x:Key="About.Title">О программе Dari</x:String>
+    <x:String x:Key="About.Copyright">Авторские права:</x:String>
+    <x:String x:Key="About.License">Лицензия:</x:String>
+    <x:String x:Key="About.Runtime">Среда выполнения:</x:String>
+    <x:String x:Key="About.OS">ОС:</x:String>
+
+    <!-- Недавние файлы -->
+    <x:String x:Key="Recent.NotFound.Title">Файл не найден</x:String>
+    <x:String x:Key="Recent.NotFound.Message">Файл больше не существует: {0}</x:String>
 
 </ResourceDictionary>

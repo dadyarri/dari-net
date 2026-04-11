@@ -170,27 +170,30 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
     /// <summary>
     /// Reads and decompresses up to <paramref name="maxBytes"/> of <paramref name="entry"/>'s
     /// content without writing it anywhere — intended for in-pane preview.
+    /// Encrypted entries are decrypted when a passphrase was supplied when opening the reader.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Thrown when the entry is encrypted.</exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the entry is encrypted and no passphrase was provided.
+    /// </exception>
     public async ValueTask<ReadOnlyMemory<byte>> ReadDecompressedPreviewAsync(
         IndexEntry entry, int maxBytes = 1 << 20, CancellationToken ct = default)
     {
         ArgumentNullException.ThrowIfNull(entry);
 
-        if (entry.IsEncrypted)
+        if (entry.IsEncrypted && _passphrase is null)
             throw new InvalidOperationException("Entry is encrypted");
 
+        // Backward compat: legacy linked entries in encrypted archives lack the EncryptedData
+        // flag. If the primary is encrypted and no passphrase is available, refuse early.
+        if (entry.IsLinked && !entry.IsEncrypted && _passphrase is null)
+        {
+            var primary = _inner.Entries.FirstOrDefault(e => !e.IsLinked && e.Offset == entry.Offset);
+            if (primary?.IsEncrypted == true)
+                throw new InvalidOperationException("Entry is encrypted");
+        }
+
         var rawBlock = await _inner.ReadRawBlockAsync(entry, ct).ConfigureAwait(false);
-
-        if (entry.Compression == CompressionMethod.None)
-            return rawBlock.Length <= maxBytes ? rawBlock : rawBlock[..maxBytes];
-
-        var writer = new ArrayBufferWriter<byte>((int)entry.OriginalSize);
-        var compressor = _registry.Get(entry.Compression);
-        await compressor.DecompressAsync(rawBlock, entry.OriginalSize, writer, ct)
-                        .ConfigureAwait(false);
-
-        var decompressed = writer.WrittenMemory;
+        var decompressed = await DecompressAsync(entry, rawBlock, ct).ConfigureAwait(false);
         return decompressed.Length <= maxBytes ? decompressed : decompressed[..maxBytes];
     }
 
@@ -252,6 +255,15 @@ public sealed class ArchiveReader : IDisposable, IAsyncDisposable
                     $"Entry '{entry.Path}' is encrypted but no passphrase was provided.");
 
             block = DecryptBlock(entry, block);
+        }
+        else if (entry.IsLinked && _passphrase is not null)
+        {
+            // Backward compatibility: archives written before the linked-entry encryption fix
+            // may have linked entries without the EncryptedData flag even when their primary
+            // entry is encrypted. Detect this by finding the primary at the same offset.
+            var primary = _inner.Entries.FirstOrDefault(e => !e.IsLinked && e.Offset == entry.Offset);
+            if (primary?.IsEncrypted == true)
+                block = DecryptBlock(primary, block);
         }
 
         if (entry.Compression == CompressionMethod.None)

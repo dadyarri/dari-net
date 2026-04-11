@@ -222,6 +222,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 }
                 catch (Exception ex)
                 {
+                    FileLogger.Log(ex, "PreviewViewModel.LoadContent.ImageDecode");
                     ClearPreviewBitmap();
                     _typeLabelKey = "Preview.Type.Error";
                     PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
@@ -279,8 +280,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             }
             OnPropertyChanged(nameof(IsTruncationVisible));
         }
-        catch (InvalidOperationException)
+        catch (InvalidOperationException ex)
         {
+            FileLogger.Log(ex, "PreviewViewModel.LoadContent.Encrypted");
             ClearPreviewBitmap();
             PreviewText = "";
             _typeLabelKey = "Preview.Type.Encrypted";
@@ -291,6 +293,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            FileLogger.Log(ex, "PreviewViewModel.LoadContent");
             ClearPreviewBitmap();
             PreviewText = "";
             _typeLabelKey = "Preview.Type.Error";
@@ -326,6 +329,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
+            FileLogger.Log(ex, "PreviewViewModel.ExtractAndOpen");
             _typeLabelKey = "Preview.Type.Error";
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = "";

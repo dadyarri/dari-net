@@ -9,6 +9,8 @@
         <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
         <NoWarn>1591</NoWarn>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <!-- Embed debug symbols so stack traces in error logs include line numbers. -->
+        <DebugType>embedded</DebugType>
     </PropertyGroup>
 
     <ItemGroup>

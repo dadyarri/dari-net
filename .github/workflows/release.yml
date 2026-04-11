@@ -1,0 +1,153 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - 'feature/**'
+      - 'copilot/**'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+            artifact: dari-win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+            artifact: dari-linux-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          BASE_VERSION=$(grep -o '<Version>[^<]*</Version>' Dari.App/Dari.App.csproj | sed 's/<[^>]*>//g')
+          FORMAT_VERSION=$(grep -o 'FormatVersion = [0-9]*' Dari.Archiver/Format/DariConstants.cs | sed 's/FormatVersion = //')
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # Release tag: strip the leading "v"
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            # Branch pre-release: <csproj-version>-<branch-slug>.<short-sha>
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            BRANCH_SLUG="${BRANCH//\//-}"
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            VERSION="${BASE_VERSION}-${BRANCH_SLUG}.${SHORT_SHA}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "informational_version=${VERSION}+${FORMAT_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$( [[ "$GITHUB_REF" == refs/tags/* ]] && echo false || echo true )" >> "$GITHUB_OUTPUT"
+
+      - name: Publish self-contained
+        run: >
+          dotnet publish Dari.App/Dari.App.csproj
+          -c Release
+          -r ${{ matrix.rid }}
+          --self-contained true
+          -p:PublishSingleFile=true
+          -p:EnableCompressionInSingleFile=true
+          -p:IncludeNativeLibrariesForSelfExtract=true
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:InformationalVersion=${{ steps.version.outputs.informational_version }}
+          -o publish/${{ matrix.artifact }}
+
+      - name: Build AppImage (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get install -y libfuse2
+          wget -q "https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage" \
+               -O /usr/local/bin/appimagetool
+          chmod +x /usr/local/bin/appimagetool
+          DARI_VERSION=${{ steps.version.outputs.version }} \
+            ./installer/linux/build-appimage.sh publish/${{ matrix.artifact }}
+
+      - name: Bundle AppImage + install files (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir appimage-bundle
+          cp build/Dari-${{ steps.version.outputs.version }}-x86_64.AppImage appimage-bundle/
+          cp installer/linux/install.sh       appimage-bundle/
+          cp installer/linux/x-dari-archive.xml appimage-bundle/
+          cp installer/linux/net.dadyarri.dari.metainfo.xml   appimage-bundle/
+          chmod +x appimage-bundle/install.sh
+          tar -czf dari-linux-x64-appimage.tar.gz -C appimage-bundle .
+
+      - name: Build Inno Setup installer (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" `
+            /DMyAppVersion="${{ steps.version.outputs.version }}" `
+            "/DMyPublishDir=$PWD\publish\${{ matrix.artifact }}" `
+            installer\windows\dari.iss
+
+      - name: Upload artifact (Linux)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dari-linux-x64-appimage
+          path: dari-linux-x64-appimage.tar.gz
+
+      - name: Upload artifact (Windows)
+        if: runner.os == 'Windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dari-win-x64-installer
+          path: dari-win-x64-installer.exe
+
+  create-release:
+    needs: build-and-release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          BASE_VERSION=$(grep -o '<Version>[^<]*</Version>' Dari.App/Dari.App.csproj | sed 's/<[^>]*>//g')
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            BRANCH_SLUG="${BRANCH//\//-}"
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            VERSION="${BASE_VERSION}-${BRANCH_SLUG}.${SHORT_SHA}"
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4.1.8
+        with:
+          path: artifacts
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Dari ${{ steps.version.outputs.version }}
+          prerelease: ${{ steps.version.outputs.is_prerelease }}
+          generate_release_notes: true
+          files: |
+            artifacts/**/*-appimage.tar.gz
+            artifacts/**/*-installer.exe

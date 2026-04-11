@@ -6,6 +6,7 @@
     <x:String x:Key="Menu.File.NewArchive">_New Archive…</x:String>
     <x:String x:Key="Menu.File.Open">_Open…</x:String>
     <x:String x:Key="Menu.File.Close">_Close</x:String>
+    <x:String x:Key="Menu.File.Recent">_Recent Archives</x:String>
     <x:String x:Key="Menu.File.Exit">E_xit</x:String>
     <x:String x:Key="Menu.Archive">_Archive</x:String>
     <x:String x:Key="Menu.Archive.ExtractAll">Extract _All…</x:String>
@@ -38,6 +39,7 @@
     <x:String x:Key="Button.Continue">Continue</x:String>
     <x:String x:Key="Button.OK">OK</x:String>
     <x:String x:Key="Button.Save">Save</x:String>
+    <x:String x:Key="Button.Apply">Apply</x:String>
 
     <!-- Toolbar / sort -->
     <x:String x:Key="Toolbar.Sort">Sort:</x:String>
@@ -81,6 +83,7 @@
     <x:String x:Key="Wizard.Step2.CompressionLabel">Compression algorithm:</x:String>
     <x:String x:Key="Wizard.Step2.Deduplication">Enable deduplication (skip identical content blocks)</x:String>
     <x:String x:Key="Wizard.Step2.Encryption">Encrypt the archive with a passphrase</x:String>
+    <x:String x:Key="Wizard.Step2.Encryption.UnsupportedTooltip">Encryption is not supported on this system.</x:String>
     <x:String x:Key="Wizard.Step3.Title">Step 3 of 3 — Destination</x:String>
     <x:String x:Key="Wizard.Step3.Subtitle">Choose where to save the new .dar archive.</x:String>
     <x:String x:Key="Wizard.Step3.Creating">Creating archive…</x:String>
@@ -109,6 +112,7 @@
     <!-- Password dialog -->
     <x:String x:Key="Password.Title">Enter Passphrase</x:String>
     <x:String x:Key="Password.Prompt">This archive is encrypted. Enter the passphrase to continue.</x:String>
+    <x:String x:Key="Password.EncryptionUnsupported">Encryption is not supported on this system. This encrypted archive cannot be opened.</x:String>
 
     <!-- Checksum error dialog -->
     <x:String x:Key="Checksum.Title">Checksum Error</x:String>
@@ -131,6 +135,8 @@
     <x:String x:Key="Settings.PreviewFontFamily">Preview monospace font:</x:String>
     <x:String x:Key="Settings.PreviewFontShowAll">Show all fonts</x:String>
     <x:String x:Key="Settings.PreviewFontSize">Preview font size:</x:String>
+    <x:String x:Key="Settings.DefaultExtractionDir">Default extraction directory:</x:String>
+    <x:String x:Key="Settings.DefaultExtractionDir.Watermark">Not set (always ask)</x:String>
 
     <!-- Theme options -->
     <x:String x:Key="Theme.System">System (follow OS)</x:String>
@@ -198,5 +204,16 @@
     <x:String x:Key="Preview.Type.Binary">Binary</x:String>
     <x:String x:Key="Preview.Type.Encrypted">Encrypted</x:String>
     <x:String x:Key="Preview.Type.Error">Error</x:String>
+
+    <!-- About dialog -->
+    <x:String x:Key="About.Title">About Dari</x:String>
+    <x:String x:Key="About.Copyright">Copyright:</x:String>
+    <x:String x:Key="About.License">License:</x:String>
+    <x:String x:Key="About.Runtime">Runtime:</x:String>
+    <x:String x:Key="About.OS">OS:</x:String>
+
+    <!-- Recent files -->
+    <x:String x:Key="Recent.NotFound.Title">File Not Found</x:String>
+    <x:String x:Key="Recent.NotFound.Message">The file no longer exists: {0}</x:String>
 
 </ResourceDictionary>

@@ -79,7 +79,15 @@
 
             <!-- Encryption -->
             <CheckBox IsChecked="{Binding EnableEncryption}"
-                      Content="{DynamicResource Wizard.Step2.Encryption}" />
+                      IsEnabled="{Binding IsEncryptionSupported}"
+                      Content="{DynamicResource Wizard.Step2.Encryption}">
+                <ToolTip.Tip>
+                    <TextBlock IsVisible="{Binding !IsEncryptionSupported}"
+                               Text="{DynamicResource Wizard.Step2.Encryption.UnsupportedTooltip}"
+                               MaxWidth="260"
+                               TextWrapping="Wrap" />
+                </ToolTip.Tip>
+            </CheckBox>
 
             <StackPanel Spacing="6" IsVisible="{Binding ShowEncryptionFields}">
                 <TextBox PasswordChar="•"

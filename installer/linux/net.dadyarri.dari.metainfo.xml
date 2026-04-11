@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+    <id>net.dadyarri.dari</id>
+
+    <metadata_license>MIT</metadata_license>
+    <project_license>MIT</project_license>
+
+    <name>Dari</name>
+    <summary>Cross-platform archive manager for .dar archives</summary>
+
+    <description>
+        <p>
+            Dari is a cross-platform desktop application for managing .dar archives.
+            It supports creating, browsing, and extracting archives with compression,
+            encryption, and deduplication.
+        </p>
+    </description>
+
+    <launchable type="desktop-id">dari.desktop</launchable>
+
+    <developer id="net.dadyarri">
+        <name>dadyarri</name>
+    </developer>
+
+    <url type="homepage">https://github.com/dadyarri/dari-net</url>
+    <url type="bugtracker">https://github.com/dadyarri/dari-net/issues</url>
+
+    <categories>
+        <category>Utility</category>
+        <category>Archiving</category>
+    </categories>
+
+    <keywords>
+        <keyword>archive</keyword>
+        <keyword>dar</keyword>
+        <keyword>compress</keyword>
+        <keyword>extract</keyword>
+    </keywords>
+
+    <provides>
+        <mediatype>application/x-dari-archive</mediatype>
+    </provides>
+
+    <content_rating type="oars-1.1"/>
+</component>

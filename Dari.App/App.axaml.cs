@@ -3,6 +3,7 @@ using System.Text;
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
 using Dari.App.Models;
 using Dari.App.Services;
 using Dari.App.ViewModels;
@@ -20,6 +21,13 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // The Avalonia UIThread dispatcher is now running — safe to subscribe here on all platforms.
+        Dispatcher.UIThread.UnhandledException += (_, e) =>
+        {
+            FileLogger.Log(e.Exception, "Dispatcher.UIThread.UnhandledException");
+            // Do not set e.Handled = true — let Avalonia show its error dialog / crash normally.
+        };
+
         var configService = new ConfigService();
         var config = LoadOrInitConfig(configService);
 
@@ -30,11 +38,24 @@ public partial class App : Application
         {
             var mainWindow = new MainWindow();
             var dialogService = new DialogService(mainWindow);
-            mainWindow.DataContext = new MainWindowViewModel(
+            var recentFiles = new RecentFilesService();
+            var vm = new MainWindowViewModel(
                 dialogService,
                 configService,
-                LocalizationManager.Current);
+                LocalizationManager.Current,
+                recentFiles);
+            mainWindow.DataContext = vm;
             desktop.MainWindow = mainWindow;
+
+            // If a .dar file was passed as a command-line argument (e.g. via Windows
+            // file-association double-click), open it once the window is shown.
+            var startupFile = desktop.Args?
+                .FirstOrDefault(a => a.EndsWith(".dar", StringComparison.OrdinalIgnoreCase));
+            if (startupFile is not null)
+            {
+                mainWindow.Opened += async (_, _) =>
+                    await vm.OpenArchiveFromPathAsync(startupFile).ConfigureAwait(true);
+            }
         }
 
         base.OnFrameworkInitializationCompleted();

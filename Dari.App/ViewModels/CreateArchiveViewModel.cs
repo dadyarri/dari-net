@@ -84,6 +84,13 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
 
     public bool ShowEncryptionFields => EnableEncryption;
 
+    /// <summary>
+    /// <see langword="false"/> on OS versions where ChaCha20-Poly1305 is not available
+    /// (e.g. Windows older than version 1903). The encryption checkbox is disabled and a
+    /// tooltip explains the limitation when this is <see langword="false"/>.
+    /// </summary>
+    public static bool IsEncryptionSupported => CryptoCapabilities.IsEncryptionSupported;
+
     // -----------------------------------------------------------------------
     // Step 3 — Destination + progress
     // -----------------------------------------------------------------------
@@ -298,6 +305,7 @@ public sealed partial class CreateArchiveViewModel : ObservableObject, IDisposab
         }
         catch (Exception ex)
         {
+            FileLogger.Log(ex, "CreateArchiveViewModel.StartCreationAsync");
             StatusMessage = LocalizationManager.Current.Format("Status.Error", ex.Message);
         }
         finally
