@@ -95,20 +95,9 @@ public partial class PreviewView : UserControl
             return;
 
         CodeEditor.Document = new TextDocument(vm.PreviewText ?? "");
-        try
-        {
-            EnsureTextMate();
-            if (vm.TextMateScope is { } scope)
-                _textMate?.SetGrammar(scope);
-        }
-        catch (InvalidOperationException)
-        {
-            // Keep plain text view if syntax highlighter fails to initialize.
-        }
-        catch (NotSupportedException)
-        {
-            // Keep plain text view if syntax highlighter fails to initialize.
-        }
+        EnsureTextMate();
+        if (vm.TextMateScope is { } scope)
+            _textMate?.SetGrammar(scope);
         CodeEditor.ScrollToLine(1);
     }
 }
