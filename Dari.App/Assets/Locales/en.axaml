@@ -30,6 +30,7 @@
     <x:String x:Key="Button.Extract">Extract</x:String>
     <x:String x:Key="Button.ExtractAll">Extract All</x:String>
     <x:String x:Key="Button.ExtractAndOpen">Extract &amp; Open</x:String>
+    <x:String x:Key="Button.ImageZoomReset">Reset</x:String>
     <x:String x:Key="Button.Skip">Skip</x:String>
     <x:String x:Key="Button.Rename">Rename</x:String>
     <x:String x:Key="Button.Overwrite">Overwrite</x:String>
@@ -49,6 +50,9 @@
     <x:String x:Key="Tooltip.ExtractSelected">Open extraction options for checked entries</x:String>
     <x:String x:Key="Tooltip.ExtractAll">Extract all entries to a folder</x:String>
     <x:String x:Key="Tooltip.ExtractAndOpen">Extract to a temporary folder and open with the default application</x:String>
+    <x:String x:Key="Tooltip.ImageZoomIn">Zoom in</x:String>
+    <x:String x:Key="Tooltip.ImageZoomOut">Zoom out</x:String>
+    <x:String x:Key="Tooltip.ImageZoomReset">Reset zoom</x:String>
 
     <!-- DataGrid column headers -->
     <x:String x:Key="Column.Select">✓</x:String>
@@ -124,6 +128,9 @@
     <x:String x:Key="Settings.Language">Language:</x:String>
     <x:String x:Key="Settings.Theme">Theme:</x:String>
     <x:String x:Key="Settings.PreviewMaxBytes">Preview size limit:</x:String>
+    <x:String x:Key="Settings.PreviewFontFamily">Preview monospace font:</x:String>
+    <x:String x:Key="Settings.PreviewFontShowAll">Show all fonts</x:String>
+    <x:String x:Key="Settings.PreviewFontSize">Preview font size:</x:String>
 
     <!-- Theme options -->
     <x:String x:Key="Theme.System">System (follow OS)</x:String>

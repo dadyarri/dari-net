@@ -10,12 +10,33 @@
 
     <Grid RowDefinitions="Auto,*,Auto">
 
-        <Button Grid.Row="0"
-                HorizontalAlignment="Right"
-                Margin="4"
-                Content="{DynamicResource Button.ExtractAndOpen}"
-                ToolTip.Tip="{DynamicResource Tooltip.ExtractAndOpen}"
-                Command="{Binding ExtractAndOpenCommand}" />
+        <StackPanel Grid.Row="0"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Margin="4"
+                    Spacing="6">
+            <StackPanel IsVisible="{Binding IsImageVisible}"
+                        Orientation="Horizontal"
+                        Spacing="4">
+                <Button Content="−"
+                        Command="{Binding ZoomOutImageCommand}"
+                        ToolTip.Tip="{DynamicResource Tooltip.ImageZoomOut}" />
+                <TextBlock Text="{Binding ImageScaleDisplay}"
+                           VerticalAlignment="Center"
+                           MinWidth="42"
+                           TextAlignment="Center" />
+                <Button Content="+"
+                        Command="{Binding ZoomInImageCommand}"
+                        ToolTip.Tip="{DynamicResource Tooltip.ImageZoomIn}" />
+                <Button Content="{DynamicResource Button.ImageZoomReset}"
+                        Command="{Binding ResetImageZoomCommand}"
+                        ToolTip.Tip="{DynamicResource Tooltip.ImageZoomReset}" />
+            </StackPanel>
+
+            <Button Content="{DynamicResource Button.ExtractAndOpen}"
+                    ToolTip.Tip="{DynamicResource Tooltip.ExtractAndOpen}"
+                    Command="{Binding ExtractAndOpenCommand}" />
+        </StackPanel>
 
         <Panel Grid.Row="1">
 
@@ -53,8 +74,8 @@
                           IsVisible="{Binding IsTextVisible}"
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto">
-                <TextBlock FontFamily="Courier New, Cascadia Code, Consolas, monospace"
-                           FontSize="12"
+                <TextBlock FontFamily="{Binding MonospaceFontFamily}"
+                           FontSize="{Binding MonospaceFontSize}"
                            Text="{Binding PreviewText}"
                            TextWrapping="NoWrap"
                            Margin="8" />
@@ -65,8 +86,8 @@
                               IsVisible="{Binding IsCodeVisible}"
                               IsReadOnly="True"
                               ShowLineNumbers="True"
-                              FontFamily="Courier New, Cascadia Code, Consolas, monospace"
-                              FontSize="12"
+                              FontFamily="{Binding MonospaceFontFamily}"
+                              FontSize="{Binding MonospaceFontSize}"
                               WordWrap="False" />
 
             <!-- Markdown -->
@@ -78,7 +99,13 @@
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto">
                 <Image Source="{Binding PreviewBitmap}"
-                       Stretch="None" />
+                       Stretch="None"
+                       RenderTransformOrigin="0,0">
+                    <Image.RenderTransform>
+                        <ScaleTransform ScaleX="{Binding ImageScale}"
+                                        ScaleY="{Binding ImageScale}" />
+                    </Image.RenderTransform>
+                </Image>
             </ScrollViewer>
 
         </Panel>

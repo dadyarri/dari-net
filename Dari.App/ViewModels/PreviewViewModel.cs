@@ -24,6 +24,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExtractAndOpenCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ZoomInImageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ZoomOutImageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ResetImageZoomCommand))]
     private PreviewState _state = PreviewState.Empty;
 
     [ObservableProperty]
@@ -33,10 +36,22 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private string _previewText = "";
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ZoomInImageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ZoomOutImageCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ResetImageZoomCommand))]
     private Bitmap? _previewBitmap;
 
     [ObservableProperty]
     private string? _textMateScope;
+
+    [ObservableProperty]
+    private string _monospaceFontFamily = "Monospace";
+
+    [ObservableProperty]
+    private double _monospaceFontSize = 12;
+
+    [ObservableProperty]
+    private double _imageScale = 1;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ExtractAndOpenCommand))]
@@ -85,10 +100,22 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     public int MaxPreviewMegaBytes { get; set; }
 
-    public PreviewViewModel(ArchiveReader reader, int maxPreviewMegaBytes = 10)
+    public string ImageScaleDisplay => $"{ImageScale:0.##}x";
+
+    partial void OnImageScaleChanged(double value) => OnPropertyChanged(nameof(ImageScaleDisplay));
+
+    public PreviewViewModel(
+        ArchiveReader reader,
+        int maxPreviewMegaBytes = 10,
+        string? monospaceFontFamily = null,
+        double monospaceFontSize = 12)
     {
         _reader = reader;
         MaxPreviewMegaBytes = maxPreviewMegaBytes;
+        MonospaceFontFamily = string.IsNullOrWhiteSpace(monospaceFontFamily)
+            ? "Monospace"
+            : monospaceFontFamily;
+        MonospaceFontSize = monospaceFontSize > 0 ? monospaceFontSize : 12;
         LocalizationManager.Current.LanguageChanged += OnLanguageChanged;
     }
 
@@ -120,6 +147,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             TextMateScope = null;
             ResetStatusBarFields();
             ClearPreviewBitmap();
+            ImageScale = 1;
             return;
         }
 
@@ -187,6 +215,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                     _isTruncated = false;
                     TruncationDisplay = "";
                     OnPropertyChanged(nameof(IsTruncationVisible));
+                    ImageScale = 1;
                     State = PreviewState.Image;
                     return;
                 }
@@ -304,6 +333,25 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
     private bool CanExtractAndOpen() =>
         CurrentEntry is not null && State is not PreviewState.Empty and not PreviewState.Loading;
+
+    [RelayCommand(CanExecute = nameof(CanAdjustImageZoom))]
+    private void ZoomInImage()
+    {
+        var next = ImageScale + 0.1;
+        ImageScale = next > 4 ? 4 : next;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAdjustImageZoom))]
+    private void ZoomOutImage()
+    {
+        var next = ImageScale - 0.1;
+        ImageScale = next < 0.1 ? 0.1 : next;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanAdjustImageZoom))]
+    private void ResetImageZoom() => ImageScale = 1;
+
+    private bool CanAdjustImageZoom() => State == PreviewState.Image && PreviewBitmap is not null;
 
     private static string SanitizeFileName(string fileName)
     {
