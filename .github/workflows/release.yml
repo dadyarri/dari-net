@@ -39,15 +39,16 @@ jobs:
         id: version
         shell: bash
         run: |
+          BASE_VERSION=$(grep -oP '(?<=<Version>)[^<]+' Dari.App/Dari.App.csproj)
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # Release tag: strip the leading "v"
             VERSION="${GITHUB_REF#refs/tags/v}"
           else
-            # Branch pre-release: use branch name + short commit SHA
+            # Branch pre-release: <csproj-version>-<branch-slug>.<short-sha>
             BRANCH="${GITHUB_REF#refs/heads/}"
             BRANCH_SLUG="${BRANCH//\//-}"
             SHORT_SHA="${GITHUB_SHA:0:8}"
-            VERSION="0.0.0-${BRANCH_SLUG}.${SHORT_SHA}"
+            VERSION="${BASE_VERSION}-${BRANCH_SLUG}.${SHORT_SHA}"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "is_prerelease=$( [[ "$GITHUB_REF" == refs/tags/* ]] && echo false || echo true )" >> "$GITHUB_OUTPUT"
@@ -95,6 +96,7 @@ jobs:
         id: version
         shell: bash
         run: |
+          BASE_VERSION=$(grep -oP '(?<=<Version>)[^<]+' Dari.App/Dari.App.csproj)
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
             echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
@@ -102,7 +104,7 @@ jobs:
             BRANCH="${GITHUB_REF#refs/heads/}"
             BRANCH_SLUG="${BRANCH//\//-}"
             SHORT_SHA="${GITHUB_SHA:0:8}"
-            VERSION="0.0.0-${BRANCH_SLUG}.${SHORT_SHA}"
+            VERSION="${BASE_VERSION}-${BRANCH_SLUG}.${SHORT_SHA}"
             echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
