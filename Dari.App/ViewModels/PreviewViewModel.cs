@@ -18,8 +18,8 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private const string MarkdownFrontMatterDelimiter = "---";
     private static readonly string MarkdownFrontMatterStartLf = $"{MarkdownFrontMatterDelimiter}\n";
     private static readonly string MarkdownFrontMatterStartCrLf = $"{MarkdownFrontMatterDelimiter}\r\n";
-    // MarkdownScrollViewer silently fails to render large content; fall back to Text above this limit.
-    private const int MarkdownCharLimit = 32_768;
+    // MarkdownScrollViewer silently fails to render large content; fall back to Text above this byte limit.
+    private const int MarkdownByteLimit = 40_960;
     private const double ImageZoomStep = 0.1;
     private const double ImageZoomMin = 0.1;
     private const double ImageZoomMax = 4;
@@ -50,7 +50,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private Bitmap? _previewBitmap;
 
     [ObservableProperty]
-    private string? _textMateScope;
+    private string? _codeFileExtension;
 
     [ObservableProperty]
     private string _monospaceFontFamily = "Monospace";
@@ -152,7 +152,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             State = PreviewState.Empty;
             StatusMessage = "";
             PreviewText = "";
-            TextMateScope = null;
+            CodeFileExtension = null;
             ResetStatusBarFields();
             ClearPreviewBitmap();
             ImageScale = 1;
@@ -165,7 +165,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             State = PreviewState.Loading;
             StatusMessage = "";
             PreviewText = "";
-            TextMateScope = null;
+            CodeFileExtension = null;
             ResetStatusBarFields();
             await LoadContentAsync(entry, ct).ConfigureAwait(true);
         }
@@ -215,10 +215,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                     using var ms = new MemoryStream(bytes.ToArray());
                     PreviewBitmap = new Bitmap(ms);
                     old?.Dispose();
-                    TextMateScope = null;
+                    CodeFileExtension = null;
                     PreviewText = "";
                     _typeLabelKey = "Preview.Type.Image";
-                    PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
                     PreviewTypeEncoding = "";
                     _isTruncated = false;
                     TruncationDisplay = "";
@@ -230,7 +229,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 catch (Exception ex)
                 {
                     ClearPreviewBitmap();
-                    TextMateScope = null;
+                    CodeFileExtension = null;
                     _typeLabelKey = "Preview.Type.Error";
                     PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
                     PreviewTypeEncoding = "";
@@ -245,7 +244,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
             if (classifyResult.Kind == ContentKind.Binary)
             {
-                TextMateScope = null;
+                CodeFileExtension = null;
                 PreviewText = "";
                 _typeLabelKey = "Preview.Type.Binary";
                 PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
@@ -271,14 +270,12 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
             };
             var decodedText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
             // MarkdownScrollViewer fails to render large content; fall back to plain text.
-            if (detectedState == PreviewState.Markdown && decodedText.Length > MarkdownCharLimit)
+            if (detectedState == PreviewState.Markdown && bytes.Length > MarkdownByteLimit)
                 detectedState = PreviewState.Text;
             PreviewText = detectedState == PreviewState.Markdown
                 ? StripMarkdownFrontMatter(decodedText)
                 : decodedText;
-            TextMateScope = detectedState == PreviewState.Code
-                ? ExtensionLanguageMap.GetScopeByExtension(ext)
-                : null;
+            CodeFileExtension = detectedState == PreviewState.Code ? ext : null;
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = $" · {classifyResult.Encoding}";
             State = detectedState;
@@ -294,7 +291,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         catch (InvalidOperationException)
         {
             ClearPreviewBitmap();
-            TextMateScope = null;
+            CodeFileExtension = null;
             PreviewText = "";
             _typeLabelKey = "Preview.Type.Encrypted";
             PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
@@ -305,10 +302,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             ClearPreviewBitmap();
-            TextMateScope = null;
+            CodeFileExtension = null;
             PreviewText = "";
             _typeLabelKey = "Preview.Type.Error";
-            PreviewTypeName = LocalizationManager.Current[_typeLabelKey];
             PreviewTypeEncoding = "";
             State = PreviewState.Error;
             StatusMessage = string.Format(

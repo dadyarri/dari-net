@@ -85,7 +85,7 @@ public partial class PreviewView : UserControl
             return;
         }
 
-        if (e.PropertyName is nameof(PreviewViewModel.PreviewText) or nameof(PreviewViewModel.TextMateScope))
+        if (e.PropertyName is nameof(PreviewViewModel.PreviewText) or nameof(PreviewViewModel.CodeFileExtension))
             UpdateCodeEditor(_vm);
     }
 
@@ -97,18 +97,27 @@ public partial class PreviewView : UserControl
         try
         {
             EnsureTextMate();
-            if (vm.TextMateScope is { } scope)
-                _textMate?.SetGrammar(scope);
+            if (vm.CodeFileExtension is { } ext && _registryOptions is { } reg)
+            {
+                var lang = reg.GetLanguageByExtension(ext);
+                if (lang is not null)
+                    _textMate?.SetGrammar(reg.GetScopeByLanguageId(lang.Id));
+            }
         }
-        catch (InvalidOperationException)
+        catch (Exception)
         {
-            // Keep plain text view if syntax highlighter fails to initialize.
+            // Syntax highlighting failed; display without highlighting.
+            _textMate = null;
         }
-        catch (NotSupportedException)
+
+        try
         {
-            // Keep plain text view if syntax highlighter fails to initialize.
+            CodeEditor.Document = new TextDocument(vm.PreviewText ?? "");
+            CodeEditor.ScrollToLine(1);
         }
-        CodeEditor.Document = new TextDocument(vm.PreviewText ?? "");
-        CodeEditor.ScrollToLine(1);
+        catch (Exception)
+        {
+            // Editor failed to accept document; ignore.
+        }
     }
 }
