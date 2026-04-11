@@ -18,6 +18,8 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     private const string MarkdownFrontMatterDelimiter = "---";
     private static readonly string MarkdownFrontMatterStartLf = $"{MarkdownFrontMatterDelimiter}\n";
     private static readonly string MarkdownFrontMatterStartCrLf = $"{MarkdownFrontMatterDelimiter}\r\n";
+    // MarkdownScrollViewer silently fails to render large content; fall back to Text above this limit.
+    private const int MarkdownCharLimit = 32_768;
     private const double ImageZoomStep = 0.1;
     private const double ImageZoomMin = 0.1;
     private const double ImageZoomMax = 4;
@@ -268,6 +270,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
                 _ => "Preview.Type.Text",
             };
             var decodedText = ContentClassifier.DecodeText(bytes.Span, classifyResult.Encoding);
+            // MarkdownScrollViewer fails to render large content; fall back to plain text.
+            if (detectedState == PreviewState.Markdown && decodedText.Length > MarkdownCharLimit)
+                detectedState = PreviewState.Text;
             PreviewText = detectedState == PreviewState.Markdown
                 ? StripMarkdownFrontMatter(decodedText)
                 : decodedText;
