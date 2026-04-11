@@ -1,6 +1,7 @@
 using System.Reflection;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Dari.Archiver;
 
 namespace Dari.App.ViewModels;
 
@@ -31,22 +32,18 @@ public sealed partial class AboutViewModel : ObservableObject
         var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
         var infoVersion = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
         var raw = infoVersion ?? asm.GetName().Version?.ToString() ?? "0.0.0";
-        Version = TruncateHash(raw);
+        Version = WithFormatVersion(raw);
     }
 
     /// <summary>
-    /// Limits the build-metadata hash in an informational version string to 8 characters.
-    /// E.g. <c>1.0.0+abcdef1234567890</c> → <c>1.0.0+abcdef12</c>.
-    /// Strings without a <c>+</c> separator are returned unchanged.
+    /// Strips any existing build-metadata suffix (<c>+…</c>) and appends the max supported
+    /// archive format version, e.g. <c>1.0.0-pre.abc12345</c> → <c>1.0.0-pre.abc12345+5</c>.
     /// </summary>
-    private static string TruncateHash(string version)
+    private static string WithFormatVersion(string version)
     {
         var plus = version.IndexOf('+');
-        if (plus < 0) return version;
-
-        var prefix = version[..(plus + 1)];   // "1.0.0+"
-        var hash = version[(plus + 1)..];      // full hash or build metadata
-        return hash.Length > 8 ? $"{prefix}{hash[..8]}" : version;
+        var semver = plus >= 0 ? version[..plus] : version;
+        return $"{semver}+{DariInfo.MaxFormatVersion}";
     }
 
     [RelayCommand]

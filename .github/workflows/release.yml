@@ -40,6 +40,7 @@ jobs:
         shell: bash
         run: |
           BASE_VERSION=$(grep -oP '(?<=<Version>)[^<]+' Dari.App/Dari.App.csproj)
+          FORMAT_VERSION=$(grep -oP '(?<=FormatVersion = )\d+' Dari.Archiver/Format/DariConstants.cs)
           if [[ "$GITHUB_REF" == refs/tags/* ]]; then
             # Release tag: strip the leading "v"
             VERSION="${GITHUB_REF#refs/tags/v}"
@@ -51,6 +52,7 @@ jobs:
             VERSION="${BASE_VERSION}-${BRANCH_SLUG}.${SHORT_SHA}"
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "informational_version=${VERSION}+${FORMAT_VERSION}" >> "$GITHUB_OUTPUT"
           echo "is_prerelease=$( [[ "$GITHUB_REF" == refs/tags/* ]] && echo false || echo true )" >> "$GITHUB_OUTPUT"
 
       - name: Publish self-contained
@@ -62,7 +64,7 @@ jobs:
           -p:PublishSingleFile=true
           -p:EnableCompressionInSingleFile=true
           -p:Version=${{ steps.version.outputs.version }}
-          -p:InformationalVersion=${{ steps.version.outputs.version }}
+          -p:InformationalVersion=${{ steps.version.outputs.informational_version }}
           -o publish/${{ matrix.artifact }}
 
       - name: Archive artifacts (Linux)
