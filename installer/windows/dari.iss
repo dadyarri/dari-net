@@ -15,10 +15,9 @@
 #define MyAppURL        "https://github.com/dadyarri/dari-net"
 #define MyAppAssocExt   ".dar"
 #define MyAppAssocKey   "Dari.DarArchive"
-#define MyAppId         "{F4A8E9C1-3B2D-4E6F-A1C7-9D8B5E0F2A3C}"
 
 [Setup]
-AppId={#MyAppId}
+AppId={{F4A8E9C1-3B2D-4E6F-A1C7-9D8B5E0F2A3C}
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
