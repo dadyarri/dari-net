@@ -63,14 +63,17 @@
                           HorizontalAlignment="Stretch">
                     <ComboBox.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:PreviewFontItem}">
-                            <StackPanel Orientation="Horizontal" Spacing="8">
-                                <TextBlock Text="{Binding FamilyName}"
-                                           FontFamily="{Binding FamilyName}"
-                                           Width="170"
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding FamilyName}"
+                                           FontFamily="{Binding FontFamily}"
                                            TextTrimming="CharacterEllipsis" />
-                                <TextBlock Text="{Binding PreviewSample}"
-                                           FontFamily="{Binding FamilyName}" />
-                            </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding PreviewSample}"
+                                           FontFamily="{Binding FontFamily}"
+                                           TextAlignment="Right"
+                                           Margin="8,0,0,0" />
+                            </Grid>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>
                 </ComboBox>

@@ -1,4 +1,5 @@
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Dari.App.Services;
@@ -113,7 +114,10 @@ public sealed partial class MainWindowViewModel : ObservableObject
         {
             var config = _configService.Load();
             browser.Preview.MaxPreviewMegaBytes = config.PreviewMaxMegaBytes;
-            browser.Preview.MonospaceFontFamily = config.PreviewMonospaceFontFamily;
+            browser.Preview.MonospaceFontFamily = new FontFamily(
+                string.IsNullOrWhiteSpace(config.PreviewMonospaceFontFamily)
+                    ? "Monospace"
+                    : config.PreviewMonospaceFontFamily);
             browser.Preview.MonospaceFontSize = config.PreviewMonospaceFontSize;
         }
     }

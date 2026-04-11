@@ -9,6 +9,7 @@ namespace Dari.App.ViewModels;
 public sealed record PreviewFontItem(string FamilyName, bool IsMonospace)
 {
     public string PreviewSample => "AaBbIiWw 123";
+    public FontFamily FontFamily => new(FamilyName);
 }
 
 /// <summary>ViewModel for the Settings dialog — language and theme selection.</summary>

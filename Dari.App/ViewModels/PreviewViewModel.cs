@@ -1,5 +1,6 @@
 using System.Collections.Frozen;
 using System.Diagnostics;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -51,7 +52,7 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
 
 
     [ObservableProperty]
-    private string _monospaceFontFamily = "Monospace";
+    private FontFamily _monospaceFontFamily = new("Monospace");
 
     [ObservableProperty]
     private double _monospaceFontSize = 12;
@@ -116,9 +117,9 @@ public sealed partial class PreviewViewModel : ObservableObject, IDisposable
     {
         _reader = reader;
         MaxPreviewMegaBytes = maxPreviewMegaBytes;
-        MonospaceFontFamily = string.IsNullOrWhiteSpace(monospaceFontFamily)
+        MonospaceFontFamily = new FontFamily(string.IsNullOrWhiteSpace(monospaceFontFamily)
             ? "Monospace"
-            : monospaceFontFamily;
+            : monospaceFontFamily);
         MonospaceFontSize = monospaceFontSize > 0 ? monospaceFontSize : 12;
         LocalizationManager.Current.LanguageChanged += OnLanguageChanged;
     }
