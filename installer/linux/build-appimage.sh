@@ -17,6 +17,7 @@ mkdir -p "$APPDIR/usr/bin"
 mkdir -p "$APPDIR/usr/share/applications"
 mkdir -p "$APPDIR/usr/share/mime/packages"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
+mkdir -p "$APPDIR/usr/share/metainfo"
 
 # Copy published files
 cp -r "$PUBLISH_DIR"/* "$APPDIR/usr/bin/"
@@ -27,6 +28,11 @@ cp "$REPO_ROOT/Dari.App/platform/dari.desktop" "$APPDIR/"
 
 # MIME type definition
 cp "$SCRIPT_DIR/x-dari-archive.xml" "$APPDIR/usr/share/mime/packages/"
+
+# AppStream metadata
+if [ -f "$SCRIPT_DIR/dari.appdata.xml" ]; then
+    cp "$SCRIPT_DIR/dari.appdata.xml" "$APPDIR/usr/share/metainfo/"
+fi
 
 # Icon
 if [ -f "$REPO_ROOT/Dari.App/Assets/dari.png" ]; then
