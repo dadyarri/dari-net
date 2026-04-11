@@ -38,8 +38,8 @@ if [[ -f "${SCRIPT_DIR}/x-dari-archive.xml" ]]; then
 fi
 
 # Install AppStream metadata
-if [[ -f "${SCRIPT_DIR}/dari.appdata.xml" ]]; then
-    install -m 644 "${SCRIPT_DIR}/dari.appdata.xml" "${METAINFO_DIR}/dari.appdata.xml"
+if [[ -f "${SCRIPT_DIR}/net.dadyarri.dari.metainfo.xml" ]]; then
+    install -m 644 "${SCRIPT_DIR}/net.dadyarri.dari.metainfo.xml" "${METAINFO_DIR}/net.dadyarri.dari.metainfo.xml"
 fi
 
 # Install .desktop entry pointing to the installed binary

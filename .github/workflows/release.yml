@@ -84,7 +84,7 @@ jobs:
           cp build/Dari-${{ steps.version.outputs.version }}-x86_64.AppImage appimage-bundle/
           cp installer/linux/install.sh       appimage-bundle/
           cp installer/linux/x-dari-archive.xml appimage-bundle/
-          cp installer/linux/dari.appdata.xml   appimage-bundle/
+          cp installer/linux/net.dadyarri.dari.metainfo.xml   appimage-bundle/
           chmod +x appimage-bundle/install.sh
           tar -czf dari-linux-x64-appimage.tar.gz -C appimage-bundle .
 

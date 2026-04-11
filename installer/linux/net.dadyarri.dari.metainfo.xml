@@ -18,6 +18,10 @@
 
     <launchable type="desktop-id">dari.desktop</launchable>
 
+    <developer id="net.dadyarri">
+        <name>dadyarri</name>
+    </developer>
+
     <url type="homepage">https://github.com/dadyarri/dari-net</url>
     <url type="bugtracker">https://github.com/dadyarri/dari-net/issues</url>
 

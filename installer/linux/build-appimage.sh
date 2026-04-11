@@ -30,8 +30,8 @@ cp "$REPO_ROOT/Dari.App/platform/dari.desktop" "$APPDIR/"
 cp "$SCRIPT_DIR/x-dari-archive.xml" "$APPDIR/usr/share/mime/packages/"
 
 # AppStream metadata
-if [ -f "$SCRIPT_DIR/dari.appdata.xml" ]; then
-    cp "$SCRIPT_DIR/dari.appdata.xml" "$APPDIR/usr/share/metainfo/"
+if [ -f "$SCRIPT_DIR/net.dadyarri.dari.metainfo.xml" ]; then
+    cp "$SCRIPT_DIR/net.dadyarri.dari.metainfo.xml" "$APPDIR/usr/share/metainfo/"
 fi
 
 # Icon
