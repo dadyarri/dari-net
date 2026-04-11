@@ -22,15 +22,22 @@
     <!-- Application files component group (populated by heat / harvesting) -->
     <ComponentGroup Id="ProductComponents" Directory="AppDir">
       <Component Id="DariExeComponent">
-        <File Id="DariExe" Source="$(var.PublishDir)\Dari.App.exe" KeyPath="yes">
-          <Shortcut Id="StartMenuShortcut"
-                    Name="Dari"
-                    Directory="ProgramMenuFolder"
-                    Advertise="no"
-                    Icon="DariIcon"
-                    IconIndex="0"
-                    WorkingDirectory="AppDir" />
-        </File>
+        <File Id="DariExe" Source="$(var.PublishDir)\Dari.App.exe" KeyPath="yes" />
+      </Component>
+      <Component Id="StartMenuShortcutComponent" Guid="C3D4E5F6-A7B8-9012-CDEF-123456789012">
+        <Shortcut Id="StartMenuShortcut"
+                  Name="Dari"
+                  Directory="ProgramMenuFolder"
+                  Target="[AppDir]Dari.App.exe"
+                  WorkingDirectory="AppDir"
+                  Icon="DariIcon"
+                  IconIndex="0" />
+        <RegistryValue Root="HKCU"
+                       Key="Software\dadyarri\Dari"
+                       Name="StartMenuShortcut"
+                       Value="1"
+                       Type="integer"
+                       KeyPath="yes" />
       </Component>
     </ComponentGroup>
 
