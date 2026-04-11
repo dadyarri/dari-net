@@ -31,12 +31,23 @@ public partial class App : Application
             var mainWindow = new MainWindow();
             var dialogService = new DialogService(mainWindow);
             var recentFiles = new RecentFilesService();
-            mainWindow.DataContext = new MainWindowViewModel(
+            var vm = new MainWindowViewModel(
                 dialogService,
                 configService,
                 LocalizationManager.Current,
                 recentFiles);
+            mainWindow.DataContext = vm;
             desktop.MainWindow = mainWindow;
+
+            // If a .dar file was passed as a command-line argument (e.g. via Windows
+            // file-association double-click), open it once the window is shown.
+            var startupFile = desktop.Args?
+                .FirstOrDefault(a => a.EndsWith(".dar", StringComparison.OrdinalIgnoreCase));
+            if (startupFile is not null)
+            {
+                mainWindow.Opened += async (_, _) =>
+                    await vm.OpenArchiveFromPathAsync(startupFile).ConfigureAwait(true);
+            }
         }
 
         base.OnFrameworkInitializationCompleted();
