@@ -101,7 +101,11 @@ public partial class PreviewView : UserControl
             if (vm.TextMateScope is { } scope)
                 _textMate?.SetGrammar(scope);
         }
-        catch
+        catch (InvalidOperationException)
+        {
+            // Keep plain text view if syntax highlighter fails to initialize.
+        }
+        catch (NotSupportedException)
         {
             // Keep plain text view if syntax highlighter fails to initialize.
         }
