@@ -83,7 +83,7 @@
     <x:String x:Key="Wizard.Step2.CompressionLabel">Алгоритм сжатия:</x:String>
     <x:String x:Key="Wizard.Step2.Deduplication">Включить дедупликацию (пропускать одинаковые блоки)</x:String>
     <x:String x:Key="Wizard.Step2.Encryption">Зашифровать архив с паролем</x:String>
-    <x:String x:Key="Wizard.Step2.Encryption.UnsupportedTooltip">Шифрование не поддерживается на данной версии ОС. Алгоритм ChaCha20-Poly1305 требует Windows 10 версии 1903 и выше.</x:String>
+    <x:String x:Key="Wizard.Step2.Encryption.UnsupportedTooltip">Шифрование не поддерживается на Windows. Для создания зашифрованных архивов используйте Linux или macOS.</x:String>
     <x:String x:Key="Wizard.Step3.Title">Шаг 3 из 3 — Назначение</x:String>
     <x:String x:Key="Wizard.Step3.Subtitle">Укажите путь для сохранения архива .dar.</x:String>
     <x:String x:Key="Wizard.Step3.Creating">Создание архива…</x:String>
@@ -112,7 +112,7 @@
     <!-- Диалог ввода пароля -->
     <x:String x:Key="Password.Title">Введите пароль</x:String>
     <x:String x:Key="Password.Prompt">Архив зашифрован. Введите пароль для продолжения.</x:String>
-    <x:String x:Key="Password.EncryptionUnsupported">Шифрование не поддерживается на данной версии ОС. Алгоритм ChaCha20-Poly1305 требует Windows 10 версии 1903 и выше.</x:String>
+    <x:String x:Key="Password.EncryptionUnsupported">Шифрование не поддерживается на Windows. Этот зашифрованный архив нельзя открыть на данной платформе.</x:String>
 
     <!-- Диалог ошибки контрольной суммы -->
     <x:String x:Key="Checksum.Title">Ошибка контрольной суммы</x:String>
