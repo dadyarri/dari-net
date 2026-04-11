@@ -73,11 +73,11 @@
                           IsVisible="{Binding IsTextVisible}"
                           HorizontalScrollBarVisibility="Auto"
                           VerticalScrollBarVisibility="Auto">
-                <TextBlock FontFamily="{Binding MonospaceFontFamily}"
-                           FontSize="{Binding MonospaceFontSize}"
-                           Text="{Binding PreviewText}"
-                           TextWrapping="NoWrap"
-                           Margin="8" />
+                <SelectableTextBlock FontFamily="{Binding MonospaceFontFamily}"
+                                    FontSize="{Binding MonospaceFontSize}"
+                                    Text="{Binding PreviewText}"
+                                    TextWrapping="NoWrap"
+                                    Margin="8" />
             </ScrollViewer>
 
             <!-- Markdown -->
