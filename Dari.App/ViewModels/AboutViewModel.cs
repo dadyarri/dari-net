@@ -30,7 +30,23 @@ public sealed partial class AboutViewModel : ObservableObject
     {
         var asm = Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly();
         var infoVersion = asm.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion;
-        Version = infoVersion ?? asm.GetName().Version?.ToString() ?? "0.0.0";
+        var raw = infoVersion ?? asm.GetName().Version?.ToString() ?? "0.0.0";
+        Version = TruncateHash(raw);
+    }
+
+    /// <summary>
+    /// Limits the build-metadata hash in an informational version string to 8 characters.
+    /// E.g. <c>1.0.0+abcdef1234567890</c> → <c>1.0.0+abcdef12</c>.
+    /// Strings without a <c>+</c> separator are returned unchanged.
+    /// </summary>
+    private static string TruncateHash(string version)
+    {
+        var plus = version.IndexOf('+');
+        if (plus < 0) return version;
+
+        var prefix = version[..(plus + 1)];   // "1.0.0+"
+        var hash = version[(plus + 1)..];      // full hash or build metadata
+        return hash.Length > 8 ? $"{prefix}{hash[..8]}" : version;
     }
 
     [RelayCommand]

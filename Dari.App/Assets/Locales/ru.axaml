@@ -204,6 +204,7 @@
     <x:String x:Key="Preview.Type.Error">Ошибка</x:String>
 
     <!-- Диалог «О программе» -->
+    <x:String x:Key="About.Title">О программе Dari</x:String>
     <x:String x:Key="About.Copyright">Авторские права:</x:String>
     <x:String x:Key="About.License">Лицензия:</x:String>
     <x:String x:Key="About.Runtime">Среда выполнения:</x:String>

@@ -4,6 +4,9 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - 'feature/**'
+      - 'copilot/**'
 
 permissions:
   contents: write
@@ -32,12 +35,22 @@ jobs:
         with:
           dotnet-version: "10.0.x"
 
-      - name: Extract version from tag
+      - name: Determine version
         id: version
         shell: bash
         run: |
-          TAG="${GITHUB_REF#refs/tags/v}"
-          echo "version=$TAG" >> "$GITHUB_OUTPUT"
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            # Release tag: strip the leading "v"
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          else
+            # Branch pre-release: use branch name + short commit SHA
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            BRANCH_SLUG="${BRANCH//\//-}"
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            VERSION="0.0.0-${BRANCH_SLUG}.${SHORT_SHA}"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "is_prerelease=$( [[ "$GITHUB_REF" == refs/tags/* ]] && echo false || echo true )" >> "$GITHUB_OUTPUT"
 
       - name: Publish self-contained
         run: >
@@ -78,6 +91,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
+          else
+            BRANCH="${GITHUB_REF#refs/heads/}"
+            BRANCH_SLUG="${BRANCH//\//-}"
+            SHORT_SHA="${GITHUB_SHA:0:8}"
+            VERSION="0.0.0-${BRANCH_SLUG}.${SHORT_SHA}"
+            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Download all artifacts
         uses: actions/download-artifact@v4.1.8
         with:
@@ -86,6 +115,9 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Dari ${{ steps.version.outputs.version }}
+          prerelease: ${{ steps.version.outputs.is_prerelease }}
           generate_release_notes: true
           files: |
             artifacts/**/*.tar.gz

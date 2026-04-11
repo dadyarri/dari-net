@@ -204,6 +204,7 @@
     <x:String x:Key="Preview.Type.Error">Error</x:String>
 
     <!-- About dialog -->
+    <x:String x:Key="About.Title">About Dari</x:String>
     <x:String x:Key="About.Copyright">Copyright:</x:String>
     <x:String x:Key="About.License">License:</x:String>
     <x:String x:Key="About.Runtime">Runtime:</x:String>

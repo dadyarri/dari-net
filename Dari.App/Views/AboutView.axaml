@@ -3,7 +3,7 @@
         xmlns:vm="using:Dari.App.ViewModels"
         x:Class="Dari.App.Views.AboutView"
         x:DataType="vm:AboutViewModel"
-        Title="{DynamicResource Menu.Help.About}"
+        Title="{DynamicResource About.Title}"
         Width="420"
         SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
@@ -53,9 +53,9 @@
         </Grid>
 
         <!-- Project URL -->
-        <TextBlock HorizontalAlignment="Center" Opacity="0.7">
-            <Run Text="{Binding ProjectUrl}" />
-        </TextBlock>
+        <HyperlinkButton Content="{Binding ProjectUrl}"
+                         NavigateUri="{Binding ProjectUrl}"
+                         HorizontalAlignment="Center" />
 
         <!-- Close button -->
         <Button Content="{DynamicResource Button.Close}"
